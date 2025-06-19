@@ -31,6 +31,8 @@ export class Route {
   @Column()
   status: boolean;
   @Column()
+  display_order: number;
+  @Column()
   created_by: string;
   @CreateDateColumn({
     name: 'created_at',
