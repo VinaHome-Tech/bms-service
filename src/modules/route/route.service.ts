@@ -8,6 +8,7 @@ import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
 import { Route } from './route.entity';
 import {
+  DTO_RP_ListRouteName,
   DTO_RP_Route,
   DTO_RQ_CreateRoute,
   DTO_RQ_UpdateRoute,
@@ -117,6 +118,27 @@ export class RouteService {
       short_name: route.short_name,
       status: route.status,
       created_at: route.created_at,
+    }));
+  }
+
+  async getListRouteNameByCompany(id: number): Promise<DTO_RP_ListRouteName[]> {
+    const company = await this.companyRepository.findOne({
+      where: { id: id },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Công ty không tồn tại');
+    }
+
+    const routes = await this.routeRepository.find({
+      where: { company: { id: id } },
+      select: ['id', 'route_name'],
+      order: { display_order: 'ASC', created_at: 'DESC' },
+    });
+
+    return routes.map((route) => ({
+      id: route.id,
+      route_name: route.route_name,
     }));
   }
 

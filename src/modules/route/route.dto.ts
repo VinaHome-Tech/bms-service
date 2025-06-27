@@ -40,3 +40,8 @@ export class DTO_RP_Route {
   status: boolean;
   created_at: Date;
 }
+
+export class DTO_RP_ListRouteName {
+  id: number;
+  route_name: string;
+}

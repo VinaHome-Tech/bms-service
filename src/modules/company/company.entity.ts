@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Office } from '../office/office.entity';
 import { Route } from '../route/route.entity';
+import { SeatChart } from '../seat/seat_chart.entity';
 
 @Entity('tbl_company')
 export class Company {
@@ -49,4 +50,7 @@ export class Company {
 
   @OneToMany(() => Route, (route) => route.company)
   routes: Route[];
+
+  @OneToMany(() => SeatChart, (seatChart) => seatChart.company)
+  seat_charts: SeatChart[];
 }

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CompanyModule } from './modules/company/company.module';
 import { RouteModule } from './modules/route/route.module';
+import { SeatModule } from './modules/seat/seat.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RouteModule } from './modules/route/route.module';
     CompanyModule,
     OfficeModule,
     RouteModule,
+    SeatModule,
   ],
   controllers: [],
   providers: [],

@@ -116,4 +116,23 @@ export class RouteController {
       });
     }
   }
+
+  @MessagePattern({ bms: 'get_list_route_name_by_company' })
+  async getListRouteNameByCompany(@Payload() id: number) {
+    try {
+      const result = await this.routeService.getListRouteNameByCompany(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Lấy danh sách tên tuyến thành công',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
 }
