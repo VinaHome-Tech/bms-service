@@ -4,9 +4,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Company } from '../company/company.entity';
+import { Schedule } from '../schedule/schedule.entity';
 
 @Entity('tbl_route')
 export class Route {
@@ -41,9 +43,12 @@ export class Route {
   })
   created_at: Date;
 
-  @ManyToOne(() => Company, (company) => company.offices, {
+  @ManyToOne(() => Company, (company) => company.routes, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @OneToMany(() => Schedule, (schedule) => schedule.route)
+  schedule: Schedule[];
 }

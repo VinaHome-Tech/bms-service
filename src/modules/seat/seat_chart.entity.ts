@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Company } from '../company/company.entity';
 import { Seat } from './seat.entity';
+import { Schedule } from '../schedule/schedule.entity';
 
 @Entity('tbl_seat_chart')
 export class SeatChart {
@@ -43,4 +44,7 @@ export class SeatChart {
     cascade: true,
   })
   seats: Seat[];
+
+  @OneToMany(() => Schedule, (schedule) => schedule.seat_chart)
+  schedule: Schedule[];
 }

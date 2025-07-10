@@ -87,4 +87,23 @@ export class SeatController {
       });
     }
   }
+
+  @MessagePattern({ bms: 'get_seat_chart_name_by_company' })
+  async getSeatChartNameByCompany(@Payload() id: number) {
+    try {
+      const result = await this.seatService.getSeatChartNameByCompany(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Lấy danh sách tên sơ đồ ghế thành công',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
 }

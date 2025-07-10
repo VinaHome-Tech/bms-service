@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   DTO_RP_SeatChart,
+  DTO_RP_SeatChartName,
   DTO_RQ_CreateSeatChart,
   DTO_RQ_UpdateSeatChart,
 } from './seat.dto';
@@ -253,5 +254,23 @@ export class SeatService {
         type: seat.type,
       })),
     };
+  }
+
+  async getSeatChartNameByCompany(id: number): Promise<DTO_RP_SeatChartName[]> {
+    const seatCharts = await this.seatChartRepository.find({
+      where: { company: { id: id } },
+      select: ['id', 'seat_chart_name'],
+    });
+
+    if (!seatCharts || seatCharts.length === 0) {
+      throw new NotFoundException(
+        'Không tìm thấy sơ đồ ghế nào cho công ty này.',
+      );
+    }
+
+    return seatCharts.map((seatChart) => ({
+      id: seatChart.id,
+      seat_chart_name: seatChart.seat_chart_name,
+    }));
   }
 }

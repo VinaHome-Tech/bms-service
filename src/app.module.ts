@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { CompanyModule } from './modules/company/company.module';
 import { RouteModule } from './modules/route/route.module';
 import { SeatModule } from './modules/seat/seat.module';
+import { ScheduleModule } from './modules/schedule/schedule.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SeatModule } from './modules/seat/seat.module';
     OfficeModule,
     RouteModule,
     SeatModule,
+    ScheduleModule,
   ],
   controllers: [],
   providers: [],

@@ -62,3 +62,8 @@ export class DTO_RP_Seat {
   column: number;
   type: number;
 }
+
+export class DTO_RP_SeatChartName {
+  id: number;
+  seat_chart_name: string;
+}
