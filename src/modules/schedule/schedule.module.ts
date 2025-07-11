@@ -4,9 +4,14 @@ import { ScheduleService } from './schedule.service';
 import { CompanyModule } from '../company/company.module';
 import { Schedule } from './schedule.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Route } from '../route/route.entity';
+import { SeatChart } from '../seat/seat_chart.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Schedule]), CompanyModule],
+  imports: [
+    TypeOrmModule.forFeature([Schedule, Route, SeatChart]),
+    CompanyModule,
+  ],
   controllers: [ScheduleController],
   providers: [ScheduleService],
   exports: [],

@@ -16,31 +16,31 @@ export class Schedule {
   id: number;
 
   @Column()
-  start_date: Date;
+  start_date: Date; // Ngày bắt đầu lịch chạy
 
   @Column()
-  end_date: Date;
+  end_date: Date; // Ngày kết thúc lịch chạy
+
+  @Column('text', { array: true })
+  weekdays: string[]; // Ngày trong tuần ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
   @Column()
-  weekdays: string[];
+  start_time: string; // Giờ bắt đầu lịch chạy
 
   @Column()
-  start_time: string;
+  repeat_type: string; // Kiểu lặp lại ('weekday', 'odd_even') - lặp lại theo ngày trong tuần hoặc theo ngày lẻ/chẵn
 
   @Column()
-  repeat_type: string;
+  odd_even_type: string; // Kiểu lặp lại ngày lẻ/chẵn ('odd' hoặc 'even')
 
   @Column()
-  odd_even_type: string;
+  is_known_end_date: boolean; // Có biết ngày kết thúc lịch chạy hay không
 
   @Column()
-  is_known_end_date: boolean;
+  trip_type: number; // Loại chuyến đi (1: Chuyến cố định chở khách, 2: Chuyến cố định chở hàng, 3: Xe hợp đồng)
 
   @Column()
-  trip_type: number;
-
-  @Column()
-  created_by: string;
+  created_by: string; // Người tạo lịch chạy
 
   @CreateDateColumn({
     name: 'created_at',
