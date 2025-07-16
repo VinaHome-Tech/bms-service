@@ -259,4 +259,30 @@ export class RouteService {
 
     await this.routeRepository.remove(route);
   }
+
+  async getListRouteNameActionByCompany(
+    id: number,
+  ): Promise<DTO_RP_ListRouteName[]> {
+    const company = await this.companyRepository.findOne({
+      where: { id: id },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Công ty không tồn tại');
+    }
+
+    const routes = await this.routeRepository.find({
+      where: {
+        company: { id: id },
+        status: true,
+      },
+      select: ['id', 'route_name'],
+      order: { display_order: 'ASC', created_at: 'DESC' },
+    });
+
+    return routes.map((route) => ({
+      id: route.id,
+      route_name: route.route_name,
+    }));
+  }
 }

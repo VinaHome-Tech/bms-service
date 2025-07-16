@@ -10,6 +10,7 @@ import {
 import { Company } from '../company/company.entity';
 import { Seat } from './seat.entity';
 import { Schedule } from '../schedule/schedule.entity';
+import { Trip } from '../trip/trip.entity';
 
 @Entity('tbl_seat_chart')
 export class SeatChart {
@@ -47,4 +48,7 @@ export class SeatChart {
 
   @OneToMany(() => Schedule, (schedule) => schedule.seat_chart)
   schedule: Schedule[];
+
+  @OneToMany(() => Trip, (trip) => trip.seat_chart)
+  trips: Trip[];
 }

@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Company } from '../company/company.entity';
 import { Schedule } from '../schedule/schedule.entity';
+import { Trip } from '../trip/trip.entity';
 
 @Entity('tbl_route')
 export class Route {
@@ -51,4 +52,7 @@ export class Route {
 
   @OneToMany(() => Schedule, (schedule) => schedule.route)
   schedule: Schedule[];
+
+  @OneToMany(() => Trip, (trip) => trip.route)
+  trips: Trip[];
 }

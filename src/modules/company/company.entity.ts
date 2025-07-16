@@ -9,6 +9,8 @@ import { Office } from '../office/office.entity';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Schedule } from '../schedule/schedule.entity';
+import { Trip } from '../trip/trip.entity';
+import { Ticket } from '../ticket/ticket.entity';
 
 @Entity('tbl_company')
 export class Company {
@@ -57,4 +59,14 @@ export class Company {
 
   @OneToMany(() => Schedule, (schedule) => schedule.company)
   schedules: Schedule[];
+
+  @OneToMany(() => Trip, (trip) => trip.company, {
+    onDelete: 'CASCADE',
+  })
+  trips: Trip[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.company, {
+    onDelete: 'CASCADE',
+  })
+  tickets: Ticket[];
 }

@@ -1,0 +1,20 @@
+# Dockerfile.dev
+FROM node:20-alpine
+
+# Tạo thư mục app bên trong container
+WORKDIR /app
+
+# Tạo user không phải root để tăng bảo mật
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
+
+# Copy package.json và package-lock.json trước để cache layer
+COPY package*.json ./
+
+# Cài đặt dependency
+RUN npm install
+
+# Copy toàn bộ mã nguồn sau khi cài xong dependency
+COPY . .
+
+# Câu lệnh mặc định (sẽ override bằng docker-compose)
+CMD ["npm", "run", "start:dev"]
