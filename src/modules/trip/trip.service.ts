@@ -4,7 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DTO_RP_ListTrip, DTO_RQ_GetListTrip } from './trip.dto';
+import {
+  DTO_RP_ListTrip,
+  DTO_RP_UpdateTrip,
+  DTO_RQ_GetListTrip,
+  DTO_RQ_UpdateTrip,
+  EmployeeItem,
+} from './trip.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from '../company/company.entity';
 import { Between, Repository } from 'typeorm';
@@ -13,6 +19,8 @@ import { Schedule } from '../schedule/schedule.entity';
 import { Route } from '../route/route.entity';
 import { Ticket } from '../ticket/ticket.entity';
 import { Seat } from '../seat/seat.entity';
+import { Vehicle } from '../vehicle/vehicle.entity';
+import { SeatChart } from '../seat/seat_chart.entity';
 
 @Injectable()
 export class TripService {
@@ -27,6 +35,10 @@ export class TripService {
     private readonly routeRepository: Repository<Route>,
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
+    @InjectRepository(Vehicle)
+    private readonly vehicleRepository: Repository<Vehicle>,
+    @InjectRepository(SeatChart)
+    private readonly seatChartRepository: Repository<SeatChart>,
   ) {}
 
   async getListTripByRouteAndDate(
@@ -74,6 +86,7 @@ export class TripService {
           'seat_chart',
           'seat_chart.seats',
           'tickets',
+          'vehicle',
         ],
       });
 
@@ -81,6 +94,7 @@ export class TripService {
         console.log(
           `✅ Đã có ${existingTrips.length} chuyến trong ngày. Trả về danh sách chuyến`,
         );
+        console.log(existingTrips);
         return this.mapToTripDTOs(existingTrips);
       }
 
@@ -170,7 +184,7 @@ export class TripService {
           // 3. Load lại chuyến đi với đầy đủ thông tin vé
           const fullTrip = await this.tripRepository.findOne({
             where: { id: savedTrip.id },
-            relations: ['tickets', 'seat_chart', 'route', 'company'],
+            relations: ['tickets', 'seat_chart', 'route', 'company', 'vehicle'],
           });
 
           if (!fullTrip) {
@@ -207,6 +221,39 @@ export class TripService {
         (ticket) => ticket.seat_name && ticket.seat_name.trim() !== '',
       );
 
+      const processEmployeeData = (employeeData: any): EmployeeItem[] => {
+        if (!employeeData) return [];
+
+        try {
+          let parsedData =
+            typeof employeeData === 'string'
+              ? JSON.parse(employeeData)
+              : employeeData;
+
+          // Handle double-nested array case '[[{...}]]'
+          if (
+            Array.isArray(parsedData) &&
+            parsedData.length > 0 &&
+            Array.isArray(parsedData[0])
+          ) {
+            parsedData = parsedData[0];
+          }
+          const employees = Array.isArray(parsedData)
+            ? parsedData
+            : [parsedData];
+          return employees
+            .map((emp: any) => ({
+              id: emp?.id?.toString() || '',
+              full_name: emp?.full_name?.toString() || '',
+              number_phone: emp?.number_phone?.toString() || '',
+            }))
+            .filter((emp) => emp.id || emp.full_name || emp.number_phone);
+        } catch (e) {
+          console.error('Error parsing employee data:', e);
+          return [];
+        }
+      };
+
       return {
         id: trip.id,
         departure_date: trip.departure_date,
@@ -218,6 +265,15 @@ export class TripService {
         trip_type: trip.trip_type,
         tickets_booked: validTickets.filter((t) => t.booked_status).length,
         total_ticket: validTickets.length,
+        vehicle_id: trip.vehicle?.id || null,
+        license_plate: trip.vehicle?.license_plate || '',
+        driver: processEmployeeData(trip.driver),
+        assistant: processEmployeeData(trip.assistant),
+        note: trip.note || '',
+        vehicle_phone: trip.vehicle?.phone || '',
+        total_fare: validTickets
+          .filter((ticket) => ticket.booked_status === true)
+          .reduce((sum, ticket) => sum + ticket.ticket_display_price, 0),
       };
     });
   }
@@ -299,4 +355,164 @@ export class TripService {
       return [];
     }
   }
+
+  async updateTripInformation(
+    data: DTO_RQ_UpdateTrip,
+    id: number,
+  ): Promise<DTO_RP_UpdateTrip> {
+    console.log('=== Bắt đầu cập nhật chuyến đi ===');
+    console.log('ID chuyến đi:', id);
+    console.log('Dữ liệu đầu vào:', JSON.stringify(data, null, 2));
+
+    // Kiểm tra trip tồn tại
+    console.log('\n=== Kiểm tra chuyến đi tồn tại ===');
+    const existingTrip = await this.tripRepository.findOne({
+      where: { id },
+      relations: ['route', 'seat_chart', 'company', 'vehicle'],
+    });
+
+    if (!existingTrip) {
+      console.error('Không tìm thấy chuyến đi với ID:', id);
+      throw new NotFoundException('Không tìm thấy chuyến đi');
+    }
+
+    // Validation bổ sung
+    console.log('\n=== Kiểm tra validation ===');
+    if (data.seat_chart_id) {
+      console.log('Kiểm tra sơ đồ ghế mới:', data.seat_chart_id);
+      const seatChart = await this.seatChartRepository.findOne({
+        where: { id: data.seat_chart_id },
+      });
+      if (!seatChart) {
+        console.error('Sơ đồ ghế không tồn tại:', data.seat_chart_id);
+        throw new BadRequestException('Sơ đồ ghế không tồn tại');
+      }
+    }
+
+    if (data.route_id) {
+      console.log('Kiểm tra tuyến đường mới:', data.route_id);
+      const route = await this.routeRepository.findOne({
+        where: { id: data.route_id },
+      });
+      if (!route) {
+        console.error('Tuyến đường không tồn tại:', data.route_id);
+        throw new BadRequestException('Tuyến đường không tồn tại');
+      }
+    }
+
+    if (data.vehicle_id) {
+      console.log('Kiểm tra phương tiện mới:', data.vehicle_id);
+      const vehicle = await this.vehicleRepository.findOne({
+        where: { id: data.vehicle_id },
+      });
+      if (!vehicle) {
+        console.error('Phương tiện không tồn tại:', data.vehicle_id);
+        throw new BadRequestException('Phương tiện không tồn tại');
+      }
+    }
+
+    // Merge data
+    console.log('\n=== Merge dữ liệu ===');
+    const updatedTrip = this.tripRepository.merge(existingTrip, {
+      departure_time: data.departure_time,
+      note: data.note,
+      seat_chart: data.seat_chart_id
+        ? await this.seatChartRepository.findOne({
+            where: { id: data.seat_chart_id },
+          })
+        : existingTrip.seat_chart,
+      route: data.route_id
+        ? await this.routeRepository.findOne({
+            where: { id: data.route_id },
+          })
+        : existingTrip.route,
+      trip_type: data.trip_type,
+      vehicle: data.vehicle_id
+        ? await this.vehicleRepository.findOne({
+            where: { id: data.vehicle_id },
+          })
+        : existingTrip.vehicle,
+    });
+    console.log('Dữ liệu chuyến đi sau khi merge:', {
+      departure_time: updatedTrip.departure_time,
+      note: updatedTrip.note,
+      seat_chart_id: updatedTrip.seat_chart?.id || null,
+      route_id: updatedTrip.route?.id || null,
+      trip_type: updatedTrip.trip_type,
+      vehicle_id: updatedTrip.vehicle?.id || null,
+    });
+
+    console.log('\n=== Cập nhật tài xế ===');
+    if (data.driver && data.driver.length > 0) {
+      console.log('Danh sách tài xế mới:', data.driver);
+      updatedTrip.driver = [
+        data.driver.map((d) => ({
+          id: d.id,
+          full_name: d.full_name,
+          number_phone: d.number_phone,
+        })),
+      ];
+    } else {
+      console.log('Không có tài xế, set về mảng rỗng');
+      updatedTrip.driver = [];
+    }
+
+    console.log('\n=== Cập nhật phụ xe ===');
+    if (data.assistant && data.assistant.length > 0) {
+      console.log('Danh sách phụ xe mới:', data.assistant);
+      updatedTrip.assistant = [
+        data.assistant.map((a) => ({
+          id: a.id,
+          full_name: a.full_name,
+          number_phone: a.number_phone,
+        })),
+      ];
+    } else {
+      console.log('Không có phụ xe, set về mảng rỗng');
+      updatedTrip.assistant = [];
+    }
+
+    try {
+      console.log('Lưu chuyến đi đã cập nhật');
+      const savedTrip = await this.tripRepository.save(updatedTrip);
+      console.log('Lưu thành công:', savedTrip.id);
+
+      const response = {
+        id: savedTrip.id,
+        departure_time: savedTrip.departure_time,
+        route_id: savedTrip.route?.id || null,
+        route_name: savedTrip.route?.route_name || '',
+        seat_chart_id: savedTrip.seat_chart?.id || null,
+        seat_chart_name: savedTrip.seat_chart?.seat_chart_name || '',
+        note: savedTrip.note || '',
+        trip_type: savedTrip.trip_type,
+        vehicle_id: savedTrip.vehicle?.id || null,
+        license_plate: savedTrip.vehicle?.license_plate || '',
+        vehicle_phone: savedTrip.vehicle?.phone || '',
+        assistant: this.mapPersonnel(savedTrip.assistant),
+        driver: this.mapPersonnel(savedTrip.driver),
+      };
+
+      console.log('Kết quả trả về');
+      console.log(JSON.stringify(response, null, 2));
+
+      return response;
+    } catch (error) {
+      console.error('Lỗi khi truy vấn chuyến đi:', error);
+      throw error;
+    } finally {
+      console.log('Kết thúc quá trình cập nhật');
+    }
+  }
+
+  private mapPersonnel = (personnel: any) => {
+    if (!Array.isArray(personnel)) return [];
+    const data = Array.isArray(personnel[0]) ? personnel[0] : personnel;
+
+    return data.map((p: any) => ({
+      id: p?.id || '',
+      full_name: p?.full_name || '',
+      number_phone: p?.number_phone || '',
+    }));
+  };
 }

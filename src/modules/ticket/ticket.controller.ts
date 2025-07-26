@@ -1,7 +1,12 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_CancelTicket, DTO_RQ_TicketPayloadUpdate } from './ticket.dto';
+import {
+  DTO_RQ_CancelTicket,
+  DTO_RQ_CopyTicket,
+  DTO_RQ_TicketPayloadUpdate,
+  DTO_RQ_UserChooserTicket,
+} from './ticket.dto';
 
 @Controller()
 export class TicketController {
@@ -27,9 +32,18 @@ export class TicketController {
   }
 
   @MessagePattern({ bms: 'update_ticket' })
-  async updateTicket(@Payload() payload: { data: DTO_RQ_TicketPayloadUpdate }) {
+  async updateTicket(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserChooserTicket;
+      data_update: DTO_RQ_TicketPayloadUpdate;
+    },
+  ) {
     try {
-      const result = await this.ticketService.updateTicket(payload.data);
+      const result = await this.ticketService.updateTicket(
+        payload.user,
+        payload.data_update,
+      );
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -59,6 +73,36 @@ export class TicketController {
       throw new RpcException({
         success: false,
         message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'copy_tickets' })
+  async copyTickets(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserChooserTicket;
+      data_copy: DTO_RQ_CopyTicket[];
+      data_pastes: number[];
+    },
+  ) {
+    try {
+      const result = await this.ticketService.copyTickets(
+        payload.user,
+        payload.data_copy,
+        payload.data_pastes,
+      );
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Server error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

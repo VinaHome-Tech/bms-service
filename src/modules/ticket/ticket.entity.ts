@@ -67,6 +67,12 @@ export class Ticket {
   @Column()
   office_created: string;
 
+  @Column()
+  user_id_created: string;
+
+  @Column()
+  office_id_created: number;
+
   @ManyToOne(() => Company, (company) => company.tickets, {
     onDelete: 'CASCADE',
   })
