@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { HttpExceptionFilter } from './utils/http-exception.filter';
+import configuration from './config/configuration';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -9,7 +10,7 @@ async function bootstrap() {
     {
       transport: Transport.NATS,
       options: {
-        servers: process.env.NATS_SERVER ? [process.env.NATS_SERVER] : [],
+        servers: configuration().nats.url,
       },
     },
   );
@@ -17,5 +18,8 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen();
   console.log('✅ BMS Service is running');
+  console.log('Port: ', configuration().connect.port);
+  console.log('Host: ', configuration().connect.host);
+  console.log('NATS Server: ', configuration().nats.url);
 }
 bootstrap();

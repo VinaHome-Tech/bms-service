@@ -1,6 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { OfficeModule } from './modules/office/office.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CompanyModule } from './modules/company/company.module';
@@ -10,33 +10,27 @@ import { ScheduleModule } from './modules/schedule/schedule.module';
 import { TripModule } from './modules/trip/trip.module';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      load: [configuration],
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: async () => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
+        host: configuration().database.host,
+        port: configuration().database.port,
+        username: configuration().database.username,
+        password: configuration().database.password,
+        database: configuration().database.database,
         autoLoadEntities: true,
-        // entities: [__dirname + '/../**/*.entity.ts'],
         synchronize: false,
-        ssl: true,
-        extra: {
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        },
+        ssl: false,
       }),
     }),
+
     CompanyModule,
     OfficeModule,
     RouteModule,
