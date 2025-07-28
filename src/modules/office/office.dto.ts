@@ -1,11 +1,10 @@
-export class DTO_RQ_CreateOffice {
+export class DTO_RQ_Office {
   name: string;
   code: string;
   address: string;
   note: string;
   status: boolean;
   phones: DTO_RQ_OfficePhone[];
-  company_id: number;
 }
 export class DTO_RQ_OfficePhone {
   id: number;

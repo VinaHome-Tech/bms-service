@@ -1,7 +1,8 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { OfficeService } from './office.service';
-import { DTO_RQ_CreateOffice, DTO_RQ_UpdateOffice } from './office.dto';
+import { DTO_RQ_Office } from './office.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class OfficeController {
@@ -16,37 +17,48 @@ export class OfficeController {
   }
 
   @MessagePattern({ bms: 'create_office' })
-  async createOffice(@Payload() data: DTO_RQ_CreateOffice) {
+  async createOffice(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      data_create: DTO_RQ_Office;
+    },
+  ) {
     try {
-      const result = await this.officeService.createOffice(data);
+      const result = await this.officeService.createOffice(
+        payload.user,
+        payload.data_create,
+      );
       return {
         success: true,
         statusCode: HttpStatus.CREATED,
-        message: 'Tạo văn phòng thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'delete_office' })
-  async deleteOffice(@Payload() id: number) {
+  async deleteOffice(
+    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  ) {
     try {
-      await this.officeService.deleteOffice(id);
+      await this.officeService.deleteOffice(payload.id, payload.user);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Xóa văn phòng thành công',
+        message: 'Success',
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -54,44 +66,48 @@ export class OfficeController {
 
   @MessagePattern({ bms: 'update_office' })
   async updateOffice(
-    @Payload() payload: { id: number; data: DTO_RQ_UpdateOffice },
+    @Payload()
+    payload: {
+      id: number;
+      user: DTO_RQ_UserAction;
+      data_update: DTO_RQ_Office;
+    },
   ) {
     try {
       const result = await this.officeService.updateOffice(
         payload.id,
-        payload.data,
+        payload.user,
+        payload.data_update,
       );
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Cập nhật văn phòng thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message:
-          error.response?.message || error.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || error.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'get_list_office_by_company' })
-  async getListOfficeByCompany(@Payload() id: number) {
+  async getListOfficeByCompany(@Payload() id: string) {
     try {
       const result = await this.officeService.getListOfficeByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách văn phòng thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message:
-          error.response?.message || error.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || error.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -117,21 +133,21 @@ export class OfficeController {
     }
   }
 
-  @MessagePattern({ bms: 'get_list_office_by_company_2' })
-  async getListOfficeByCompany_2(@Payload() id: number) {
+  @MessagePattern({ bms: 'get_list_office_room_work_by_company' })
+  async getListOfficeRoomWorkByCompany(@Payload() id: string) {
     try {
-      const result = await this.officeService.getListOfficeByCompany_2(id);
+      const result =
+        await this.officeService.getListOfficeRoomWorkByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách văn phòng thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message:
-          error.response?.message || error.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || error.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

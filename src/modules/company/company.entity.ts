@@ -49,8 +49,8 @@ export class Company {
   })
   created_at: Date;
 
-  @OneToMany(() => Office, (office) => office.company)
-  offices: Office[];
+  // @OneToMany(() => Office, (office) => office.company)
+  // offices: Office[];
 
   @OneToMany(() => Route, (route) => route.company)
   routes: Route[];

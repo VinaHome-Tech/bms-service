@@ -3,23 +3,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  DTO_RP_Office,
-  DTO_RP_Office_2,
-  DTO_RQ_CreateOffice,
-  DTO_RQ_UpdateOffice,
-} from './office.dto';
+import { DTO_RP_Office, DTO_RQ_Office } from './office.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
 import { Office } from './office.entity';
 import { OfficePhone } from './office_phone.entity';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { OfficeMapper } from './office.mapper';
 
 @Injectable()
 export class OfficeService {
   constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
+    // @InjectRepository(Company)
+    // private readonly companyRepository: Repository<Company>,
 
     @InjectRepository(Office)
     private readonly officeRepository: Repository<Office>,
@@ -28,70 +24,35 @@ export class OfficeService {
     private readonly officePhoneRepository: Repository<OfficePhone>,
   ) {}
 
-  async createOffice(data: DTO_RQ_CreateOffice): Promise<DTO_RP_Office> {
-    console.log('Received data for createOffice:', data);
-    const company = await this.companyRepository.findOne({
-      where: { id: data.company_id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
+  async createOffice(
+    user: DTO_RQ_UserAction,
+    data_create: DTO_RQ_Office,
+  ): Promise<DTO_RP_Office> {
+    console.log('User:', user);
+    console.log('Data Create:', data_create);
     const existingOffice = await this.officeRepository.findOne({
       where: {
-        name: data.name,
-        company: { id: data.company_id },
+        name: data_create.name,
+        company_id: user.company_id,
       },
-      relations: ['company'],
     });
-
     if (existingOffice) {
       throw new ConflictException('Tên văn phòng đã tồn tại.');
     }
-
-    const office = this.officeRepository.create({
-      name: data.name,
-      code: data.code,
-      address: data.address,
-      note: data.note,
-      status: data.status,
-      company: company,
-    });
-
-    if (data.phones?.length > 0) {
-      office.phones = data.phones.map((phone) =>
-        this.officePhoneRepository.create({
-          phone: phone.phone,
-          type: phone.type,
-        }),
-      );
-    }
+    const office = OfficeMapper.toCreateEntity(user, data_create);
     const savedOffice = await this.officeRepository.save(office);
     if (savedOffice.phones) {
       savedOffice.phones.forEach((p) => delete p.office);
     }
-
-    return {
-      id: savedOffice.id,
-      name: savedOffice.name,
-      code: savedOffice.code,
-      address: savedOffice.address,
-      note: savedOffice.note,
-      status: savedOffice.status,
-      created_at: savedOffice.created_at,
-      phones: (savedOffice.phones || []).map((phone) => ({
-        id: phone.id,
-        phone: phone.phone,
-        type: phone.type,
-      })),
-    };
+    console.log('Saved Office:', savedOffice);
+    return OfficeMapper.toDTO(savedOffice);
   }
 
-  async deleteOffice(id: number): Promise<void> {
+  async deleteOffice(id: number, user: DTO_RQ_UserAction): Promise<void> {
+    console.log('Delete Office ID:', id);
+    console.log('User:', user);
     const office = await this.officeRepository.findOne({
       where: { id },
-      relations: ['company'],
     });
 
     if (!office) {
@@ -103,38 +64,41 @@ export class OfficeService {
 
   async updateOffice(
     id: number,
-    data: DTO_RQ_UpdateOffice,
+    user: DTO_RQ_UserAction,
+    data_update: DTO_RQ_Office,
   ): Promise<DTO_RP_Office> {
+    console.log('Update Office ID:', id);
+    console.log('User:', user);
+    console.log('Data Update:', data_update);
     const office = await this.officeRepository.findOne({
       where: { id },
-      relations: ['company', 'phones'],
+      relations: ['phones'],
     });
 
     if (!office) {
       throw new NotFoundException('Văn phòng không tồn tại');
     }
 
-    if (data.name) {
+    if (data_update.name) {
       const existingOffice = await this.officeRepository.findOne({
         where: {
-          name: data.name,
-          company: { id: office.company.id },
+          name: data_update.name,
+          company_id: user.company_id,
         },
       });
-
       if (existingOffice && existingOffice.id !== id) {
         throw new ConflictException('Tên văn phòng đã tồn tại.');
       }
     }
 
-    office.name = data.name;
-    office.code = data.code;
-    office.address = data.address;
-    office.note = data.note;
-    office.status = data.status;
+    office.name = data_update.name;
+    office.code = data_update.code;
+    office.address = data_update.address;
+    office.note = data_update.note;
+    office.status = data_update.status;
 
-    if (data.phones) {
-      const inputPhones = data.phones;
+    if (data_update.phones) {
+      const inputPhones = data_update.phones;
 
       const inputPhoneIds = inputPhones.filter((p) => p.id).map((p) => p.id);
 
@@ -170,91 +134,48 @@ export class OfficeService {
       updatedOffice.phones.forEach((p) => delete p.office);
     }
 
-    return {
-      id: updatedOffice.id,
-      name: updatedOffice.name,
-      code: updatedOffice.code,
-      address: updatedOffice.address,
-      note: updatedOffice.note,
-      status: updatedOffice.status,
-      created_at: updatedOffice.created_at,
-      phones: updatedOffice.phones.map((p) => ({
-        id: p.id,
-        phone: p.phone,
-        type: p.type,
-      })),
-    };
+    return OfficeMapper.toDTO(updatedOffice);
   }
 
-  async getListOfficeByCompany(id: number): Promise<DTO_RP_Office[]> {
-    const company = await this.companyRepository.findOne({
-      where: { id },
-      relations: ['offices', 'offices.phones'],
+  async getListOfficeByCompany(id: string): Promise<DTO_RP_Office[]> {
+    const offices = await this.officeRepository.find({
+      where: { company_id: id },
+      relations: ['phones'],
+      order: { created_at: 'DESC' },
     });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
-    return company.offices.map((office) => ({
-      id: office.id,
-      name: office.name,
-      code: office.code,
-      address: office.address,
-      note: office.note,
-      status: office.status,
-      created_at: office.created_at,
-      phones: (office.phones || []).map((phone) => ({
-        id: phone.id,
-        phone: phone.phone,
-        type: phone.type,
-      })),
-    }));
+    return offices.map((office) => OfficeMapper.toDTO(office));
   }
 
   async getListOfficeNameByCompany(
     id: number,
   ): Promise<{ id: number; name: string }[]> {
-    const company = await this.companyRepository.findOne({
-      where: { id },
-      relations: ['offices'],
-    });
+    // const company = await this.companyRepository.findOne({
+    //   where: { id },
+    //   relations: ['offices'],
+    // });
 
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
+    // if (!company) {
+    //   throw new NotFoundException('Công ty không tồn tại');
+    // }
+    return null;
 
-    return company.offices.map((office) => ({
-      id: office.id,
-      name: office.name,
-    }));
+    // return company.offices.map((office) => ({
+    //   id: office.id,
+    //   name: office.name,
+    // }));
   }
 
-  async getListOfficeByCompany_2(id: number): Promise<DTO_RP_Office_2[]> {
-    const company = await this.companyRepository.findOne({
-      where: { id },
-      relations: ['offices', 'offices.phones'],
+  async getListOfficeRoomWorkByCompany(id: string): Promise<DTO_RQ_Office[]> {
+    const offices = await this.officeRepository.find({
+      where: { company_id: id },
+      relations: ['phones'],
+      order: { created_at: 'DESC' },
     });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
+    if (!offices || offices.length === 0) {
+      throw new NotFoundException(
+        'Không tìm thấy văn phòng nào cho công ty này',
+      );
     }
-
-    return company.offices.map((office) => ({
-      id: office.id,
-      name: office.name,
-      code: office.code,
-      address: office.address,
-      note: office.note,
-      status: office.status,
-      phones: (office.phones || []).map((phone) => ({
-        id: phone.id,
-        phone: phone.phone,
-        type: phone.type,
-      })),
-      company_id: company.id,
-      company_name: company.name,
-      company_code: company.code,
-    }));
+    return offices.map((office) => OfficeMapper.toDTO(office));
   }
 }
