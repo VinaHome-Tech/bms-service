@@ -71,8 +71,4 @@ export class Company {
   })
   tickets: Ticket[];
 
-  @OneToMany(() => Vehicle, (vehicle) => vehicle.company, {
-    onDelete: 'CASCADE',
-  })
-  vehicles: Vehicle[];
 }

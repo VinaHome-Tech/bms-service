@@ -1,12 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Company } from '../company/company.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Trip } from '../trip/trip.entity';
 
 @Entity('tbl_vehicle')
@@ -41,11 +33,11 @@ export class Vehicle {
   @Column()
   maintenance_due: Date;
 
-  @ManyToOne(() => Company, (company) => company.vehicles, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
+  @Column()
+  company_id: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
 
   @OneToMany(() => Trip, (trip) => trip.vehicle)
   trips: Trip[];

@@ -1,4 +1,4 @@
-export class DTO_RQ_CreateVehicle {
+export class DTO_RQ_Vehicle {
   license_plate: string;
   engine_number: string;
   frame_number: string;
@@ -8,7 +8,6 @@ export class DTO_RQ_CreateVehicle {
   phone: string;
   registration_expiry: Date;
   maintenance_due: Date;
-  company_id: number;
 }
 export class DTO_RQ_UpdateVehicle {
   license_plate: string;
