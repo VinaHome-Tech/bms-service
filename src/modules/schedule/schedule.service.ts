@@ -40,7 +40,7 @@ export class ScheduleService {
     const existingRoute = await this.routeRepository.findOne({
       where: {
         id: data.route_id,
-        company: { id: data.company_id },
+        // company: { id: data.company_id },
       },
       relations: ['company'],
     });

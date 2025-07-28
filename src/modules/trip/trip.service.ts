@@ -65,7 +65,7 @@ export class TripService {
         throw new NotFoundException('Công ty không tồn tại');
       }
       const existingRoute = await this.routeRepository.findOne({
-        where: { id: data.route, company: { id: data.company } },
+        // where: { id: data.route, company: { id: data.company } },
         relations: ['company'],
       });
       if (!existingRoute) {

@@ -1,26 +1,32 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { RouteService } from './route.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_CreateRoute, DTO_RQ_UpdateRoute } from './route.dto';
+import { DTO_RQ_Route } from './route.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class RouteController {
   constructor(private readonly routeService: RouteService) {}
 
   @MessagePattern({ bms: 'create_route' })
-  async createRoute(@Payload() data: DTO_RQ_CreateRoute) {
+  async createRoute(
+    @Payload() payload: { user: DTO_RQ_UserAction; data_create: DTO_RQ_Route },
+  ) {
     try {
-      const result = await this.routeService.createRoute(data);
+      const result = await this.routeService.createRoute(
+        payload.user,
+        payload.data_create,
+      );
       return {
         success: true,
         statusCode: HttpStatus.CREATED,
-        message: 'Tạo tuyến thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -28,42 +34,48 @@ export class RouteController {
 
   @MessagePattern({ bms: 'update_route' })
   async updateRoute(
-    @Payload() payload: { id: number; data: DTO_RQ_UpdateRoute },
+    @Payload()
+    payload: {
+      id: number;
+      user: DTO_RQ_UserAction;
+      data_update: DTO_RQ_Route;
+    },
   ) {
     try {
       const result = await this.routeService.updateRoute(
         payload.id,
-        payload.data,
+        payload.user,
+        payload.data_update,
       );
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Cập nhật tuyến thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'get_list_route_by_company' })
-  async getListRouteByCompany(@Payload() id: number) {
+  async getListRouteByCompany(@Payload() id: string) {
     try {
       const result = await this.routeService.getListRouteByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách tuyến thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -75,7 +87,7 @@ export class RouteController {
     data: {
       route_id: number;
       display_order: number;
-      company_id: number;
+      company_id: string;
     },
   ) {
     try {
@@ -87,31 +99,33 @@ export class RouteController {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Cập nhật thứ tự tuyến thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'delete_route' })
-  async deleteRoute(@Payload() id: number) {
+  async deleteRoute(
+    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  ) {
     try {
-      await this.routeService.deleteRoute(id);
+      await this.routeService.deleteRoute(payload.id, payload.user);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Xóa tuyến thành công',
+        message: 'Success',
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

@@ -7,12 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
 import { Route } from './route.entity';
-import {
-  DTO_RP_ListRouteName,
-  DTO_RP_Route,
-  DTO_RQ_CreateRoute,
-  DTO_RQ_UpdateRoute,
-} from './route.dto';
+import { DTO_RP_ListRouteName, DTO_RP_Route, DTO_RQ_Route } from './route.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { RouteMapper } from './route.mapper';
 
 @Injectable()
 export class RouteService {
@@ -24,23 +21,18 @@ export class RouteService {
     private readonly routeRepository: Repository<Route>,
   ) {}
 
-  async createRoute(data: DTO_RQ_CreateRoute) {
-    console.log('Received data for createRoute:', data);
-
-    const company = await this.companyRepository.findOne({
-      where: { id: data.company_id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
+  async createRoute(
+    user: DTO_RQ_UserAction,
+    data_create: DTO_RQ_Route,
+  ): Promise<DTO_RP_Route> {
+    console.log('User:', user);
+    console.log('Data Create:', data_create);
 
     const existingRoute = await this.routeRepository.findOne({
       where: {
-        route_name: data.route_name,
-        company: { id: data.company_id },
+        route_name: data_create.route_name,
+        company_id: user.company_id,
       },
-      relations: ['company'],
     });
 
     if (existingRoute) {
@@ -49,7 +41,7 @@ export class RouteService {
 
     const maxOrderRoute = await this.routeRepository
       .createQueryBuilder('route')
-      .where('route.company_id = :companyId', { companyId: data.company_id })
+      .where('route.company_id = :companyId', { companyId: user.company_id })
       .select('MAX(route.display_order)', 'max')
       .getRawOne();
 
@@ -57,68 +49,32 @@ export class RouteService {
     const newDisplayOrder = Number(maxDisplayOrder) + 1;
 
     const route = this.routeRepository.create({
-      base_price: data.base_price,
-      company: company,
-      created_by: data.created_by,
-      distance: data.distance,
-      e_ticket_price: data.e_ticket_price,
-      journey: data.journey,
-      note: data.note,
-      route_name: data.route_name,
-      route_name_e_ticket: data.route_name_e_ticket,
-      short_name: data.short_name,
-      status: data.status,
+      base_price: data_create.base_price,
+      company_id: user.company_id,
+      distance: data_create.distance,
+      e_ticket_price: data_create.e_ticket_price,
+      journey: data_create.journey,
+      note: data_create.note,
+      route_name: data_create.route_name,
+      route_name_e_ticket: data_create.route_name_e_ticket,
+      short_name: data_create.short_name,
+      status: data_create.status,
       display_order: newDisplayOrder,
     });
 
     const savedRoute = await this.routeRepository.save(route);
 
-    return {
-      id: savedRoute.id,
-      base_price: savedRoute.base_price,
-      created_by: savedRoute.created_by,
-      distance: savedRoute.distance,
-      e_ticket_price: savedRoute.e_ticket_price,
-      journey: savedRoute.journey,
-      note: savedRoute.note,
-      route_name: savedRoute.route_name,
-      route_name_e_ticket: savedRoute.route_name_e_ticket,
-      short_name: savedRoute.short_name,
-      status: savedRoute.status,
-      display_order: savedRoute.display_order,
-      created_at: savedRoute.created_at,
-    };
+    return RouteMapper.toDTO(savedRoute);
   }
 
-  async getListRouteByCompany(id: number) {
-    const company = await this.companyRepository.findOne({
-      where: { id: id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
+  async getListRouteByCompany(id: string) {
+    console.log('Received company ID:', id);
     const routes = await this.routeRepository.find({
-      where: { company: { id: id } },
-      order: { display_order: 'ASC', created_at: 'DESC' },
+      where: { company_id: id },
+      order: { display_order: 'ASC' },
     });
 
-    return routes.map((route) => ({
-      id: route.id,
-      base_price: route.base_price,
-      created_by: route.created_by,
-      distance: route.distance,
-      e_ticket_price: route.e_ticket_price,
-      journey: route.journey,
-      note: route.note,
-      display_order: route.display_order,
-      route_name: route.route_name,
-      route_name_e_ticket: route.route_name_e_ticket,
-      short_name: route.short_name,
-      status: route.status,
-      created_at: route.created_at,
-    }));
+    return routes.map((route) => RouteMapper.toDTO(route));
   }
 
   async getListRouteNameByCompany(id: number): Promise<DTO_RP_ListRouteName[]> {
@@ -131,7 +87,7 @@ export class RouteService {
     }
 
     const routes = await this.routeRepository.find({
-      where: { company: { id: id } },
+      // where: { company: { id: id } },
       select: ['id', 'route_name'],
       order: { display_order: 'ASC', created_at: 'DESC' },
     });
@@ -144,69 +100,35 @@ export class RouteService {
 
   async updateRoute(
     id: number,
-    data: DTO_RQ_UpdateRoute,
+    user: DTO_RQ_UserAction,
+    data_update: DTO_RQ_Route,
   ): Promise<DTO_RP_Route> {
     const route = await this.routeRepository.findOne({
       where: { id: id },
-      relations: ['company'],
     });
 
     if (!route) {
       throw new NotFoundException('Tuyến không tồn tại');
     }
 
-    const company = await this.companyRepository.findOne({
-      where: { id: data.company_id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
     const existingRoute = await this.routeRepository.findOne({
       where: {
-        route_name: data.route_name,
-        company: { id: data.company_id },
+        route_name: data_update.route_name,
+        company_id: user.company_id,
       },
-      relations: ['company'],
     });
     if (existingRoute && existingRoute.id !== id) {
       throw new ConflictException('Tên tuyến đã tồn tại.');
     }
-    route.base_price = data.base_price;
-    route.company = company;
-    route.created_by = data.created_by;
-    route.distance = data.distance;
-    route.e_ticket_price = data.e_ticket_price;
-    route.journey = data.journey;
-    route.note = data.note;
-    route.route_name = data.route_name;
-    route.route_name_e_ticket = data.route_name_e_ticket;
-    route.short_name = data.short_name;
-    route.status = data.status;
-    route.created_at = new Date();
-    const updatedRoute = await this.routeRepository.save(route);
-    return {
-      id: updatedRoute.id,
-      base_price: updatedRoute.base_price,
-      created_by: updatedRoute.created_by,
-      distance: updatedRoute.distance,
-      e_ticket_price: updatedRoute.e_ticket_price,
-      journey: updatedRoute.journey,
-      note: updatedRoute.note,
-      display_order: updatedRoute.display_order,
-      route_name: updatedRoute.route_name,
-      route_name_e_ticket: updatedRoute.route_name_e_ticket,
-      short_name: updatedRoute.short_name,
-      status: updatedRoute.status,
-      created_at: updatedRoute.created_at,
-    };
+    Object.assign(existingRoute, data_update);
+    const updatedRoute = await this.routeRepository.save(existingRoute);
+    return RouteMapper.toDTO(updatedRoute);
   }
 
   async updateRouteOrder(
     id: number,
     display_order: number,
-    company_id: number,
+    company_id: string,
   ): Promise<DTO_RP_Route> {
     console.log('Received data for updateRouteOrder:', {
       id,
@@ -217,7 +139,7 @@ export class RouteService {
     const route = await this.routeRepository.findOne({
       where: {
         id: id,
-        company: { id: company_id },
+        company_id: company_id,
       },
     });
 
@@ -230,27 +152,14 @@ export class RouteService {
     route.display_order = display_order;
     const updatedRoute = await this.routeRepository.save(route);
 
-    return {
-      id: updatedRoute.id,
-      base_price: updatedRoute.base_price,
-      created_by: updatedRoute.created_by,
-      distance: updatedRoute.distance,
-      e_ticket_price: updatedRoute.e_ticket_price,
-      journey: updatedRoute.journey,
-      note: updatedRoute.note,
-      display_order: updatedRoute.display_order,
-      route_name: updatedRoute.route_name,
-      route_name_e_ticket: updatedRoute.route_name_e_ticket,
-      short_name: updatedRoute.short_name,
-      status: updatedRoute.status,
-      created_at: updatedRoute.created_at,
-    };
+    return RouteMapper.toDTO(updatedRoute);
   }
 
-  async deleteRoute(id: number): Promise<void> {
+  async deleteRoute(id: number, user: DTO_RQ_UserAction): Promise<void> {
+    console.log('Delete Route ID:', id);
+    console.log('User:', user);
     const route = await this.routeRepository.findOne({
       where: { id: id },
-      relations: ['company'],
     });
 
     if (!route) {
@@ -273,7 +182,7 @@ export class RouteService {
 
     const routes = await this.routeRepository.find({
       where: {
-        company: { id: id },
+        // company: { id: id },
         status: true,
       },
       select: ['id', 'route_name'],

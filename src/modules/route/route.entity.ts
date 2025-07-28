@@ -2,12 +2,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../company/company.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { Trip } from '../trip/trip.entity';
 
@@ -35,20 +32,16 @@ export class Route {
   status: boolean;
   @Column()
   display_order: number;
+
   @Column()
-  created_by: string;
+  company_id: string;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
   created_at: Date;
-
-  @ManyToOne(() => Company, (company) => company.routes, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
 
   @OneToMany(() => Schedule, (schedule) => schedule.route)
   schedule: Schedule[];

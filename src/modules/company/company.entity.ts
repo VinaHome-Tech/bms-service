@@ -52,8 +52,8 @@ export class Company {
   // @OneToMany(() => Office, (office) => office.company)
   // offices: Office[];
 
-  @OneToMany(() => Route, (route) => route.company)
-  routes: Route[];
+  // @OneToMany(() => Route, (route) => route.company)
+  // routes: Route[];
 
   @OneToMany(() => SeatChart, (seatChart) => seatChart.company)
   seat_charts: SeatChart[];
@@ -70,5 +70,4 @@ export class Company {
     onDelete: 'CASCADE',
   })
   tickets: Ticket[];
-
 }
