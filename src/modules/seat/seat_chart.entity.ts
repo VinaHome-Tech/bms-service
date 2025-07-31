@@ -2,12 +2,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../company/company.entity';
 import { Seat } from './seat.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { Trip } from '../trip/trip.entity';
@@ -26,8 +23,6 @@ export class SeatChart {
   total_row: number;
   @Column()
   total_column: number;
-  @Column()
-  created_by: string;
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',
@@ -35,11 +30,8 @@ export class SeatChart {
   })
   created_at: Date;
 
-  @ManyToOne(() => Company, (company) => company.seat_charts, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
+  @Column()
+  company_id: string;
 
   @OneToMany(() => Seat, (seat) => seat.seat_chart, {
     cascade: true,

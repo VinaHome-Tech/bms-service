@@ -10,6 +10,8 @@ import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
 import { Seat } from './seat.entity';
 import { SeatChart } from './seat_chart.entity';
+import { SeatMapper } from './seat.mapper';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Injectable()
 export class SeatService {
@@ -23,40 +25,33 @@ export class SeatService {
   ) {}
 
   async createSeatChart(
-    data: DTO_RQ_CreateSeatChart,
+    user: DTO_RQ_UserAction,
+    data_create: DTO_RQ_CreateSeatChart,
   ): Promise<DTO_RP_SeatChart> {
-    console.log(data);
-    const company = await this.companyRepository.findOne({
-      where: { id: data.company_id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
+    console.log('User:', user);
+    console.log('Data Create:', data_create);
 
     const existingSeatChart = await this.seatChartRepository.findOne({
       where: {
-        company: { id: data.company_id },
-        seat_chart_name: data.seat_chart_name,
+        company_id: user.company_id,
+        seat_chart_name: data_create.seat_chart_name,
       },
-      relations: ['company'],
     });
     if (existingSeatChart) {
       throw new NotFoundException('Sơ đồ ghế đã tồn tại.');
     }
 
     const newSeatChart = this.seatChartRepository.create({
-      seat_chart_name: data.seat_chart_name,
-      seat_chart_type: data.seat_chart_type,
-      total_floor: data.total_floor,
-      total_row: data.total_row,
-      total_column: data.total_column,
-      created_by: data.created_by,
-      company: company,
+      seat_chart_name: data_create.seat_chart_name,
+      seat_chart_type: data_create.seat_chart_type,
+      total_floor: data_create.total_floor,
+      total_row: data_create.total_row,
+      total_column: data_create.total_column,
+      company_id: user.company_id,
     });
     const savedSeatChart = await this.seatChartRepository.save(newSeatChart);
 
-    const seatsToCreate = data.seats.map((seat) => ({
+    const seatsToCreate = data_create.seats.map((seat) => ({
       name: seat.name,
       code: seat.code,
       status: seat.status,
@@ -69,65 +64,29 @@ export class SeatService {
 
     const savedSeats = await this.seatRepository.save(seatsToCreate);
 
-    return {
-      id: savedSeatChart.id,
-      seat_chart_name: savedSeatChart.seat_chart_name,
-      seat_chart_type: savedSeatChart.seat_chart_type,
-      total_floor: savedSeatChart.total_floor,
-      total_row: savedSeatChart.total_row,
-      total_column: savedSeatChart.total_column,
-      created_by: savedSeatChart.created_by,
-      created_at: savedSeatChart.created_at,
-      company_id: savedSeatChart.company.id,
-      seats: savedSeats.map((seat) => ({
-        id: seat.id,
-        code: seat.code,
-        name: seat.name,
-        status: seat.status,
-        floor: seat.floor,
-        row: seat.row,
-        column: seat.column,
-        type: seat.type,
-      })),
-    };
+    return SeatMapper.toDTO({
+      ...savedSeatChart,
+      seats: savedSeats,
+    });
   }
 
-  async getSeatChartByCompany(id: number): Promise<DTO_RP_SeatChart[]> {
+  async getSeatChartByCompany(id: string): Promise<DTO_RP_SeatChart[]> {
+    console.log('Received company ID:', id);
     const seatCharts = await this.seatChartRepository.find({
-      where: { company: { id: id } },
-      relations: ['company', 'seats'],
+      where: { company_id: id },
+      relations: ['seats'],
     });
 
-    if (!seatCharts || seatCharts.length === 0) {
-      throw new NotFoundException(
-        'Không tìm thấy sơ đồ ghế nào cho công ty này.',
-      );
+    if (!seatCharts.length) {
+      throw new NotFoundException('Không có sơ đồ ghế nào');
     }
 
-    return seatCharts.map((seatChart) => ({
-      id: seatChart.id,
-      seat_chart_name: seatChart.seat_chart_name,
-      seat_chart_type: seatChart.seat_chart_type,
-      total_floor: seatChart.total_floor,
-      total_row: seatChart.total_row,
-      total_column: seatChart.total_column,
-      created_by: seatChart.created_by,
-      created_at: seatChart.created_at,
-      company_id: seatChart.company.id,
-      seats: seatChart.seats.map((seat) => ({
-        id: seat.id,
-        code: seat.code,
-        name: seat.name,
-        status: seat.status,
-        floor: seat.floor,
-        row: seat.row,
-        column: seat.column,
-        type: seat.type,
-      })),
-    }));
+    return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
   }
 
-  async deleteSeatChart(id: number): Promise<void> {
+  async deleteSeatChart(id: number, user: DTO_RQ_UserAction): Promise<void> {
+    console.log('Delete Seat Chart ID:', id);
+    console.log('User:', user);
     const seatChart = await this.seatChartRepository.findOne({
       where: { id: id },
       relations: ['seats'],
@@ -145,14 +104,14 @@ export class SeatService {
 
   async updateSeatChart(
     id: number,
-    data: DTO_RQ_UpdateSeatChart,
+    data_update: DTO_RQ_UpdateSeatChart,
   ): Promise<DTO_RP_SeatChart> {
-    console.log(data);
+    console.log(data_update);
 
     // Lấy thông tin seat chart hiện tại với tất cả seats liên quan
     const seatChart = await this.seatChartRepository.findOne({
       where: { id: id },
-      relations: ['company', 'seats'],
+      relations: ['seats'],
     });
 
     if (!seatChart) {
@@ -160,19 +119,17 @@ export class SeatService {
     }
 
     // Cập nhật thông tin chính của seat chart
-    seatChart.seat_chart_name = data.seat_chart_name;
-    seatChart.seat_chart_type = data.seat_chart_type;
-    seatChart.total_floor = data.total_floor;
-    seatChart.total_row = data.total_row;
-    seatChart.total_column = data.total_column;
-    seatChart.created_by = data.created_by;
-    seatChart.created_at = new Date();
+    seatChart.seat_chart_name = data_update.seat_chart_name;
+    seatChart.seat_chart_type = data_update.seat_chart_type;
+    seatChart.total_floor = data_update.total_floor;
+    seatChart.total_row = data_update.total_row;
+    seatChart.total_column = data_update.total_column;
 
     const updatedSeatChart = await this.seatChartRepository.save(seatChart);
 
     // Lấy danh sách seats hiện tại
     const existingSeats = updatedSeatChart.seats || [];
-    const newSeatsData = data.seats || [];
+    const newSeatsData = data_update.seats || [];
 
     // Tạo map để kiểm tra nhanh
     const existingSeatMap = new Map<string, any>();
@@ -224,7 +181,7 @@ export class SeatService {
     // Lấy lại thông tin seat chart sau khi cập nhật
     const finalSeatChart = await this.seatChartRepository.findOne({
       where: { id: updatedSeatChart.id },
-      relations: ['company', 'seats'],
+      relations: ['seats'],
     });
 
     if (!finalSeatChart) {
@@ -233,32 +190,12 @@ export class SeatService {
       );
     }
 
-    return {
-      id: finalSeatChart.id,
-      seat_chart_name: finalSeatChart.seat_chart_name,
-      seat_chart_type: finalSeatChart.seat_chart_type,
-      total_floor: finalSeatChart.total_floor,
-      total_row: finalSeatChart.total_row,
-      total_column: finalSeatChart.total_column,
-      created_by: finalSeatChart.created_by,
-      created_at: finalSeatChart.created_at,
-      company_id: finalSeatChart.company.id,
-      seats: finalSeatChart.seats.map((seat) => ({
-        id: seat.id,
-        code: seat.code,
-        name: seat.name,
-        status: seat.status,
-        floor: seat.floor,
-        row: seat.row,
-        column: seat.column,
-        type: seat.type,
-      })),
-    };
+    return SeatMapper.toDTO(finalSeatChart);
   }
 
   async getSeatChartNameByCompany(id: number): Promise<DTO_RP_SeatChartName[]> {
     const seatCharts = await this.seatChartRepository.find({
-      where: { company: { id: id } },
+      // where: { company: { id: id } },
       select: ['id', 'seat_chart_name'],
     });
 

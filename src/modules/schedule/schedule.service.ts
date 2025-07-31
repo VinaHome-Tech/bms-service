@@ -54,7 +54,7 @@ export class ScheduleService {
       const existingSeatChart = await this.seatChartRepository.findOne({
         where: {
           id: data.seat_chart_id,
-          company: { id: data.company_id },
+          // company: { id: data.company_id },
         },
         relations: ['company'],
       });

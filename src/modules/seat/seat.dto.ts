@@ -4,8 +4,6 @@ export class DTO_RQ_CreateSeatChart {
   total_floor: number;
   total_row: number;
   total_column: number;
-  created_by: string;
-  company_id: number;
   seats: DTO_RQ_CreateSeat[];
 }
 export class DTO_RQ_CreateSeat {
@@ -47,9 +45,6 @@ export class DTO_RP_SeatChart {
   total_floor: number;
   total_row: number;
   total_column: number;
-  created_by: string;
-  created_at: Date;
-  company_id: number;
   seats: DTO_RP_Seat[];
 }
 export class DTO_RP_Seat {

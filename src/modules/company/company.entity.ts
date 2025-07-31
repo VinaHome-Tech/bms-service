@@ -55,8 +55,8 @@ export class Company {
   // @OneToMany(() => Route, (route) => route.company)
   // routes: Route[];
 
-  @OneToMany(() => SeatChart, (seatChart) => seatChart.company)
-  seat_charts: SeatChart[];
+  // @OneToMany(() => SeatChart, (seatChart) => seatChart.company)
+  // seat_charts: SeatChart[];
 
   @OneToMany(() => Schedule, (schedule) => schedule.company)
   schedules: Schedule[];
