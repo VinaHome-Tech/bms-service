@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   DTO_RP_Schedule,
-  DTO_RQ_CreateSchedule,
+  DTO_RQ_Schedule,
   DTO_RQ_UpdateSchedule,
 } from './schedule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +14,7 @@ import { Company } from '../company/company.entity';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Schedule } from './schedule.entity';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -27,22 +32,17 @@ export class ScheduleService {
     private readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
-  async createSchedule(data: DTO_RQ_CreateSchedule): Promise<DTO_RP_Schedule> {
-    console.log('Received data for createSchedule:', data);
-
-    const existingCompany = await this.companyRepository.findOne({
-      where: { id: data.company_id },
-    });
-    if (!existingCompany) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
+  async createSchedule(
+    user: DTO_RQ_UserAction,
+    data_create: DTO_RQ_Schedule,
+  ): Promise<DTO_RP_Schedule> {
+    console.log('User:', user);
+    console.log('Data Create:', data_create);
     const existingRoute = await this.routeRepository.findOne({
       where: {
-        id: data.route_id,
-        // company: { id: data.company_id },
+        id: data_create.route_id,
+        company_id: user.company_id,
       },
-      relations: ['company'],
     });
     if (!existingRoute) {
       throw new NotFoundException(
@@ -50,13 +50,12 @@ export class ScheduleService {
       );
     }
 
-    if (data.seat_chart_id != null) {
+    if (data_create.seat_chart_id != null) {
       const existingSeatChart = await this.seatChartRepository.findOne({
         where: {
-          id: data.seat_chart_id,
-          // company: { id: data.company_id },
+          id: data_create.seat_chart_id,
+          company_id: user.company_id,
         },
-        relations: ['company'],
       });
       if (!existingSeatChart) {
         throw new NotFoundException(
@@ -70,24 +69,26 @@ export class ScheduleService {
       return new Date(year, month - 1, day);
     };
 
-    const startDate = parseDateWithoutTimezone(data.start_date);
-    const endDate = data.is_known_end_date
-      ? parseDateWithoutTimezone(data.end_date)
+    const startDate = parseDateWithoutTimezone(data_create.start_date);
+    const endDate = data_create.is_known_end_date
+      ? parseDateWithoutTimezone(data_create.end_date)
       : null;
 
     const scheduleEntity = this.scheduleRepository.create({
-      ...data,
-      company: { id: data.company_id },
-      route: { id: data.route_id },
-      seat_chart: data.seat_chart_id ? { id: data.seat_chart_id } : null,
+      ...data_create,
+      company_id: user.company_id,
+      route: { id: data_create.route_id },
+      seat_chart: data_create.seat_chart_id
+        ? { id: data_create.seat_chart_id }
+        : null,
       start_date: startDate,
       end_date: endDate,
-      weekdays: data.weekdays,
+      weekdays: data_create.weekdays,
     });
 
     const savedSchedule = await this.scheduleRepository.save(scheduleEntity);
     if (!savedSchedule) {
-      throw new Error('Không thể tạo lịch chạy');
+      throw new BadRequestException('Không thể tạo lịch chạy');
     }
 
     const fullSchedule = await this.scheduleRepository.findOne({
@@ -96,7 +97,9 @@ export class ScheduleService {
     });
 
     if (!fullSchedule) {
-      throw new Error('Không thể lấy thông tin lịch trình sau khi tạo');
+      throw new BadRequestException(
+        'Không thể lấy thông tin lịch trình sau khi tạo',
+      );
     }
 
     const response: DTO_RP_Schedule = {
@@ -105,48 +108,35 @@ export class ScheduleService {
       route_name: fullSchedule.route.route_name,
       seat_chart_id: fullSchedule.seat_chart?.id || null,
       seat_chart_name: fullSchedule.seat_chart?.seat_chart_name || null,
-      start_time: data.start_time,
+      start_time: fullSchedule.start_time,
       repeat_type: fullSchedule.repeat_type,
-      weekdays: data.weekdays,
+      weekdays: fullSchedule.weekdays,
       odd_even_type: fullSchedule.odd_even_type,
-      start_date: data.start_date,
-      end_date: data.is_known_end_date ? data.end_date : null,
+      start_date: fullSchedule.start_date ? data_create.start_date : null,
+      end_date: fullSchedule.is_known_end_date ? data_create.end_date : null,
       is_known_end_date: fullSchedule.is_known_end_date,
       trip_type: fullSchedule.trip_type,
-      created_by: fullSchedule.created_by,
-      created_at: fullSchedule.created_at.toISOString(),
     };
 
     console.log('Created schedule:', response);
     return response;
   }
 
-  async getListSchedulesByCompany(id: number): Promise<DTO_RP_Schedule[]> {
+  async getListSchedulesByCompany(id: string): Promise<DTO_RP_Schedule[]> {
     console.log('Received company ID for getListSchedulesByCompany:', id);
 
-    // 1. Validate company exists
-    const existingCompany = await this.companyRepository.findOne({
-      where: { id },
-    });
-    if (!existingCompany) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
-    // 2. Get schedules with relations
     const schedules = await this.scheduleRepository.find({
-      where: { company: { id } },
+      where: { company_id: id },
       relations: ['route', 'seat_chart'],
-      order: { start_time: 'ASC' },
+      order: { created_at: 'ASC' },
     });
 
     if (!schedules?.length) return [];
 
-    // 3. Process response data
     const response: DTO_RP_Schedule[] = schedules.map((schedule) => {
-      // Format date to local timezone (Vietnam UTC+7)
       const adjustTimezone = (date: Date) => {
         if (!date) return null;
-        return new Date(date.getTime() + 7 * 60 * 60 * 1000); // Add 7 hours for UTC+7
+        return new Date(date.getTime() + 7 * 60 * 60 * 1000);
       };
 
       // Format date to YYYY-MM-DD
@@ -159,7 +149,6 @@ export class ScheduleService {
       const localEndDate = schedule.end_date
         ? adjustTimezone(schedule.end_date)
         : null;
-      const localCreatedAt = adjustTimezone(schedule.created_at);
       const weekdays =
         typeof schedule.weekdays === 'string'
           ? (schedule.weekdays as string).replace(/[{}"]/g, '').split(',')
@@ -182,12 +171,10 @@ export class ScheduleService {
         repeat_type: schedule.repeat_type,
         weekdays,
         odd_even_type: schedule.odd_even_type,
-        start_date: formatDate(localStartDate), // Fixed timezone
+        start_date: formatDate(localStartDate),
         end_date: schedule.is_known_end_date ? formatDate(localEndDate) : null, // Fixed timezone
         is_known_end_date: schedule.is_known_end_date,
         trip_type: schedule.trip_type,
-        created_by: schedule.created_by,
-        created_at: localCreatedAt.toISOString(), // Adjusted to local time
       };
     });
 
@@ -195,8 +182,9 @@ export class ScheduleService {
     return response;
   }
 
-  async deleteSchedule(id: number): Promise<void> {
-    console.log('Received ID for deleteSchedule:', id);
+  async deleteSchedule(id: number, user: DTO_RQ_UserAction): Promise<void> {
+    console.log('Delete ID', id);
+    console.log('User:', user);
 
     const schedule = await this.scheduleRepository.findOne({
       where: { id },
@@ -209,10 +197,8 @@ export class ScheduleService {
 
     const result = await this.scheduleRepository.delete(id);
     if (result.affected === 0) {
-      throw new Error('Không thể xóa lịch chạy');
+      throw new BadRequestException('Không thể xóa lịch chạy');
     }
-
-    console.log('Deleted schedule with ID:', id);
   }
 
   async updateSchedule(
@@ -235,33 +221,32 @@ export class ScheduleService {
         throw new Error('Lịch chạy không tồn tại');
       }
 
-      const updatedSchedule = await this.scheduleRepository.save({
-        ...existingSchedule,
-        ...data,
-      });
-      if (!updatedSchedule) {
-        throw new Error('Không thể cập nhật lịch chạy');
-      }
-      const response: DTO_RP_Schedule = {
-        id: updatedSchedule.id,
-        route_id: updatedSchedule.route_id,
-        route_name: updatedSchedule.route?.route_name || '',
-        seat_chart_id: updatedSchedule.seat_chart_id,
-        seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
-        start_time: updatedSchedule.start_time,
-        repeat_type: updatedSchedule.repeat_type,
-        weekdays: updatedSchedule.weekdays || [],
-        odd_even_type: updatedSchedule.odd_even_type || null,
-        start_date: updatedSchedule.start_date,
-        end_date: updatedSchedule.end_date || null,
-        is_known_end_date: updatedSchedule.is_known_end_date || false,
-        trip_type: updatedSchedule.trip_type || 0,
-        created_by: updatedSchedule.created_by,
-        created_at: updatedSchedule.created_at.toISOString(),
-      };
+      // const updatedSchedule = await this.scheduleRepository.save({
+      //   ...existingSchedule,
+      //   ...data,
+      // });
+      // if (!updatedSchedule) {
+      //   throw new Error('Không thể cập nhật lịch chạy');
+      // }
+      // const response: DTO_RP_Schedule = {
+      //   id: updatedSchedule.id,
+      //   route_id: updatedSchedule.route_id,
+      //   route_name: updatedSchedule.route?.route_name || '',
+      //   seat_chart_id: updatedSchedule.seat_chart_id,
+      //   seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
+      //   start_time: updatedSchedule.start_time,
+      //   repeat_type: updatedSchedule.repeat_type,
+      //   weekdays: updatedSchedule.weekdays || [],
+      //   odd_even_type: updatedSchedule.odd_even_type || null,
+      //   start_date: updatedSchedule.start_date,
+      //   end_date: updatedSchedule.end_date || null,
+      //   is_known_end_date: updatedSchedule.is_known_end_date || false,
+      //   trip_type: updatedSchedule.trip_type || 0,
+      // };
 
-      console.log('Successfully updated schedule:', response);
-      return response;
+      // console.log('Successfully updated schedule:', response);
+      // return response;
+      return null;
     } catch (error) {
       console.error('Error updating schedule:', error);
       throw error;

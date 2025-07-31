@@ -107,7 +107,7 @@ export class TripService {
       const isOddDay = dayNumber % 2 !== 0;
 
       const allSchedules = await this.scheduleRepository.find({
-        where: { route: { id: data.route }, company: { id: data.company } },
+        // where: { route: { id: data.route }, company: { id: data.company } },
         relations: ['company', 'route', 'seat_chart', 'seat_chart.seats'],
       });
 

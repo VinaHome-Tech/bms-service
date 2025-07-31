@@ -194,16 +194,14 @@ export class SeatService {
     return SeatMapper.toDTO(finalSeatChart);
   }
 
-  async getSeatChartNameByCompany(id: number): Promise<DTO_RP_SeatChartName[]> {
+  async getSeatChartNameByCompany(id: string): Promise<DTO_RP_SeatChartName[]> {
     const seatCharts = await this.seatChartRepository.find({
-      // where: { company: { id: id } },
+      where: { company_id: id },
       select: ['id', 'seat_chart_name'],
     });
 
     if (!seatCharts || seatCharts.length === 0) {
-      throw new NotFoundException(
-        'Không tìm thấy sơ đồ ghế nào cho công ty này.',
-      );
+      throw new NotFoundException('Không tìm thấy sơ đồ ghế nào');
     }
 
     return seatCharts.map((seatChart) => ({

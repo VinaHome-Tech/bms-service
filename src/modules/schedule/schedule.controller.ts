@@ -1,64 +1,79 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_CreateSchedule, DTO_RQ_UpdateSchedule } from './schedule.dto';
+import { DTO_RQ_Schedule, DTO_RQ_UpdateSchedule } from './schedule.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
   @MessagePattern({ bms: 'create_schedule' })
-  async createSchedule(data: DTO_RQ_CreateSchedule) {
+  async createSchedule(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      data_create: DTO_RQ_Schedule;
+    },
+  ) {
     try {
-      const result = await this.scheduleService.createSchedule(data);
+      const result = await this.scheduleService.createSchedule(
+        payload.user,
+        payload.data_create,
+      );
       return {
         success: true,
         statusCode: HttpStatus.CREATED,
-        message: 'Tạo lịch chạy thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'get_list_schedules_by_company' })
-  async getListSchedulesByCompany(@Payload() id: number) {
+  async getListSchedulesByCompany(@Payload() id: string) {
     try {
       const result = await this.scheduleService.getListSchedulesByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách lịch chạy thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'delete_schedule' })
-  async deleteSchedule(@Payload() id: number) {
+  async deleteSchedule(
+    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  ) {
     try {
-      const result = await this.scheduleService.deleteSchedule(id);
+      const result = await this.scheduleService.deleteSchedule(
+        payload.id,
+        payload.user,
+      );
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Xóa lịch chạy thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

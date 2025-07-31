@@ -58,8 +58,8 @@ export class Company {
   // @OneToMany(() => SeatChart, (seatChart) => seatChart.company)
   // seat_charts: SeatChart[];
 
-  @OneToMany(() => Schedule, (schedule) => schedule.company)
-  schedules: Schedule[];
+  // @OneToMany(() => Schedule, (schedule) => schedule.company)
+  // schedules: Schedule[];
 
   @OneToMany(() => Trip, (trip) => trip.company, {
     onDelete: 'CASCADE',

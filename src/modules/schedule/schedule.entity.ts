@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../company/company.entity';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 
@@ -39,9 +38,6 @@ export class Schedule {
   @Column()
   trip_type: number; // Loại chuyến đi (1: Chuyến cố định chở khách, 2: Chuyến cố định chở hàng, 3: Xe hợp đồng)
 
-  @Column()
-  created_by: string; // Người tạo lịch chạy
-
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',
@@ -49,11 +45,8 @@ export class Schedule {
   })
   created_at: Date;
 
-  @ManyToOne(() => Company, (company) => company.schedules, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
+  @Column()
+  company_id: string;
 
   @ManyToOne(() => Route, (route) => route.schedule, {
     onDelete: 'CASCADE',

@@ -91,32 +91,32 @@ export class SeatController {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Cập nhật sơ đồ ghế thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'get_seat_chart_name_by_company' })
-  async getSeatChartNameByCompany(@Payload() id: number) {
+  async getSeatChartNameByCompany(@Payload() id: string) {
     try {
       const result = await this.seatService.getSeatChartNameByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách tên sơ đồ ghế thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
