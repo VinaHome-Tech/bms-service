@@ -74,6 +74,7 @@ export class SeatService {
     console.log('Received company ID:', id);
     const seatCharts = await this.seatChartRepository.find({
       where: { company_id: id },
+      order: { created_at: 'ASC' },
       relations: ['seats'],
     });
 
