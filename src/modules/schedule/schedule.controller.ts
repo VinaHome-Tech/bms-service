@@ -81,12 +81,18 @@ export class ScheduleController {
 
   @MessagePattern({ bms: 'update_schedule' })
   async updateSchedule(
-    @Payload() payload: { id: number; data: DTO_RQ_UpdateSchedule },
+    @Payload()
+    payload: {
+      id: number;
+      user: DTO_RQ_UserAction;
+      data_update: DTO_RQ_Schedule;
+    },
   ) {
     try {
       const result = await this.scheduleService.updateSchedule(
         payload.id,
-        payload.data,
+        payload.user,
+        payload.data_update,
       );
       return {
         success: true,

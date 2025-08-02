@@ -25,8 +25,6 @@ export class DTO_RQ_UpdateSchedule {
   end_date: string;
   is_known_end_date: boolean;
   trip_type: number;
-  created_by: string;
-  company_id: number;
 }
 
 export class DTO_RP_Schedule {

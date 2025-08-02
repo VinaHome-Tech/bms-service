@@ -3,11 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  DTO_RP_Schedule,
-  DTO_RQ_Schedule,
-  DTO_RQ_UpdateSchedule,
-} from './schedule.dto';
+import { DTO_RP_Schedule, DTO_RQ_Schedule } from './schedule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Company } from '../company/company.entity';
@@ -203,50 +199,47 @@ export class ScheduleService {
 
   async updateSchedule(
     id: number,
-    data: DTO_RQ_UpdateSchedule,
+    user: DTO_RQ_UserAction,
+    data_update: DTO_RQ_Schedule,
   ): Promise<DTO_RP_Schedule> {
-    console.log('Received data for updateSchedule:', { id, data });
-
+    console.log('Update ID', id);
+    console.log('User:', user);
+    console.log('Data Update:', data_update);
     try {
-      if (id !== data.id) {
-        throw new Error('Dữ liệu lịch chạy không hợp lệ');
-      }
-
       const existingSchedule = await this.scheduleRepository.findOne({
         where: { id },
         relations: ['route', 'seat_chart'],
       });
 
       if (!existingSchedule) {
-        throw new Error('Lịch chạy không tồn tại');
+        throw new NotFoundException('Lịch chạy không tồn tại');
       }
 
-      // const updatedSchedule = await this.scheduleRepository.save({
-      //   ...existingSchedule,
-      //   ...data,
-      // });
-      // if (!updatedSchedule) {
-      //   throw new Error('Không thể cập nhật lịch chạy');
-      // }
-      // const response: DTO_RP_Schedule = {
-      //   id: updatedSchedule.id,
-      //   route_id: updatedSchedule.route_id,
-      //   route_name: updatedSchedule.route?.route_name || '',
-      //   seat_chart_id: updatedSchedule.seat_chart_id,
-      //   seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
-      //   start_time: updatedSchedule.start_time,
-      //   repeat_type: updatedSchedule.repeat_type,
-      //   weekdays: updatedSchedule.weekdays || [],
-      //   odd_even_type: updatedSchedule.odd_even_type || null,
-      //   start_date: updatedSchedule.start_date,
-      //   end_date: updatedSchedule.end_date || null,
-      //   is_known_end_date: updatedSchedule.is_known_end_date || false,
-      //   trip_type: updatedSchedule.trip_type || 0,
-      // };
+      const updatedSchedule = await this.scheduleRepository.save({
+        ...existingSchedule,
+        ...data_update,
+      });
+      if (!updatedSchedule) {
+        throw new BadRequestException('Không thể cập nhật lịch chạy');
+      }
+      const response: DTO_RP_Schedule = {
+        id: updatedSchedule.id,
+        route_id: updatedSchedule.route_id,
+        route_name: updatedSchedule.route?.route_name || '',
+        seat_chart_id: updatedSchedule.seat_chart_id,
+        seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
+        start_time: updatedSchedule.start_time,
+        repeat_type: updatedSchedule.repeat_type,
+        weekdays: updatedSchedule.weekdays || [],
+        odd_even_type: updatedSchedule.odd_even_type || null,
+        start_date: updatedSchedule.start_date,
+        end_date: updatedSchedule.end_date || null,
+        is_known_end_date: updatedSchedule.is_known_end_date || false,
+        trip_type: updatedSchedule.trip_type || 0,
+      };
 
-      // console.log('Successfully updated schedule:', response);
-      // return response;
-      return null;
+      console.log('Successfully updated schedule:', response);
+      return response;
     } catch (error) {
       console.error('Error updating schedule:', error);
       throw error;
