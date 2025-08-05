@@ -4,9 +4,11 @@ import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import {
   DTO_RQ_CancelTicket,
   DTO_RQ_CopyTicket,
+  DTO_RQ_MoveTicket,
   DTO_RQ_TicketPayloadUpdate,
   DTO_RQ_UserChooserTicket,
 } from './ticket.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class TicketController {
@@ -19,13 +21,13 @@ export class TicketController {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách vé thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -47,32 +49,41 @@ export class TicketController {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Cập nhật vé thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
 
   @MessagePattern({ bms: 'cancel_ticket' })
-  async cancelTicket(@Payload() payload: { data: DTO_RQ_CancelTicket }) {
+  async cancelTicket(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      data_cancel: DTO_RQ_CancelTicket;
+    },
+  ) {
     try {
-      const result = await this.ticketService.cancelTicket(payload.data);
+      const result = await this.ticketService.cancelTicket(
+        payload.user,
+        payload.data_cancel,
+      );
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Hủy vé thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -102,7 +113,148 @@ export class TicketController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Server error!',
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'move_tickets' })
+  async moveTickets(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      sourceTickets: DTO_RQ_MoveTicket[];
+      destinationTicketIds: number[];
+    },
+  ) {
+    try {
+      const result = await this.ticketService.moveTickets(
+        payload.user,
+        payload.sourceTickets,
+        payload.destinationTicketIds,
+      );
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'update_contact_status' })
+  async updateContactStatus(
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      ticketIds: number[];
+      status: number;
+    },
+  ) {
+    try {
+      const result = await this.ticketService.updateContactStatus(
+        payload.user,
+        payload.ticketIds,
+        payload.status,
+      );
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'get_list_customer_by_trip' })
+  async getListCustomerByTrip(@Payload() data: { id: number }) {
+    try {
+      const result = await this.ticketService.getListCustomerByTrip(data.id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'get_list_transit_up_by_trip' })
+  async getListTransitUpByTrip(@Payload() data: { id: number }) {
+    try {
+      const result = await this.ticketService.getListTransitUpByTrip(data.id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'get_list_transit_down_by_trip' })
+  async getListTransitDownByTrip(@Payload() data: { id: number }) {
+    try {
+      const result = await this.ticketService.getListTransitDownByTrip(data.id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'search_tickets' })
+  async searchTickets(
+    @Payload() payload: { query: string; company_id: string },
+  ) {
+    try {
+      const result = await this.ticketService.searchTickets(
+        payload.query,
+        payload.company_id,
+      );
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

@@ -162,23 +162,16 @@ export class RouteService {
   }
 
   async getListRouteNameActionByCompany(
-    id: number,
+    id: string,
   ): Promise<DTO_RP_ListRouteName[]> {
-    const company = await this.companyRepository.findOne({
-      where: { id: id },
-    });
-
-    if (!company) {
-      throw new NotFoundException('Công ty không tồn tại');
-    }
-
+    console.log('getListRouteNameActionByCompany:', id);
     const routes = await this.routeRepository.find({
       where: {
-        // company: { id: id },
+        company_id: id,
         status: true,
       },
       select: ['id', 'route_name'],
-      order: { display_order: 'ASC', created_at: 'DESC' },
+      order: { display_order: 'ASC' },
     });
 
     return routes.map((route) => ({

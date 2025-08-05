@@ -127,4 +127,23 @@ export class VehicleController {
       });
     }
   }
+
+  @MessagePattern({ bms: 'get_list_registration_expiry' })
+  async getListRegistrationExpiry(@Payload() id: string) {
+    try {
+      const result = await this.vehicleService.getListRegistrationExpiry(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Server error',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
 }

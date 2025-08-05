@@ -38,3 +38,9 @@ export class DTO_RP_LicensePlate {
   id: number;
   license_plate: string;
 }
+
+export class DTO_RP_RegistrationExpiry {
+  id: number;
+  license_plate: string;
+  registration_expiry: Date;
+}

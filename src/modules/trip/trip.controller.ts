@@ -2,6 +2,7 @@ import { Controller, HttpStatus } from '@nestjs/common';
 import { TripService } from './trip.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { DTO_RQ_GetListTrip, DTO_RQ_UpdateTrip } from './trip.dto';
+import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class TripController {
@@ -14,7 +15,7 @@ export class TripController {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách chuyến thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
@@ -28,11 +29,17 @@ export class TripController {
 
   @MessagePattern({ bms: 'update_trip_information' })
   async updateTripInformation(
-    @Payload() payload: { data: DTO_RQ_UpdateTrip; id: number },
+    @Payload()
+    payload: {
+      user: DTO_RQ_UserAction;
+      data_update: DTO_RQ_UpdateTrip;
+      id: number;
+    },
   ) {
     try {
       const result = await this.tripService.updateTripInformation(
-        payload.data,
+        payload.user,
+        payload.data_update,
         payload.id,
       );
       return {
@@ -44,7 +51,7 @@ export class TripController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Server Error',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { OfficePhone } from './office_phone.entity';
+import { Ticket } from '../ticket/ticket.entity';
 
 @Entity('tbl_office')
 export class Office {
@@ -42,4 +43,10 @@ export class Office {
     eager: true,
   })
   phones: OfficePhone[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.office, {
+    onDelete: 'SET NULL',
+    eager: true,
+  })
+  tickets: Ticket[];
 }

@@ -151,20 +151,20 @@ export class RouteController {
   }
 
   @MessagePattern({ bms: 'get_list_route_name_action_by_company' })
-  async getListRouteNameActionByCompany(@Payload() id: number) {
+  async getListRouteNameActionByCompany(@Payload() id: string) {
     try {
       const result =
         await this.routeService.getListRouteNameActionByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách tên tuyến hành động thành công',
+        message: 'Success',
         result,
       };
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

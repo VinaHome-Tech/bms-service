@@ -1,7 +1,7 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_Schedule, DTO_RQ_UpdateSchedule } from './schedule.dto';
+import { DTO_RQ_Schedule } from './schedule.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()

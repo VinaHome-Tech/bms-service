@@ -3,4 +3,5 @@ export class DTO_RQ_UserAction {
   full_name: string;
   username: string;
   company_id: string;
+  office_id: number;
 }

@@ -18,6 +18,9 @@ export class DTO_RP_Ticket {
   payment_method: string;
   user_created: string;
   office_created: string;
+  contact_status: number;
+  transit_up: boolean;
+  transit_down: boolean;
 }
 
 export class DTO_RQ_TicketPayloadUpdate {
@@ -30,7 +33,10 @@ export class DTO_RQ_TicketPayloadUpdate {
   ticket_note: string;
   ticket_display_price: number;
   payment_method: string;
-  booked_status: boolean;
+  office_id: number;
+  agent_id: number;
+  transit_up: boolean;
+  transit_down: boolean;
 }
 export class DTO_RQ_CancelTicket {
   id: number[];
@@ -55,4 +61,55 @@ export class DTO_RQ_UserChooserTicket {
   full_name: string;
   office_name: string;
   office_id: number;
+}
+
+export class DTO_RQ_MoveTicket {
+  id: number;
+  booked_status: boolean;
+  ticket_phone: string;
+  ticket_email: string;
+  ticket_customer_name: string;
+  ticket_point_up: string;
+  ticket_point_down: string;
+  ticket_note: string;
+  ticket_display_price: number;
+  payment_method: string;
+  user_created: string;
+  user_id_created: string;
+  office_id: number;
+}
+
+export class DTO_RP_ListCustomerByTrip {
+  id: number;
+  ticket_phone: string;
+  ticket_customer_name: string;
+  user_created: string;
+  ticket_note: string;
+  ticket_display_price: number;
+  ticket_point_up: string;
+  ticket_point_down: string;
+  payment_method: string;
+  seat_name: string;
+}
+
+export class DTO_RP_ListTransitUpByTrip {
+  id: number;
+  ticket_phone: string;
+  ticket_customer_name: string;
+  user_created: string;
+  ticket_note: string;
+  ticket_display_price: number;
+  ticket_point_up: string;
+  seat_name: string;
+}
+
+export class DTO_RP_ListTransitDownByTrip {
+  id: number;
+  ticket_phone: string;
+  ticket_customer_name: string;
+  user_created: string;
+  ticket_note: string;
+  ticket_display_price: number;
+  ticket_point_down: string;
+  seat_name: string;
 }

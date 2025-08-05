@@ -6,7 +6,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../company/company.entity';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Ticket } from '../ticket/ticket.entity';
@@ -29,17 +28,20 @@ export class Trip {
   @Column()
   note: string;
 
+  @Column()
+  company_id: string;
+
   @Column('jsonb', { nullable: true })
   driver: Array<{
     id: string;
-    full_name: string;
-    number_phone: string;
+    name: string;
+    phone: string;
   }>[];
   @Column('jsonb', { nullable: true })
   assistant: Array<{
     id: string;
-    full_name: string;
-    number_phone: string;
+    name: string;
+    phone: string;
   }>[];
 
   @ManyToOne(() => SeatChart, (seatChart) => seatChart.trips, {
@@ -47,12 +49,6 @@ export class Trip {
   })
   @JoinColumn({ name: 'seat_chart_id' })
   seat_chart: SeatChart;
-
-  @ManyToOne(() => Company, (company) => company.trips, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
 
   @ManyToOne(() => Route, (route) => route.trips, {
     onDelete: 'CASCADE',

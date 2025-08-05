@@ -1,12 +1,13 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../company/company.entity';
 import { Trip } from '../trip/trip.entity';
+import { Office } from '../office/office.entity';
 
 @Entity('tbl_ticket')
 export class Ticket {
@@ -65,23 +66,36 @@ export class Ticket {
   user_created: string;
 
   @Column()
-  office_created: string;
-
-  @Column()
   user_id_created: string;
 
   @Column()
-  office_id_created: number;
+  company_id: string;
 
-  @ManyToOne(() => Company, (company) => company.tickets, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'company_id' })
-  company: Company;
+  @Column()
+  contact_status: number;
+
+  @Column()
+  transit_up: boolean;
+
+  @Column()
+  transit_down: boolean;
 
   @ManyToOne(() => Trip, (trip) => trip.tickets, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'trip_id' })
   trip: Trip;
+
+  @ManyToOne(() => Office, (office) => office.tickets, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'office_id' })
+  office: Office;
+
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  created_at: Date;
 }

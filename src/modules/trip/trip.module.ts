@@ -3,7 +3,6 @@ import { TripController } from './trip.controller';
 import { TripService } from './trip.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Trip } from './trip.entity';
-import { Company } from '../company/company.entity';
 import { Route } from '../route/route.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
@@ -14,7 +13,6 @@ import { Vehicle } from '../vehicle/vehicle.entity';
   imports: [
     TypeOrmModule.forFeature([
       Trip,
-      Company,
       Route,
       Schedule,
       SeatChart,

@@ -9,6 +9,7 @@ import { Vehicle } from './vehicle.entity';
 import { Company } from '../company/company.entity';
 import {
   DTO_RP_LicensePlate,
+  DTO_RP_RegistrationExpiry,
   DTO_RP_Vehicle,
   DTO_RQ_Vehicle,
 } from './vehicle.dto';
@@ -110,7 +111,7 @@ export class VehicleService {
   async getLicensePlateByCompany(id: string): Promise<DTO_RP_LicensePlate[]> {
     console.log(id);
     const vehicles = await this.vehicleRepository.find({
-      // where: { company: { id } },
+      where: { company_id: id, status: 1 },
       select: ['id', 'license_plate'],
     });
 
@@ -121,6 +122,26 @@ export class VehicleService {
     return vehicles.map((vehicle) => ({
       id: vehicle.id,
       license_plate: vehicle.license_plate,
+    }));
+  }
+
+  async getListRegistrationExpiry(
+    id: string,
+  ): Promise<DTO_RP_RegistrationExpiry[]> {
+    const vehicles = await this.vehicleRepository.find({
+      where: { company_id: id },
+      select: ['id', 'license_plate', 'registration_expiry'],
+      order: { registration_expiry: 'ASC' },
+    });
+
+    if (!vehicles.length) {
+      throw new NotFoundException('Không có phương tiện nào');
+    }
+
+    return vehicles.map((vehicle) => ({
+      id: vehicle.id,
+      license_plate: vehicle.license_plate,
+      registration_expiry: vehicle.registration_expiry,
     }));
   }
 }
