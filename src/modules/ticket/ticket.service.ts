@@ -11,6 +11,7 @@ import {
   DTO_RP_ListCustomerByTrip,
   DTO_RP_ListTransitDownByTrip,
   DTO_RP_ListTransitUpByTrip,
+  DTO_RP_SearchTicket,
   DTO_RP_Ticket,
   DTO_RQ_CancelTicket,
   DTO_RQ_CopyTicket,
@@ -536,8 +537,41 @@ export class TicketService {
   async searchTickets(
     query: string,
     company_id: string,
-  ): Promise<DTO_RP_Ticket[]> {
+  ): Promise<DTO_RP_SearchTicket[]> {
     console.log(query, company_id);
-    return null;
+
+    if (!query || query.trim() === '') {
+      throw new BadRequestException('Từ khóa tìm kiếm không được để trống');
+    }
+
+    const tickets = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .leftJoinAndSelect('ticket.trip', 'trip')
+      .leftJoinAndSelect('trip.route', 'route')
+      .where('ticket.company_id = :company_id', { company_id })
+      .andWhere('ticket.booked_status = :booked_status', {
+        booked_status: true,
+      })
+      .andWhere(
+        '(ticket.ticket_phone LIKE :query OR ticket.ticket_customer_name LIKE :query)',
+        { query: `%${query}%` },
+      )
+      .orderBy('trip.departure_date', 'DESC')
+      .addOrderBy('trip.departure_time', 'DESC')
+      .limit(50)
+      .getMany();
+
+    return tickets.map((ticket) => ({
+      ticket_id: ticket.id,
+      trip_id: ticket.trip.id,
+      route_id: ticket.trip.route?.id || 0,
+      route_name: ticket.trip.route?.route_name || '',
+      departure_date: ticket.trip.departure_date,
+      departure_time: ticket.trip.departure_time,
+      seat_name: ticket.seat_name,
+      ticket_phone: ticket.ticket_phone,
+      ticket_customer_name: ticket.ticket_customer_name,
+      ticket_display_price: ticket.ticket_display_price,
+    }));
   }
 }
