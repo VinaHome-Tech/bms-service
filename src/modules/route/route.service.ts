@@ -19,7 +19,7 @@ export class RouteService {
 
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
-  ) {}
+  ) { }
 
   async createRoute(
     user: DTO_RQ_UserAction,
@@ -80,7 +80,7 @@ export class RouteService {
   async getListRouteNameByCompany(id: string): Promise<DTO_RP_ListRouteName[]> {
     const routes = await this.routeRepository.find({
       where: { company_id: id },
-      select: ['id', 'route_name'],
+      select: [ 'id', 'route_name' ],
       order: { display_order: 'ASC' },
     });
 
@@ -161,22 +161,21 @@ export class RouteService {
     await this.routeRepository.remove(route);
   }
 
+  // BM-36 Get List Route Name Action By Company
   async getListRouteNameActionByCompany(
     id: string,
   ): Promise<DTO_RP_ListRouteName[]> {
-    console.log('getListRouteNameActionByCompany:', id);
     const routes = await this.routeRepository.find({
       where: {
         company_id: id,
         status: true,
       },
-      select: ['id', 'route_name'],
+      select: {
+        id: true,
+        route_name: true,
+      },
       order: { display_order: 'ASC' },
     });
-
-    return routes.map((route) => ({
-      id: route.id,
-      route_name: route.route_name,
-    }));
+    return routes;
   }
 }

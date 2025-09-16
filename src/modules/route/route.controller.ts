@@ -150,6 +150,7 @@ export class RouteController {
     }
   }
 
+  // BM-36 Get List Route Name Action By Company
   @MessagePattern({ bms: 'get_list_route_name_action_by_company' })
   async getListRouteNameActionByCompany(@Payload() id: string) {
     try {
