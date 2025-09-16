@@ -4,20 +4,20 @@ import { Trip } from './trip.entity';
 export class TripMapper {
   static mapToTripListDTO(trips: Trip[]): DTO_RP_ListTrip[] {
     return trips.map((trip) => {
-      const tickets = (trip.tickets || []).filter(
-        (ticket) =>
-          ticket.seat_status === true &&
-          ticket.seat_name != null &&
-          ticket.seat_name.trim() !== '',
-      );
-      const bookedTickets = tickets.filter((ticket) => ticket.booked_status);
+      // const tickets = (trip.tickets || []).filter(
+      //   (ticket) =>
+      //     ticket.seat_status === true &&
+      //     ticket.seat_name != null &&
+      //     ticket.seat_name.trim() !== '',
+      // );
+      // const bookedTickets = tickets.filter((ticket) => ticket.booked_status);
 
       return {
         trip_id: trip.id,
-        departure_date: trip.departure_date,
-        departure_time: trip.departure_time.split(':').slice(0, 2).join(':'),
-        vehicle_id: trip.vehicle?.id || null,
         trip_type: trip.trip_type,
+        departure_date: trip.departure_date,
+        departure_time: trip.departure_time?.split(':').slice(0, 2).join(':'),
+        vehicle_id: trip.vehicle?.id || null,
         note: trip.note,
         driver: this.mapDriversToEmployeeItems(trip.driver),
         assistant: this.mapAssistantsToEmployeeItems(trip.assistant),
@@ -27,12 +27,14 @@ export class TripMapper {
         seat_chart_name: trip.seat_chart?.seat_chart_name || null,
         license_plate: trip.vehicle?.license_plate || null,
         vehicle_phone: trip.vehicle?.phone || null,
-        tickets_booked: bookedTickets.length,
-        total_ticket: tickets.length,
-        total_fare: bookedTickets.reduce(
-          (sum, ticket) => sum + (ticket.ticket_display_price || 0),
-          0,
-        ),
+        tickets_booked: trip.ticket_summary?.booked_tickets || 0,
+        total_ticket: trip.ticket_summary?.total_tickets || 0,
+        confirmation_depart: trip.confirmation_depart,
+        // total_fare: bookedTickets.reduce(
+        //   (sum, ticket) => sum + (ticket.ticket_display_price || 0),
+        //   0,
+        // ),
+        total_fare: 0,
       };
     });
   }

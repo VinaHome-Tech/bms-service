@@ -108,21 +108,20 @@ export class VehicleService {
     await this.vehicleRepository.remove(vehicle);
   }
 
+  // BM-32: Get License Plate By Company
   async getLicensePlateByCompany(id: string): Promise<DTO_RP_LicensePlate[]> {
-    console.log(id);
-    const vehicles = await this.vehicleRepository.find({
-      where: { company_id: id, status: 1 },
-      select: ['id', 'license_plate'],
-    });
+    const vehicles = await this.vehicleRepository
+      .createQueryBuilder('v')
+      .select(['v.id AS id', 'v.license_plate AS license_plate'])
+      .where('v.company_id = :id', { id })
+      .andWhere('v.status = :status', { status: 1 })
+      .getRawMany<DTO_RP_LicensePlate>();
 
     if (!vehicles.length) {
-      throw new NotFoundException('No vehicles found for this company');
+      throw new NotFoundException('Không có phương tiện nào');
     }
 
-    return vehicles.map((vehicle) => ({
-      id: vehicle.id,
-      license_plate: vehicle.license_plate,
-    }));
+    return vehicles;
   }
 
   async getListRegistrationExpiry(

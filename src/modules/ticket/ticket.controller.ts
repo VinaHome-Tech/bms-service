@@ -259,4 +259,23 @@ export class TicketController {
       });
     }
   }
+
+  @MessagePattern({ bms: 'get_tickets_by_trip_to_print' })
+  async getTicketsByTripToPrint(@Payload() id: number) {
+    try {
+      const result = await this.ticketService.getTicketsByTripToPrint(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
 }

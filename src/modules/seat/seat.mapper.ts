@@ -10,6 +10,7 @@ export class SeatMapper {
       total_floor: seat.total_floor,
       total_row: seat.total_row,
       total_column: seat.total_column,
+      total_seat: seat.total_seat,
       seats: seat.seats.map((seat) => ({
         id: seat.id,
         code: seat.code,

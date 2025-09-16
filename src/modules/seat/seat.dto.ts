@@ -45,6 +45,7 @@ export class DTO_RP_SeatChart {
   total_floor: number;
   total_row: number;
   total_column: number;
+  total_seat: number;
   seats: DTO_RP_Seat[];
 }
 export class DTO_RP_Seat {

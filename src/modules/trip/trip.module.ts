@@ -8,6 +8,7 @@ import { Schedule } from '../schedule/schedule.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Ticket } from '../ticket/ticket.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
+import { TripTicketSummary } from './trip_ticket_summary';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Vehicle } from '../vehicle/vehicle.entity';
       SeatChart,
       Ticket,
       Vehicle,
+      TripTicketSummary,
     ]),
   ],
   controllers: [TripController],

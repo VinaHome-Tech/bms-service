@@ -6,7 +6,7 @@ export class DTO_RQ_GetListTrip {
 export class DTO_RP_ListTrip {
   trip_id: number;
   departure_date: string | Date;
-  departure_time: string;
+  departure_time?: string;
   vehicle_id: number | null;
   trip_type: number;
   note: string | null;
@@ -21,6 +21,7 @@ export class DTO_RP_ListTrip {
   tickets_booked: number;
   total_ticket: number;
   total_fare: number;
+  confirmation_depart: boolean;
 }
 export class EmployeeItem {
   id: string;
@@ -54,4 +55,12 @@ export class DTO_RQ_UpdateTrip {
   vehicle_id: number;
   assistant: EmployeeItem[];
   driver: EmployeeItem[];
+}
+export class DTO_RQ_ChangeTimeTrip {
+  trip_id: number;
+  departure_time: string;
+}
+export class DTO_RP_ChangeTimeTrip {
+  trip_id: number;
+  departure_time: string;
 }

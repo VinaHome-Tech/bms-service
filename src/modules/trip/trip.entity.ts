@@ -1,15 +1,19 @@
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Ticket } from '../ticket/ticket.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
+import { Schedule } from '../schedule/schedule.entity';
+import { TripTicketSummary } from './trip_ticket_summary';
 
 @Entity('tbl_trip')
 export class Trip {
@@ -44,6 +48,12 @@ export class Trip {
     phone: string;
   }>[];
 
+  @DeleteDateColumn()
+  deleted_at: Date;
+
+  @Column()
+  confirmation_depart: boolean;
+
   @ManyToOne(() => SeatChart, (seatChart) => seatChart.trips, {
     onDelete: 'SET NULL',
   })
@@ -67,4 +77,13 @@ export class Trip {
   })
   @JoinColumn({ name: 'vehicle_id' })
   vehicle: Vehicle;
+
+  @ManyToOne(() => Schedule, (schedule) => schedule.trips, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'schedule_id' })
+  schedule: Schedule;
+
+  @OneToOne(() => TripTicketSummary, (summary) => summary.trip)
+  ticket_summary: TripTicketSummary;
 }

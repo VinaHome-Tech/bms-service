@@ -23,6 +23,8 @@ export class SeatChart {
   total_row: number;
   @Column()
   total_column: number;
+  @Column()
+  total_seat: number;
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',

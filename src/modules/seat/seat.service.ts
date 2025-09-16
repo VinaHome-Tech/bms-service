@@ -47,6 +47,8 @@ export class SeatService {
       total_floor: data_create.total_floor,
       total_row: data_create.total_row,
       total_column: data_create.total_column,
+      total_seat: data_create.seats.filter((seat) => seat.status === true)
+        .length,
       company_id: user.company_id,
     });
     const savedSeatChart = await this.seatChartRepository.save(newSeatChart);
@@ -72,17 +74,27 @@ export class SeatService {
 
   async getSeatChartByCompany(id: string): Promise<DTO_RP_SeatChart[]> {
     console.log('Received company ID:', id);
-    const seatCharts = await this.seatChartRepository.find({
-      where: { company_id: id },
-      order: { created_at: 'ASC' },
-      relations: ['seats'],
-    });
+    try {
+      const seatCharts = await this.seatChartRepository.find({
+        where: { company_id: id },
+        order: { created_at: 'ASC' },
+        relations: ['seats'],
+      });
 
-    if (!seatCharts.length) {
-      throw new NotFoundException('Không có sơ đồ ghế nào');
+      if (!seatCharts.length) {
+        throw new NotFoundException('Không có sơ đồ ghế nào');
+      }
+
+      console.log('Found seat charts:', seatCharts);
+
+      return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
+    } catch (error) {
+      console.error('Lỗi khi lấy sơ đồ ghế:', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error('Đã xảy ra lỗi không xác định khi lấy sơ đồ ghế');
     }
-
-    return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
   }
 
   async deleteSeatChart(id: number, user: DTO_RQ_UserAction): Promise<void> {
@@ -125,6 +137,9 @@ export class SeatService {
     seatChart.total_floor = data_update.total_floor;
     seatChart.total_row = data_update.total_row;
     seatChart.total_column = data_update.total_column;
+    seatChart.total_seat = data_update.seats.filter(
+      (seat) => seat.status === true,
+    ).length;
 
     const updatedSeatChart = await this.seatChartRepository.save(seatChart);
 

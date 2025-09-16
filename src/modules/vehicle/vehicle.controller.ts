@@ -109,6 +109,7 @@ export class VehicleController {
     }
   }
 
+  // BM-32: Get License Plate By Company
   @MessagePattern({ bms: 'get_license_plate_by_company' })
   async getLicensePlateByCompany(@Payload() id: string) {
     try {

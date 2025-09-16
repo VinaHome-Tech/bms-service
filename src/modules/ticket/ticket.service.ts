@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +14,7 @@ import {
   DTO_RP_ListTransitUpByTrip,
   DTO_RP_SearchTicket,
   DTO_RP_Ticket,
+  DTO_RP_TicketsToPrint,
   DTO_RQ_CancelTicket,
   DTO_RQ_CopyTicket,
   DTO_RQ_MoveTicket,
@@ -22,6 +24,9 @@ import {
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { Office } from '../office/office.entity';
 import { TicketMapper } from './ticket.mapper';
+import { SeatChart } from '../seat/seat_chart.entity';
+import { Seat } from '../seat/seat.entity';
+import { Schedule } from '../schedule/schedule.entity';
 
 @Injectable()
 export class TicketService {
@@ -32,19 +37,266 @@ export class TicketService {
     private readonly tripRepository: Repository<Trip>,
     @InjectRepository(Office)
     private readonly officeRepository: Repository<Office>,
+    @InjectRepository(SeatChart)
+    private readonly seatChartRepository: Repository<SeatChart>,
+    @InjectRepository(Seat)
+    private readonly seatRepository: Repository<Seat>,
+    @InjectRepository(Schedule)
+    private readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
+  // async getListTicketsByTrip(id: number): Promise<DTO_RP_Ticket[]> {
+  //   const start = Date.now();
+  //   console.log('----------------');
+  //   console.log(`getListTicketsByTrip START tripId=${id}`);
+
+  //   try {
+  //     const trip = await this.tripRepository
+  //       .createQueryBuilder('trip')
+  //       .leftJoin('trip.schedule', 'schedule')
+  //       .select(['trip.id', 'trip.trip_type', 'trip.company_id', 'schedule.id'])
+  //       .where('trip.id = :id', { id })
+  //       .getOne();
+
+  //     if (!trip) {
+  //       throw new NotFoundException('Chuyến không tồn tại');
+  //     }
+
+  //     let tickets = await this.ticketRepository.find({
+  //       where: { trip: { id: trip.id } },
+  //       select: [
+  //         'id',
+  //         'seat_name',
+  //         'seat_status',
+  //         'seat_floor',
+  //         'seat_row',
+  //         'seat_column',
+  //         'seat_type',
+  //         'seat_code',
+  //         'booked_status',
+  //         'ticket_phone',
+  //         'ticket_email',
+  //         'ticket_customer_name',
+  //         'ticket_point_up',
+  //         'ticket_point_down',
+  //         'ticket_note',
+  //         'ticket_display_price',
+  //         'payment_method',
+  //         'user_created',
+  //         'user_id_created',
+  //         'office',
+  //         'contact_status',
+  //         'transit_up',
+  //         'transit_down',
+  //       ],
+  //     });
+  //     console.log(`Existing tickets count=${tickets.length}`);
+
+  //     if (trip.trip_type === 1 || trip.trip_type === 3) {
+  //       if (tickets.length > 0) {
+  //         console.log(`DONE in ${Date.now() - start}ms`);
+  //         return TicketMapper.mapToTicketDTO(tickets);
+  //       }
+
+  //       const schedule = await this.scheduleRepository
+  //         .createQueryBuilder('schedule')
+  //         .leftJoin('schedule.seat_chart', 'seat_chart')
+  //         .leftJoin('schedule.route', 'route')
+  //         .select(['schedule.id', 'seat_chart.id', 'route.base_price'])
+  //         .where('schedule.id = :id', { id: trip.schedule?.id })
+  //         .getOne();
+  //       console.log('schedule:', schedule);
+
+  //       if (!schedule) {
+  //         throw new NotFoundException('Không tìm thấy lịch cho chuyến này');
+  //       }
+  //       if (!schedule.seat_chart) {
+  //         throw new NotFoundException(
+  //           'Không tìm thấy sơ đồ ghế cho chuyến này',
+  //         );
+  //       }
+
+  //       const seats = await this.seatRepository.find({
+  //         where: { seat_chart: { id: schedule.seat_chart.id } },
+  //         select: [
+  //           'id',
+  //           'code',
+  //           'name',
+  //           'status',
+  //           'floor',
+  //           'row',
+  //           'column',
+  //           'type',
+  //         ],
+  //       });
+  //       console.log('seats:', seats.length);
+
+  //       if (seats.length === 0) {
+  //         console.warn('Seat chart has no seats');
+  //         throw new NotFoundException('Sơ đồ ghế không có ghế nào');
+  //       }
+
+  //       const newTicketEntities = seats.map((seat) =>
+  //         this.ticketRepository.create({
+  //           seat_name: seat.name,
+  //           seat_status: seat.status,
+  //           seat_floor: seat.floor,
+  //           seat_row: seat.row,
+  //           seat_column: seat.column,
+  //           seat_type: seat.type,
+  //           seat_code: seat.code,
+  //           booked_status: false,
+  //           ticket_display_price: schedule.route?.base_price ?? 0,
+  //           company_id: trip.company_id,
+  //           trip: { id: trip.id } as any,
+  //         }),
+  //       );
+
+  //       tickets = await this.ticketRepository.save(newTicketEntities);
+  //       console.log(`Saved ${tickets.length} tickets`);
+  //       console.log(`DONE in ${Date.now() - start}ms`);
+  //       return TicketMapper.mapToTicketDTO(tickets);
+  //     }
+
+  //     console.log(`DONE in ${Date.now() - start}ms`);
+  //     return null;
+  //   } catch (err) {
+  //     console.error(`ERROR: ${err?.message}`, err?.stack);
+  //     throw err;
+  //   }
+  // }
   async getListTicketsByTrip(id: number): Promise<DTO_RP_Ticket[]> {
-    console.log(`Fetching tickets for trip ID: ${id}`);
-    const existingTrip = await this.tripRepository.findOne({
-      where: { id },
-      relations: ['tickets', 'tickets.office'],
-    });
-    if (!existingTrip) {
-      throw new NotFoundException('Chuyến không tồn tại');
+    const start = Date.now();
+    console.log('----------------');
+    console.log(`getListTicketsByTrip START tripId=${id}`);
+
+    try {
+      const trip = await this.tripRepository
+        .createQueryBuilder('trip')
+        .leftJoinAndSelect('trip.schedule', 'schedule')
+        .leftJoinAndSelect('schedule.seat_chart', 'seat_chart')
+        .leftJoinAndSelect('schedule.route', 'route')
+        .select([
+          'trip.id',
+          'trip.trip_type',
+          'trip.company_id',
+          'schedule.id',
+          'seat_chart.id',
+          'route.base_price',
+        ])
+        .where('trip.id = :id', { id })
+        .getOne();
+
+      if (!trip) {
+        throw new NotFoundException('Chuyến không tồn tại');
+      }
+
+      // 2) Kiểm tra vé đã tồn tại chưa
+      let tickets = await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .leftJoinAndSelect('ticket.office', 'office')
+        .where('ticket.trip_id = :tripId', { tripId: trip.id })
+        .select([
+          'ticket.id',
+          'ticket.seat_name',
+          'ticket.seat_status',
+          'ticket.seat_floor',
+          'ticket.seat_row',
+          'ticket.seat_column',
+          'ticket.seat_type',
+          'ticket.seat_code',
+          'ticket.booked_status',
+          'ticket.ticket_phone',
+          'ticket.ticket_email',
+          'ticket.ticket_customer_name',
+          'ticket.ticket_point_up',
+          'ticket.ticket_point_down',
+          'ticket.ticket_note',
+          'ticket.ticket_display_price',
+          'ticket.payment_method',
+          'ticket.user_created',
+          'ticket.user_id_created',
+          'ticket.contact_status',
+          'ticket.transit_up',
+          'ticket.transit_down',
+          'office.id',
+          'office.name',
+        ])
+        .getMany();
+
+      console.log(`Existing tickets count=${tickets.length}`);
+
+      if (trip.trip_type === 1 || trip.trip_type === 3) {
+        if (tickets.length > 0) {
+          console.log(`DONE in ${Date.now() - start}ms`);
+          return TicketMapper.mapToTicketDTO(tickets);
+        }
+
+        // 3) Kiểm tra schedule và seat_chart
+        if (!trip.schedule) {
+          throw new NotFoundException('Không tìm thấy lịch cho chuyến này');
+        }
+        if (!trip.schedule.seat_chart) {
+          throw new NotFoundException(
+            'Không tìm thấy sơ đồ ghế cho chuyến này',
+          );
+        }
+
+        // 4) Lấy seats theo seat_chart.id
+        const seats = await this.seatRepository.find({
+          where: { seat_chart: { id: trip.schedule.seat_chart.id } },
+          select: [
+            'id',
+            'code',
+            'name',
+            'status',
+            'floor',
+            'row',
+            'column',
+            'type',
+          ],
+        });
+        console.log('seats:', seats.length);
+
+        if (seats.length === 0) {
+          console.warn('Seat chart has no seats');
+          throw new NotFoundException('Sơ đồ ghế không có ghế nào');
+        }
+
+        // 5) Chuẩn bị dữ liệu insert nhanh
+        const newTickets = seats.map((seat) => ({
+          seat_name: seat.name,
+          seat_status: seat.status,
+          seat_floor: seat.floor,
+          seat_row: seat.row,
+          seat_column: seat.column,
+          seat_type: seat.type,
+          seat_code: seat.code,
+          booked_status: false,
+          ticket_display_price: trip.schedule.route?.base_price ?? 0,
+          company_id: trip.company_id,
+          trip: { id: trip.id } as any,
+        }));
+
+        // 6) Bulk insert để nhanh hơn save()
+        await this.ticketRepository.insert(newTickets);
+
+        // 7) Query lại tickets để trả về DTO
+        tickets = await this.ticketRepository.find({
+          where: { trip: { id: trip.id } },
+        });
+
+        console.log(`Inserted ${tickets.length} tickets`);
+        console.log(`DONE in ${Date.now() - start}ms`);
+        return TicketMapper.mapToTicketDTO(tickets);
+      }
+
+      console.log(`DONE in ${Date.now() - start}ms`);
+      return null;
+    } catch (err) {
+      console.error(`ERROR: ${err?.message}`, err?.stack);
+      throw err;
     }
-    console.log(existingTrip.tickets);
-    return TicketMapper.mapToTicketDTO(existingTrip.tickets);
   }
 
   async updateTicket(
@@ -573,5 +825,42 @@ export class TicketService {
       ticket_customer_name: ticket.ticket_customer_name,
       ticket_display_price: ticket.ticket_display_price,
     }));
+  }
+
+  async getTicketsByTripToPrint(id: number): Promise<DTO_RP_TicketsToPrint[]> {
+    try {
+      const tickets = await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .where('ticket.trip_id = :id', { id })
+        .select([
+          'ticket.id',
+          'ticket.seat_name',
+          'ticket.seat_status',
+          'ticket.seat_floor',
+          'ticket.seat_row',
+          'ticket.seat_column',
+          'ticket.seat_type',
+          'ticket.seat_code',
+          'ticket.booked_status',
+          'ticket.ticket_phone',
+          'ticket.ticket_email',
+          'ticket.ticket_customer_name',
+          'ticket.ticket_point_up',
+          'ticket.ticket_point_down',
+          'ticket.ticket_note',
+          'ticket.ticket_display_price',
+          'ticket.payment_method',
+        ])
+        .getMany();
+
+      if (!tickets || tickets.length === 0) {
+        return [];
+      }
+
+      return TicketMapper.mapTicketsToPrintDTO(tickets);
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy danh sách vé để in:', error);
+      throw new InternalServerErrorException('Có lỗi khi lấy danh sách vé');
+    }
   }
 }

@@ -2,14 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
+import { Trip } from '../trip/trip.entity';
 
 @Entity('tbl_schedule')
+@Index(['company_id'])
 export class Schedule {
   @PrimaryGeneratedColumn()
   id: number;
@@ -59,4 +63,7 @@ export class Schedule {
   })
   @JoinColumn({ name: 'seat_chart_id' })
   seat_chart: SeatChart;
+
+  @OneToMany(() => Trip, (trip) => trip.schedule)
+  trips: Trip[];
 }
