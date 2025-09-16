@@ -22,7 +22,7 @@ export class OfficeService {
 
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
-  ) { }
+  ) {}
 
   async createOffice(
     user: DTO_RQ_UserAction,

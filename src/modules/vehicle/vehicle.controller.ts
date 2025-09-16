@@ -129,6 +129,7 @@ export class VehicleController {
     }
   }
 
+  // BM-34 Get List Registration Expiry
   @MessagePattern({ bms: 'get_list_registration_expiry' })
   async getListRegistrationExpiry(@Payload() id: string) {
     try {

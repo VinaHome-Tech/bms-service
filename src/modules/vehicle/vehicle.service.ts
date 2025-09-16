@@ -124,23 +124,22 @@ export class VehicleService {
     return vehicles;
   }
 
+  // BM-34 Get List Registration Expiry
   async getListRegistrationExpiry(
     id: string,
   ): Promise<DTO_RP_RegistrationExpiry[]> {
     const vehicles = await this.vehicleRepository.find({
       where: { company_id: id },
-      select: ['id', 'license_plate', 'registration_expiry'],
+      select: {
+        id: true,
+        license_plate: true,
+        registration_expiry: true,
+      },
       order: { registration_expiry: 'ASC' },
     });
-
     if (!vehicles.length) {
       throw new NotFoundException('Không có phương tiện nào');
     }
-
-    return vehicles.map((vehicle) => ({
-      id: vehicle.id,
-      license_plate: vehicle.license_plate,
-      registration_expiry: vehicle.registration_expiry,
-    }));
+    return vehicles;
   }
 }
