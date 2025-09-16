@@ -22,7 +22,7 @@ export class OfficeService {
 
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
-  ) {}
+  ) { }
 
   async createOffice(
     user: DTO_RQ_UserAction,
@@ -72,7 +72,7 @@ export class OfficeService {
     console.log('Data Update:', data_update);
     const office = await this.officeRepository.findOne({
       where: { id },
-      relations: ['phones'],
+      relations: [ 'phones' ],
     });
 
     if (!office) {
@@ -140,7 +140,7 @@ export class OfficeService {
   async getListOfficeByCompany(id: string): Promise<DTO_RP_Office[]> {
     const offices = await this.officeRepository.find({
       where: { company_id: id },
-      relations: ['phones'],
+      relations: [ 'phones' ],
       order: { created_at: 'DESC' },
     });
     return offices.map((office) => OfficeMapper.toDTO(office));
@@ -165,12 +165,27 @@ export class OfficeService {
     // }));
   }
 
+  // BM-33 Get List Office Room Work By Company
   async getListOfficeRoomWorkByCompany(id: string): Promise<DTO_RQ_Office[]> {
-    const offices = await this.officeRepository.find({
-      where: { company_id: id },
-      relations: ['phones'],
-      order: { created_at: 'DESC' },
-    });
+    const offices = await this.officeRepository
+      .createQueryBuilder('office')
+      .leftJoinAndSelect('office.phones', 'phone')
+      .where('office.company_id = :companyId', { companyId: id })
+      .orderBy('office.created_at', 'DESC')
+      .select([
+        'office.id',
+        'office.name',
+        'office.code',
+        'office.address',
+        'office.note',
+        'office.status',
+        'office.created_at',
+        'phone.id',
+        'phone.phone',
+        'phone.type',
+      ])
+      .getMany();
+
     if (!offices || offices.length === 0) {
       throw new NotFoundException(
         'Không tìm thấy văn phòng nào cho công ty này',

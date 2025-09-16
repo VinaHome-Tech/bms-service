@@ -11,6 +11,9 @@ async function bootstrap() {
       transport: Transport.NATS,
       options: {
         servers: configuration().nats.url,
+        reconnect: true,
+        maxReconnectAttempts: -1,
+        reconnectTimeWait: 5000,
       },
     },
   );

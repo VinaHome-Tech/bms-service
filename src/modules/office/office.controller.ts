@@ -133,6 +133,7 @@ export class OfficeController {
     }
   }
 
+  // BM-33 Get List Office Room Work By Company
   @MessagePattern({ bms: 'get_list_office_room_work_by_company' })
   async getListOfficeRoomWorkByCompany(@Payload() id: string) {
     try {
