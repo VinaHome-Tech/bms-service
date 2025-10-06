@@ -8,7 +8,6 @@ import { RouteModule } from './modules/route/route.module';
 import { SeatModule } from './modules/seat/seat.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { TripModule } from './modules/trip/trip.module';
-import { TicketModule } from './modules/ticket/ticket.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
 import configuration from './config/configuration';
 
@@ -37,7 +36,6 @@ import configuration from './config/configuration';
     SeatModule,
     ScheduleModule,
     TripModule,
-    TicketModule,
     VehicleModule,
   ],
   controllers: [],

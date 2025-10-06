@@ -10,7 +10,6 @@ import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { Trip } from '../trip/trip.entity';
-import { Ticket } from '../ticket/ticket.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
 
 @Entity('tbl_company')

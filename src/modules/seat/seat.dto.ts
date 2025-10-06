@@ -63,3 +63,16 @@ export class DTO_RP_SeatChartName {
   id: number;
   seat_chart_name: string;
 }
+
+export class DTO_RP_ItemSeat {
+  id: number;
+  code: string;
+  name: string;
+  status: boolean;
+  floor: number;
+  row: number;
+  column: number;
+  type: number;
+  base_price: number;
+  company_id: string;
+}

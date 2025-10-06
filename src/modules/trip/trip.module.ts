@@ -6,7 +6,6 @@ import { Trip } from './trip.entity';
 import { Route } from '../route/route.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
-import { Ticket } from '../ticket/ticket.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
 import { TripTicketSummary } from './trip_ticket_summary';
 
@@ -17,7 +16,6 @@ import { TripTicketSummary } from './trip_ticket_summary';
       Route,
       Schedule,
       SeatChart,
-      Ticket,
       Vehicle,
       TripTicketSummary,
     ]),

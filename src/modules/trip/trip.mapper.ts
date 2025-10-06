@@ -35,6 +35,7 @@ export class TripMapper {
         //   0,
         // ),
         total_fare: 0,
+        total_tickets_price: trip.ticket_summary?.total_tickets_price || 0,
       };
     });
   }

@@ -17,13 +17,12 @@ import { Connection, In, Repository } from 'typeorm';
 import { Trip } from './trip.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { Route } from '../route/route.entity';
-import { Ticket } from '../ticket/ticket.entity';
-import { Seat } from '../seat/seat.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
 import { TripMapper } from './trip.mapper';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { TripTicketSummary } from './trip_ticket_summary';
+import { DTO_RP_ItemSeat } from '../seat/seat.dto';
 
 @Injectable()
 export class TripService {
@@ -34,8 +33,6 @@ export class TripService {
     private readonly scheduleRepository: Repository<Schedule>,
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
-    @InjectRepository(Ticket)
-    private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
     @InjectRepository(SeatChart)
@@ -242,12 +239,12 @@ export class TripService {
     return note;
   }
 
+  // BM-17 Get List Trip By Route And Date
   async getListTripByRouteAndDate(
     data: DTO_RQ_GetListTrip,
   ): Promise<DTO_RP_ListTrip[]> {
-    const startTime = performance.now();
+    console.time('⏱️ getListTripByRouteAndDate');
     try {
-      console.log('--------------------------------------');
       const { route, company, date } = data;
       const searchDate = new Date(date);
 
@@ -255,8 +252,7 @@ export class TripService {
         throw new BadRequestException('Ngày không hợp lệ');
       }
 
-      const t1 = performance.now();
-
+      console.time('🔹 Query schedules');
       const allSchedules = await this.scheduleRepository
         .createQueryBuilder('schedule')
         .leftJoinAndSelect('schedule.route', 'route')
@@ -276,16 +272,13 @@ export class TripService {
           'seat_chart.total_seat',
         ])
         .getMany();
-
-      console.log(
-        `⏱ Lấy schedules mất ${(performance.now() - t1).toFixed(2)} ms`,
-      );
+      console.timeEnd('🔹 Query schedules');
 
       const dayOfWeek = this.getDayOfWeek(searchDate);
       const dayNumber = searchDate.getDate();
       const isOddDay = dayNumber % 2 !== 0;
 
-      const t2 = performance.now();
+      console.time('🔹 Filter schedules');
       const matchedSchedules = allSchedules.filter((schedule) => {
         const startDate = this.normalizeDate(schedule.start_date);
         const endDate = schedule.is_known_end_date
@@ -311,12 +304,9 @@ export class TripService {
             return false;
         }
       });
-      console.log(
-        `⏱ Filter schedules mất ${(performance.now() - t2).toFixed(2)} ms`,
-      );
+      console.timeEnd('🔹 Filter schedules');
 
-      const t3 = performance.now();
-
+      console.time('🔹 Query existing trips');
       const existingTrips = await this.tripRepository.find({
         where: {
           company_id: company,
@@ -332,12 +322,13 @@ export class TripService {
         relations: ['schedule'],
         withDeleted: true,
       });
+      console.timeEnd('🔹 Query existing trips');
 
       const existingTripScheduleIds = new Set(
         existingTrips.map((t) => t.schedule.id),
       );
 
-      // 2. Chuẩn bị danh sách trip mới cần tạo
+      console.time('🔹 Create new trips');
       const newTrips = matchedSchedules
         .filter((s) => !existingTripScheduleIds.has(s.id))
         .map((schedule) =>
@@ -352,10 +343,11 @@ export class TripService {
           }),
         );
 
-      // 3. Lưu tất cả trip mới (1 query duy nhất)
       const savedTrips = await this.tripRepository.save(newTrips);
+      console.timeEnd('🔹 Create new trips');
 
       if (savedTrips.length > 0) {
+        console.time('🔹 Save ticket summaries');
         const newSummaries = savedTrips.map((trip) => {
           const schedule = matchedSchedules.find(
             (s) => s.id === trip.schedule.id,
@@ -364,36 +356,41 @@ export class TripService {
             trip,
             total_tickets: schedule?.seat_chart?.total_seat || 0,
             booked_tickets: 0,
+            total_tickets_price: 0,
           });
         });
 
         await this.tripTicketSummaryRepository.save(newSummaries);
+        console.timeEnd('🔹 Save ticket summaries');
       }
 
-      for (const trip of existingTrips) {
-        const schedule = matchedSchedules.find(
-          (s) => s.id === trip.schedule.id,
-        );
-        if (!schedule) continue;
+      console.time('🔹 Update existing trip summaries');
+      await Promise.all(
+        existingTrips.map(async (trip) => {
+          const schedule = matchedSchedules.find(
+            (s) => s.id === trip.schedule.id,
+          );
+          if (!schedule) return;
 
-        const bookedCount = await this.ticketRepository.count({
-          where: { trip: { id: trip.id }, booked_status: true },
-        });
+          const [bookedCount, totalTicketsPrice] = await Promise.all([
+            this.updateBookedTicketsFromExternalAPI(trip.id),
+            this.updateTotalTicketsPriceFromExternalAPI(trip.id),
+          ]);
 
-        await this.tripTicketSummaryRepository.update(
-          { trip: { id: trip.id } },
-          {
-            total_tickets: schedule?.seat_chart?.total_seat || 0,
-            booked_tickets: bookedCount,
-          },
-        );
-      }
-
-      console.log(
-        `⏱ Vòng lặp tạo trip mất ${(performance.now() - t3).toFixed(2)} ms`,
+          await this.tripTicketSummaryRepository.update(
+            { trip: { id: trip.id } },
+            {
+              total_tickets: schedule?.seat_chart?.total_seat || 0,
+              booked_tickets: bookedCount || 0,
+              total_tickets_price: totalTicketsPrice || 0,
+            },
+          );
+        }),
       );
 
-      const t4 = performance.now();
+      console.timeEnd('🔹 Update existing trip summaries');
+
+      console.time('🔹 Query trips in day');
       const tripsInDay = await this.tripRepository
         .createQueryBuilder('trip')
         .leftJoin('trip.route', 'route')
@@ -427,59 +424,74 @@ export class TripService {
 
           'ticket_summary.booked_tickets',
           'ticket_summary.total_tickets',
+          'ticket_summary.total_tickets_price',
         ])
         .getMany();
+      console.timeEnd('🔹 Query trips in day');
 
-      console.log(
-        `⏱ Lấy tripsInDay mất ${(performance.now() - t4).toFixed(2)} ms`,
-      );
-
-      const t5 = performance.now();
+      console.time('🔹 Map trips to DTO');
       const result = await TripMapper.mapToTripListDTO(tripsInDay);
-      console.log(`⏱ Map DTO mất ${(performance.now() - t5).toFixed(2)} ms`);
+      console.timeEnd('🔹 Map trips to DTO');
 
-      console.log(
-        `⏱ Tổng thời gian: ${(performance.now() - startTime).toFixed(2)} ms`,
-      );
-
+      console.timeEnd('⏱️ getListTripByRouteAndDate');
       return result;
     } catch (error) {
+      console.timeEnd('⏱️ getListTripByRouteAndDate');
       console.error('❌ Lỗi khi lấy danh sách trip theo route và date:', error);
-      throw error;
+      throw new InternalServerErrorException(
+        'Có lỗi khi lấy danh sách chuyến đi',
+      );
     }
   }
 
-  private async createTicketsFromSeats(
-    trip: Trip,
-    seats: Seat[],
-  ): Promise<void> {
-    if (!seats || seats.length === 0) {
-      console.warn(`Không có ghế nào để tạo vé cho chuyến ${trip.id}`);
-      return;
-    }
-
-    const ticketEntities = seats.map((seat) => {
-      return this.ticketRepository.create({
-        seat_name: seat.name,
-        seat_status: seat.status,
-        seat_floor: seat.floor,
-        seat_row: seat.row,
-        seat_column: seat.column,
-        seat_type: seat.type,
-        seat_code: seat.code,
-        booked_status: false,
-        ticket_display_price: trip.route.base_price,
-        company_id: trip.company_id,
-        trip: trip,
-      });
-    });
-
+  private async updateBookedTicketsFromExternalAPI(
+    tripId: number,
+  ): Promise<number> {
     try {
-      await this.ticketRepository.save(ticketEntities);
-      console.log(`Đã tạo ${ticketEntities.length} vé cho chuyến ${trip.id}`);
+      const url = `http://host.docker.internal:3002/v4-1/bus-ticket/booked-count/${tripId}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(
+          `HTTP error! status: ${response.status}`,
+        );
+      }
+      const data = await response.json();
+      const bookedCount = data.booked_count ?? data.result ?? 0;
+      return bookedCount;
     } catch (error) {
-      console.error(`Lỗi khi tạo vé cho chuyến ${trip.id}:`, error);
-      throw new InternalServerErrorException('Có lỗi khi tạo vé');
+      throw new InternalServerErrorException(
+        `Lỗi khi gọi API external cho trip ${tripId}: ${error.message}`,
+      );
+    }
+  }
+  private async updateTotalTicketsPriceFromExternalAPI(
+    tripId: number,
+  ): Promise<number> {
+    try {
+      const url = `http://host.docker.internal:3002/v4-1/bus-ticket/calculate-total-tickets-price/${tripId}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new InternalServerErrorException(
+          `HTTP error! status: ${response.status}`,
+        );
+      }
+      const data = await response.json();
+      const totalTicketsPrice = data.total_price ?? data.result ?? 0;
+      return totalTicketsPrice;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Lỗi khi gọi API external cho trip ${tripId}: ${error.message}`,
+      );
     }
   }
 
@@ -491,14 +503,6 @@ export class TripService {
       newDate.setHours(0, 0, 0, 0);
     }
     return newDate;
-  }
-
-  private startOfDay(date: Date): Date {
-    return this.normalizeDate(date);
-  }
-
-  private endOfDay(date: Date): Date {
-    return this.normalizeDate(date, true);
   }
 
   private getDayOfWeek(date: Date): string {
@@ -683,4 +687,56 @@ export class TripService {
       phone: p?.phone || p?.phone || '',
     }));
   };
+
+  // BM-37 Get List Seat By Trip
+  async getListSeatByTrip(id: number): Promise<DTO_RP_ItemSeat[]> {
+    try {
+      const seats = await this.tripRepository
+        .createQueryBuilder('trip')
+        .innerJoin('trip.seat_chart', 'seatChart')
+        .innerJoin('seatChart.seats', 'seat')
+        .innerJoin('trip.route', 'route')
+        .where('trip.id = :id', { id })
+        .select([
+          'seat.id',
+          'seat.code',
+          'seat.name',
+          'seat.status',
+          'seat.floor',
+          'seat.row',
+          'seat.column',
+          'seat.type',
+          'route.base_price',
+          'trip.company_id',
+        ])
+        .getRawMany();
+
+      if (!seats || seats.length === 0) {
+        throw new NotFoundException(
+          'Chuyến đi không tồn tại hoặc chưa có sơ đồ ghế',
+        );
+      }
+
+      const result: DTO_RP_ItemSeat[] = seats.map((raw) => ({
+        id: raw.seat_id,
+        code: raw.seat_code,
+        name: raw.seat_name,
+        status: raw.seat_status,
+        floor: raw.seat_floor,
+        row: raw.seat_row,
+        column: raw.seat_column,
+        type: raw.seat_type,
+        base_price: raw.route_base_price,
+        company_id: raw.trip_company_id,
+      }));
+      return result;
+    } catch (error) {
+      console.error('❌ Error in getListSeatByTrip:', {
+        tripId: id,
+        message: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
 }

@@ -19,7 +19,7 @@ export class RouteService {
 
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
-  ) { }
+  ) {}
 
   async createRoute(
     user: DTO_RQ_UserAction,
@@ -80,7 +80,7 @@ export class RouteService {
   async getListRouteNameByCompany(id: string): Promise<DTO_RP_ListRouteName[]> {
     const routes = await this.routeRepository.find({
       where: { company_id: id },
-      select: [ 'id', 'route_name' ],
+      select: ['id', 'route_name'],
       order: { display_order: 'ASC' },
     });
 

@@ -18,6 +18,9 @@ export class TripTicketSummary {
   @Column()
   booked_tickets: number;
 
+  @Column()
+  total_tickets_price: number;
+
   @OneToOne(() => Trip, (trip) => trip.ticket_summary, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'trip_id' })
   trip: Trip;

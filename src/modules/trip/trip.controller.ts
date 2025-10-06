@@ -12,6 +12,27 @@ import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 export class TripController {
   constructor(private readonly tripService: TripService) {}
 
+  // BM-37 Get List Seat By Trip
+  @MessagePattern({ bms: 'get_list_seat_by_trip' })
+  async getListSeatByTrip(@Payload() id: number) {
+    try {
+      const result = await this.tripService.getListSeatByTrip(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  // BM-17 Get List Trip By Route And Date
   @MessagePattern({ bms: 'get_list_trip_by_route_and_date' })
   async getListTripByRouteAndDate(@Payload() data: DTO_RQ_GetListTrip) {
     try {
@@ -25,7 +46,7 @@ export class TripController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        message: error.response?.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

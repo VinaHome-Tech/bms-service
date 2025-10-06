@@ -4,13 +4,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Route } from '../route/route.entity';
 import { SeatChart } from '../seat/seat_chart.entity';
-import { Ticket } from '../ticket/ticket.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
 import { Schedule } from '../schedule/schedule.entity';
 import { TripTicketSummary } from './trip_ticket_summary';
@@ -65,12 +63,6 @@ export class Trip {
   })
   @JoinColumn({ name: 'route_id' })
   route: Route;
-
-  @OneToMany(() => Ticket, (ticket) => ticket.trip, {
-    onDelete: 'CASCADE',
-    eager: true,
-  })
-  tickets: Ticket[];
 
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.trips, {
     onDelete: 'SET NULL',
