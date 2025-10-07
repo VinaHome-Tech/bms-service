@@ -52,6 +52,9 @@ export class Trip {
   @Column()
   confirmation_depart: boolean;
 
+  @Column()
+  ticket_price: number;
+
   @ManyToOne(() => SeatChart, (seatChart) => seatChart.trips, {
     onDelete: 'SET NULL',
   })

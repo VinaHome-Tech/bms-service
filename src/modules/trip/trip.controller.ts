@@ -26,7 +26,7 @@ export class TripController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Service error!',
+        message: error.response?.message || 'Service error',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
@@ -46,7 +46,30 @@ export class TripController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Service error!',
+        message: error.response?.message || 'Service error',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  // BM-38 Update Tickets Booked In Trip
+  @MessagePattern({ bms: 'UPDATE_TICKETS_BOOKED_IN_TRIP' })
+  async updateTicketsBookedInTrip(
+    @Payload()
+    payload: {
+      id: number;
+      data: { tickets_booked: number; total_tickets_price: number };
+    },
+  ) {
+    try {
+      await this.tripService.updateTicketsBookedInTrip(
+        payload.id,
+        payload.data,
+      );
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }

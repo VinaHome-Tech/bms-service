@@ -4,14 +4,6 @@ import { Trip } from './trip.entity';
 export class TripMapper {
   static mapToTripListDTO(trips: Trip[]): DTO_RP_ListTrip[] {
     return trips.map((trip) => {
-      // const tickets = (trip.tickets || []).filter(
-      //   (ticket) =>
-      //     ticket.seat_status === true &&
-      //     ticket.seat_name != null &&
-      //     ticket.seat_name.trim() !== '',
-      // );
-      // const bookedTickets = tickets.filter((ticket) => ticket.booked_status);
-
       return {
         trip_id: trip.id,
         trip_type: trip.trip_type,
@@ -30,10 +22,7 @@ export class TripMapper {
         tickets_booked: trip.ticket_summary?.booked_tickets || 0,
         total_ticket: trip.ticket_summary?.total_tickets || 0,
         confirmation_depart: trip.confirmation_depart,
-        // total_fare: bookedTickets.reduce(
-        //   (sum, ticket) => sum + (ticket.ticket_display_price || 0),
-        //   0,
-        // ),
+        ticket_price: trip.ticket_price || 0,
         total_fare: 0,
         total_tickets_price: trip.ticket_summary?.total_tickets_price || 0,
       };

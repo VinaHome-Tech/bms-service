@@ -266,13 +266,17 @@ export class TripService {
           'schedule.end_date',
           'schedule.start_time',
           'schedule.repeat_type',
+          'schedule.odd_even_type',
+          'schedule.is_known_end_date',
           'schedule.trip_type',
           'route.id',
+          'route.base_price',
           'seat_chart.id',
           'seat_chart.total_seat',
         ])
         .getMany();
       console.timeEnd('🔹 Query schedules');
+      console.log('✅ allSchedules:', allSchedules.length);
 
       const dayOfWeek = this.getDayOfWeek(searchDate);
       const dayNumber = searchDate.getDate();
@@ -280,10 +284,12 @@ export class TripService {
 
       console.time('🔹 Filter schedules');
       const matchedSchedules = allSchedules.filter((schedule) => {
+        if (!schedule.start_date) return false;
         const startDate = this.normalizeDate(schedule.start_date);
-        const endDate = schedule.is_known_end_date
-          ? this.normalizeDate(schedule.end_date, true)
-          : null;
+        const endDate =
+          schedule.is_known_end_date && schedule.end_date
+            ? this.normalizeDate(schedule.end_date, true)
+            : null;
 
         const inDateRange =
           searchDate >= startDate && (!endDate || searchDate <= endDate);
@@ -292,9 +298,10 @@ export class TripService {
         switch (schedule.repeat_type) {
           case 'daily':
             return true;
-          case 'weekday':
+          case 'weekday': {
             const weekdays = this.parseWeekdays(schedule.weekdays);
             return weekdays.includes(dayOfWeek);
+          }
           case 'odd_even':
             return (
               (schedule.odd_even_type === 'odd' && isOddDay) ||
@@ -305,6 +312,12 @@ export class TripService {
         }
       });
       console.timeEnd('🔹 Filter schedules');
+      console.log('✅ matchedSchedules:', matchedSchedules.length);
+
+      if (!matchedSchedules.length) {
+        console.warn('⚠️ Không có schedule nào khớp với ngày này.');
+        return [];
+      }
 
       console.time('🔹 Query existing trips');
       const existingTrips = await this.tripRepository.find({
@@ -315,14 +328,13 @@ export class TripService {
         },
         select: {
           id: true,
-          schedule: {
-            id: true,
-          },
+          schedule: { id: true },
         },
         relations: ['schedule'],
         withDeleted: true,
       });
       console.timeEnd('🔹 Query existing trips');
+      console.log('✅ existingTrips:', existingTrips.length);
 
       const existingTripScheduleIds = new Set(
         existingTrips.map((t) => t.schedule.id),
@@ -340,11 +352,15 @@ export class TripService {
             departure_date: date,
             company_id: company,
             schedule: schedule,
+            ticket_price: schedule.route.base_price,
           }),
         );
 
-      const savedTrips = await this.tripRepository.save(newTrips);
+      const savedTrips = newTrips.length
+        ? await this.tripRepository.save(newTrips)
+        : [];
       console.timeEnd('🔹 Create new trips');
+      console.log('✅ newTrips:', savedTrips.length);
 
       if (savedTrips.length > 0) {
         console.time('🔹 Save ticket summaries');
@@ -359,36 +375,40 @@ export class TripService {
             total_tickets_price: 0,
           });
         });
-
         await this.tripTicketSummaryRepository.save(newSummaries);
         console.timeEnd('🔹 Save ticket summaries');
+        console.log('✅ ticketSummaries:', newSummaries.length);
       }
 
-      console.time('🔹 Update existing trip summaries');
-      await Promise.all(
-        existingTrips.map(async (trip) => {
-          const schedule = matchedSchedules.find(
-            (s) => s.id === trip.schedule.id,
-          );
-          if (!schedule) return;
+      // --- Cập nhật tạm thời có thể comment lại để debug ---
+      // console.time('🔹 Update existing trip summaries');
+      // await Promise.all(
+      //   existingTrips.map(async (trip) => {
+      //     const schedule = matchedSchedules.find(
+      //       (s) => s.id === trip.schedule.id,
+      //     );
+      //     if (!schedule) return;
 
-          const [bookedCount, totalTicketsPrice] = await Promise.all([
-            this.updateBookedTicketsFromExternalAPI(trip.id),
-            this.updateTotalTicketsPriceFromExternalAPI(trip.id),
-          ]);
+      //     try {
+      //       const [bookedCount, totalTicketsPrice] = await Promise.all([
+      //         this.updateBookedTicketsFromExternalAPI(trip.id),
+      //         this.updateTotalTicketsPriceFromExternalAPI(trip.id),
+      //       ]);
 
-          await this.tripTicketSummaryRepository.update(
-            { trip: { id: trip.id } },
-            {
-              total_tickets: schedule?.seat_chart?.total_seat || 0,
-              booked_tickets: bookedCount || 0,
-              total_tickets_price: totalTicketsPrice || 0,
-            },
-          );
-        }),
-      );
-
-      console.timeEnd('🔹 Update existing trip summaries');
+      //       await this.tripTicketSummaryRepository.update(
+      //         { trip: { id: trip.id } },
+      //         {
+      //           total_tickets: schedule?.seat_chart?.total_seat || 0,
+      //           booked_tickets: bookedCount || 0,
+      //           total_tickets_price: totalTicketsPrice || 0,
+      //         },
+      //       );
+      //     } catch (e) {
+      //       console.error(`⚠️ Lỗi khi cập nhật trip #${trip.id}:`, e.message);
+      //     }
+      //   }),
+      // );
+      // console.timeEnd('🔹 Update existing trip summaries');
 
       console.time('🔹 Query trips in day');
       const tripsInDay = await this.tripRepository
@@ -411,29 +431,28 @@ export class TripService {
           'trip.driver',
           'trip.assistant',
           'trip.confirmation_depart',
-
+          'trip.ticket_price',
           'vehicle.id',
           'vehicle.phone',
           'vehicle.license_plate',
-
           'route.id',
           'route.route_name',
-
           'seat_chart.id',
           'seat_chart.seat_chart_name',
-
           'ticket_summary.booked_tickets',
           'ticket_summary.total_tickets',
           'ticket_summary.total_tickets_price',
         ])
         .getMany();
       console.timeEnd('🔹 Query trips in day');
+      console.log('✅ tripsInDay:', tripsInDay.length);
 
       console.time('🔹 Map trips to DTO');
       const result = await TripMapper.mapToTripListDTO(tripsInDay);
       console.timeEnd('🔹 Map trips to DTO');
 
       console.timeEnd('⏱️ getListTripByRouteAndDate');
+      console.log('✅ Final result length:', result.length);
       return result;
     } catch (error) {
       console.timeEnd('⏱️ getListTripByRouteAndDate');
@@ -493,6 +512,25 @@ export class TripService {
         `Lỗi khi gọi API external cho trip ${tripId}: ${error.message}`,
       );
     }
+  }
+
+  // BM-38 Update Tickets Booked In Trip
+  async updateTicketsBookedInTrip(
+    id: number,
+    data: { tickets_booked: number; total_tickets_price: number },
+  ): Promise<void> {
+    const summary = await this.tripTicketSummaryRepository.findOne({
+      where: { trip: { id } },
+    });
+
+    if (!summary) {
+      throw new NotFoundException('Không tìm thấy dữ liệu chuyến');
+    }
+
+    summary.booked_tickets = data.tickets_booked;
+    summary.total_tickets_price = data.total_tickets_price;
+
+    await this.tripTicketSummaryRepository.save(summary);
   }
 
   private normalizeDate(date: Date, isEndOfDay = false): Date {
@@ -708,6 +746,10 @@ export class TripService {
           'seat.type',
           'route.base_price',
           'trip.company_id',
+          'trip.departure_date',
+          'trip.departure_time',
+          'route.id',
+          'route.route_name AS route_name',
         ])
         .getRawMany();
 
@@ -718,17 +760,22 @@ export class TripService {
       }
 
       const result: DTO_RP_ItemSeat[] = seats.map((raw) => ({
-        id: raw.seat_id,
+        id: Number(raw.seat_id),
         code: raw.seat_code,
         name: raw.seat_name,
         status: raw.seat_status,
-        floor: raw.seat_floor,
-        row: raw.seat_row,
-        column: raw.seat_column,
-        type: raw.seat_type,
-        base_price: raw.route_base_price,
+        floor: Number(raw.seat_floor),
+        row: Number(raw.seat_row),
+        column: Number(raw.seat_column),
+        type: Number(raw.seat_type),
+        base_price: Number(raw.route_base_price),
         company_id: raw.trip_company_id,
+        route_id: Number(raw.route_id),
+        route_name: raw.route_name,
+        departure_date: raw.trip_departure_date,
+        departure_time: raw.trip_departure_time,
       }));
+
       return result;
     } catch (error) {
       console.error('❌ Error in getListSeatByTrip:', {

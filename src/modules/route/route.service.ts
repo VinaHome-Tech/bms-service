@@ -165,17 +165,22 @@ export class RouteService {
   async getListRouteNameActionByCompany(
     id: string,
   ): Promise<DTO_RP_ListRouteName[]> {
-    const routes = await this.routeRepository.find({
-      where: {
-        company_id: id,
-        status: true,
-      },
-      select: {
-        id: true,
-        route_name: true,
-      },
-      order: { display_order: 'ASC' },
-    });
-    return routes;
+    try {
+      const routes = await this.routeRepository.find({
+        where: {
+          company_id: id,
+          status: true,
+        },
+        select: {
+          id: true,
+          route_name: true,
+        },
+        order: { display_order: 'ASC' },
+      });
+      return routes;
+    } catch (error) {
+      console.error('Error fetching route names:', error);
+      throw error;
+    }
   }
 }

@@ -23,6 +23,7 @@ export class DTO_RP_ListTrip {
   total_fare: number;
   confirmation_depart: boolean;
   total_tickets_price: number;
+  ticket_price: number;
 }
 export class EmployeeItem {
   id: string;
