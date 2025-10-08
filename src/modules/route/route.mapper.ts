@@ -1,5 +1,5 @@
+import { Route } from 'src/entities/route.entity';
 import { DTO_RP_Route } from './route.dto';
-import { Route } from './route.entity';
 
 export class RouteMapper {
   static toDTO(route: Route): DTO_RP_Route {

@@ -7,11 +7,11 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Route } from '../route/route.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Vehicle } from '../vehicle/vehicle.entity';
-import { Schedule } from '../schedule/schedule.entity';
-import { TripTicketSummary } from './trip_ticket_summary';
+import { SeatChart } from './seat_chart.entity';
+import { Schedule } from './schedule.entity';
+import { TripTicketSummary } from '../modules/trip/trip_ticket_summary';
+import { Route } from './route.entity';
+import { Vehicle } from './vehicle.entity';
 
 @Entity('tbl_trip')
 export class Trip {

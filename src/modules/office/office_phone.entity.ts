@@ -5,7 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Office } from './office.entity';
+import { Office } from '../../entities/office.entity';
 
 @Entity('tbl_office_phone')
 export class OfficePhone {

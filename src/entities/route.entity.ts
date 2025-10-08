@@ -1,3 +1,5 @@
+import { Schedule } from 'src/entities/schedule.entity';
+import { Trip } from 'src/entities/trip.entity';
 import {
   Column,
   CreateDateColumn,
@@ -5,8 +7,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Schedule } from '../schedule/schedule.entity';
-import { Trip } from '../trip/trip.entity';
+import { RoutePoint } from './route_point.entity';
 
 @Entity('tbl_route')
 export class Route {
@@ -48,4 +49,7 @@ export class Route {
 
   @OneToMany(() => Trip, (trip) => trip.route)
   trips: Trip[];
+
+  @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
+  routePoints: RoutePoint[];
 }

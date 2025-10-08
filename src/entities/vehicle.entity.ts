@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Trip } from '../trip/trip.entity';
+import { Trip } from './trip.entity';
 
 @Entity('tbl_vehicle')
 export class Vehicle {

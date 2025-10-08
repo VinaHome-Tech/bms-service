@@ -5,8 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Vehicle } from './vehicle.entity';
-import { Company } from '../company/company.entity';
 import {
   DTO_RP_LicensePlate,
   DTO_RP_RegistrationExpiry,
@@ -15,14 +13,13 @@ import {
 } from './vehicle.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { VehicleMapper } from './vehicle.mapper';
+import { Vehicle } from 'src/entities/vehicle.entity';
 
 @Injectable()
 export class VehicleService {
   constructor(
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
   ) {}
 
   async createVehicle(

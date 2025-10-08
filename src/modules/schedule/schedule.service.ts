@@ -6,17 +6,14 @@ import {
 import { DTO_RP_Schedule, DTO_RQ_Schedule } from './schedule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Company } from '../company/company.entity';
-import { Route } from '../route/route.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Schedule } from './schedule.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
+import { Schedule } from '../../entities/schedule.entity';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { Route } from 'src/entities/route.entity';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
 
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,

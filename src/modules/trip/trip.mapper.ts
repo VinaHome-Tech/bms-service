@@ -1,5 +1,5 @@
 import { DTO_RP_ListTrip, EmployeeItem } from './trip.dto';
-import { Trip } from './trip.entity';
+import { Trip } from '../../entities/trip.entity';
 
 export class TripMapper {
   static mapToTripListDTO(trips: Trip[]): DTO_RP_ListTrip[] {

@@ -1,5 +1,5 @@
 import { DTO_RP_SeatChart } from './seat.dto';
-import { SeatChart } from './seat_chart.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
 
 export class SeatMapper {
   static toDTO(seat: SeatChart): DTO_RP_SeatChart {

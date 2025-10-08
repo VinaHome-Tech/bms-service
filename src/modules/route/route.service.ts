@@ -4,18 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
-import { Route } from './route.entity';
 import { DTO_RP_ListRouteName, DTO_RP_Route, DTO_RQ_Route } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
+import { Route } from 'src/entities/route.entity';
 
 @Injectable()
 export class RouteService {
   constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
 
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,

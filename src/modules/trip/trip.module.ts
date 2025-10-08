@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { TripController } from './trip.controller';
 import { TripService } from './trip.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Trip } from './trip.entity';
-import { Route } from '../route/route.entity';
-import { Schedule } from '../schedule/schedule.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Vehicle } from '../vehicle/vehicle.entity';
+import { Trip } from '../../entities/trip.entity';
+import { Schedule } from '../../entities/schedule.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
 import { TripTicketSummary } from './trip_ticket_summary';
+import { Route } from 'src/entities/route.entity';
+import { Vehicle } from 'src/entities/vehicle.entity';
 
 @Module({
   imports: [

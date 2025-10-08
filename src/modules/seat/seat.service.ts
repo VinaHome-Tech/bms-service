@@ -6,18 +6,15 @@ import {
   DTO_RQ_UpdateSeatChart,
 } from './seat.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Company } from '../company/company.entity';
 import { Repository } from 'typeorm';
-import { Seat } from './seat.entity';
-import { SeatChart } from './seat_chart.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
 import { SeatMapper } from './seat.mapper';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { Seat } from 'src/entities/seat.entity';
 
 @Injectable()
 export class SeatService {
   constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
     @InjectRepository(SeatChart)
     private readonly seatChartRepository: Repository<SeatChart>,
     @InjectRepository(Seat)

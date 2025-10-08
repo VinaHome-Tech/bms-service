@@ -14,15 +14,15 @@ import {
 } from './trip.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, In, Repository } from 'typeorm';
-import { Trip } from './trip.entity';
-import { Schedule } from '../schedule/schedule.entity';
-import { Route } from '../route/route.entity';
-import { Vehicle } from '../vehicle/vehicle.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
+import { Trip } from '../../entities/trip.entity';
+import { Schedule } from '../../entities/schedule.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
 import { TripMapper } from './trip.mapper';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { TripTicketSummary } from './trip_ticket_summary';
 import { DTO_RP_ItemSeat } from '../seat/seat.dto';
+import { Route } from 'src/entities/route.entity';
+import { Vehicle } from 'src/entities/vehicle.entity';
 
 @Injectable()
 export class TripService {

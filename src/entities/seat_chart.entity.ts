@@ -5,9 +5,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Schedule } from './schedule.entity';
+import { Trip } from './trip.entity';
 import { Seat } from './seat.entity';
-import { Schedule } from '../schedule/schedule.entity';
-import { Trip } from '../trip/trip.entity';
 
 @Entity('tbl_seat_chart')
 export class SeatChart {

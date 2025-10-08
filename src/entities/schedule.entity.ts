@@ -8,9 +8,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Route } from '../route/route.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Trip } from '../trip/trip.entity';
+import { SeatChart } from './seat_chart.entity';
+import { Trip } from './trip.entity';
+import { Route } from './route.entity';
 
 @Entity('tbl_schedule')
 @Index(['company_id'])

@@ -6,7 +6,7 @@ import {
 import { DTO_RP_Office, DTO_RQ_Office } from './office.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Office } from './office.entity';
+import { Office } from '../../entities/office.entity';
 import { OfficePhone } from './office_phone.entity';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { OfficeMapper } from './office.mapper';
