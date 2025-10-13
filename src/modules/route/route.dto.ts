@@ -57,3 +57,9 @@ export class DTO_RP_RoutePoint {
   route_id: number;
   point_id: number;
 }
+
+export class DTO_RP_ListRouteNameToConfig {
+  id: number;
+  route_name: string;
+  display_price: number;
+}

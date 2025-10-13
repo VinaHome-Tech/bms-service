@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { RouteController } from './route.controller';
-import { RouteService } from './route.service';
+import { BmsRouteController } from './bms_route.controller';
+import { BmsRouteService } from './bms_route.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PlatformRouteController } from './platform_route.controller';
 import { PlatformRouteService } from './platform_route.service';
@@ -9,7 +9,7 @@ import { Route } from 'src/entities/route.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Route, RoutePoint])],
-  controllers: [RouteController, PlatformRouteController],
-  providers: [RouteService, PlatformRouteService],
+  controllers: [BmsRouteController, PlatformRouteController],
+  providers: [BmsRouteService, PlatformRouteService],
 })
 export class RouteModule {}

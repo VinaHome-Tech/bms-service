@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DTO_RP_ListRouteName, DTO_RP_Route, DTO_RQ_Route } from './route.dto';
+import { DTO_RP_ListRouteName, DTO_RP_ListRouteNameToConfig, DTO_RP_Route, DTO_RQ_Route } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
 import { Route } from 'src/entities/route.entity';
 
 @Injectable()
-export class RouteService {
+export class BmsRouteService {
   constructor(
 
     @InjectRepository(Route)
@@ -177,6 +177,33 @@ export class RouteService {
       return routes;
     } catch (error) {
       console.error('Error fetching route names:', error);
+      throw error;
+    }
+  }
+
+  async getListRouteNameToConfigByCompany(
+    id: string,
+  ): Promise<DTO_RP_ListRouteNameToConfig[]> {
+    try {
+      const routes = await this.routeRepository.find({
+        where: {
+          company_id: id,
+          status: true,
+        },
+        select: {
+          id: true,
+          route_name: true,
+          base_price: true,
+        },
+        order: { display_order: 'ASC' },
+      });
+      return routes.map((route) => ({
+        id: route.id,
+        route_name: route.route_name,
+        display_price: route.base_price,
+      }));
+    } catch (error) {
+      console.error('Error fetching route names for config:', error);
       throw error;
     }
   }
