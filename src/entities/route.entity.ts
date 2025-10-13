@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RoutePoint } from './route_point.entity';
+import { ConfigFare } from './config-fare.entity';
 
 @Entity('tbl_route')
 export class Route {
@@ -52,4 +53,6 @@ export class Route {
 
   @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
   routePoints: RoutePoint[];
+  @OneToMany(() => ConfigFare, (configFare) => configFare.route)
+  configFares: ConfigFare[];
 }

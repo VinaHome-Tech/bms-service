@@ -6,10 +6,12 @@ import { PlatformRouteController } from './platform_route.controller';
 import { PlatformRouteService } from './platform_route.service';
 import { RoutePoint } from 'src/entities/route_point.entity';
 import { Route } from 'src/entities/route.entity';
+import { ConfigFare } from 'src/entities/config-fare.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Route, RoutePoint])],
+  imports: [TypeOrmModule.forFeature([Route, RoutePoint, ConfigFare])],
   controllers: [BmsRouteController, PlatformRouteController],
   providers: [BmsRouteService, PlatformRouteService],
+  exports: [TypeOrmModule],
 })
 export class RouteModule {}

@@ -10,6 +10,7 @@ import { TripModule } from './modules/trip/trip.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
 import configuration from './config/configuration';
 import { PointModule } from './modules/point/point.module';
+import { ConfigFareModule } from './modules/config/config_fare.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PointModule } from './modules/point/point.module';
     TripModule,
     VehicleModule,
     PointModule,
+    ConfigFareModule,
   ],
   controllers: [],
   providers: [],
