@@ -6,9 +6,10 @@ import { FareConfig } from "src/entities/fare-config.entity";
 import { ConfigFare } from "src/entities/config-fare.entity";
 import { Route } from "src/entities/route.entity";
 import { RouteModule } from "../route/route.module";
+import { SeatChart } from "src/entities/seat_chart.entity";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([FareConfig, ConfigFare, Route])],
+    imports: [TypeOrmModule.forFeature([FareConfig, ConfigFare, Route, SeatChart])],
     controllers: [BmsConfigFareController],
     providers: [BmsConfigFareService],
 })

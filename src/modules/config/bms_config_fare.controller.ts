@@ -25,4 +25,23 @@ export class BmsConfigFareController {
       });
     }
   }
+
+  @MessagePattern({ bms: 'GET_LIST_CONFIG_FARE_BY_COMPANY' })
+  async getListConfigFareByCompany(@Payload() companyId: string) {
+    try {
+      const result = await this.bmsConfigFareService.getListConfigFareByCompany(companyId);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
 }

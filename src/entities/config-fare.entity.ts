@@ -5,7 +5,7 @@ import { Route } from "./route.entity";
 @Entity({ name: 'tbl_config_fare' })
 export class ConfigFare {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   route_id: number;
