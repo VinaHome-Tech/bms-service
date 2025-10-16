@@ -17,6 +17,9 @@ export class RoutePoint {
   @Column()
   display_order: number;
 
+  @Column()
+  time_gap: string;
+
   @ManyToOne(() => Route, (route) => route.routePoints, {
     onDelete: 'CASCADE',
   })

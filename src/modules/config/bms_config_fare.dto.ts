@@ -49,10 +49,8 @@ export class DTO_RP_ConfigFare_2 {
   fare_configs: FareConfigDto[];
 }
 
-
 export class DTO_RP_ConfigFare_3 {
   route_id: number;
   route_name: string;
   config_fares: DTO_RP_ConfigFare_2[];
 }
-

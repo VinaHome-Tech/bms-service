@@ -167,4 +167,97 @@ export class BmsConfigFareService {
       throw error;
     }
   }
+
+  async deleteConfigFare(configFareId: number): Promise<void> {
+    console.log('Deleting config fare with ID:', configFareId);
+    try {
+      const configFare = await this.configFareRepository.findOne({
+        where: { id: configFareId },
+        select: ['id'],
+      });
+      if (!configFare) {
+        throw new NotFoundException('Config fare not found');
+      }
+      await this.configFareRepository.delete({ id: configFareId });
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateConfigFare(
+    id: number,
+    data: DTO_RQ_ConfigFare,
+  ): Promise<DTO_RP_ConfigFare> {
+    console.log(`Updating config fare ID ${id} with data:`, data);
+    try {
+      const configFare = await this.configFareRepository.findOne({
+        select: ['id'],
+        where: { id },
+      });
+      if (!configFare) {
+        throw new NotFoundException('Config fare not found');
+      }
+      const route = await this.routeRepository.findOne({
+        select: ['id'],
+        where: { id: data.route_id },
+      });
+      if (!route) {
+        throw new NotFoundException('Route not found');
+      }
+      configFare.route_id = route.id;
+      configFare.trip_type = data.trip_type;
+      configFare.seat_chart_id = data.seat_chart_id;
+      configFare.priority = data.priority;
+      configFare.double_room = data.double_room;
+      configFare.same_price = data.same_price;
+      configFare.config_name = data.config_name;
+      configFare.start_date = data.date_range?.[0];
+      configFare.end_date = data.date_range?.[1];
+
+      const updatedConfigFare =
+        await this.configFareRepository.save(configFare);
+
+      // Xoá các fare_configs cũ
+      await this.fareConfigRepository.delete({ config_fare_id: id });
+
+      // Thêm các fare_configs mới nếu có
+      if (data.fare_configs?.length) {
+        const fareConfigData = data.fare_configs.map((f) => ({
+          departure_point_id: f.departure_point_id,
+          arrival_point_id: f.arrival_point_id,
+          single_room_price: f.single_room_price,
+          double_room_price: f.double_room_price,
+          config_fare_id: updatedConfigFare.id,
+        }));
+        await this.fareConfigRepository
+          .createQueryBuilder()
+          .insert()
+          .into('tbl_fare_config')
+          .values(fareConfigData)
+          .execute();
+      }
+
+      // Lấy lại các fare_configs mới
+      updatedConfigFare.fare_configs = await this.fareConfigRepository.find({
+        where: { config_fare_id: updatedConfigFare.id },
+      });
+
+      return {
+        id: updatedConfigFare.id,
+        route_id: updatedConfigFare.route_id,
+        trip_type: updatedConfigFare.trip_type,
+        seat_chart_id: updatedConfigFare.seat_chart_id,
+        priority: updatedConfigFare.priority,
+        double_room: updatedConfigFare.double_room,
+        same_price: updatedConfigFare.same_price,
+        config_name: updatedConfigFare.config_name,
+        date_range: [
+          updatedConfigFare.start_date,
+          updatedConfigFare.end_date,
+        ] as [Date, Date],
+        fare_configs: updatedConfigFare.fare_configs,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }

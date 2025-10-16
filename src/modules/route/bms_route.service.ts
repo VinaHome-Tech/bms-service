@@ -5,7 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DTO_RP_ListRouteName, DTO_RP_ListRouteNameToConfig, DTO_RP_Route, DTO_RQ_Route } from './route.dto';
+import {
+  DTO_RP_ListRouteName,
+  DTO_RP_ListRouteNameToConfig,
+  DTO_RP_Route,
+  DTO_RQ_Route,
+} from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
 import { Route } from 'src/entities/route.entity';
@@ -13,7 +18,6 @@ import { Route } from 'src/entities/route.entity';
 @Injectable()
 export class BmsRouteService {
   constructor(
-
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
   ) {}
