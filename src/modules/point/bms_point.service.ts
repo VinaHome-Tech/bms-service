@@ -11,6 +11,7 @@ import { Province } from 'src/entities/provinces.entity';
 import {
   DTO_RP_GroupPointName,
   DTO_RP_ItemPointConfigTime,
+  DTO_RP_RoutePointName,
   DTO_RQ_ItemPointConfigTime,
 } from './bms_point.dto';
 
@@ -18,12 +19,47 @@ import {
 export class BmsPointService {
   constructor(
     @InjectRepository(Point)
-    private pointRepository: Repository<Point>,
+    private readonly pointRepository: Repository<Point>,
     @InjectRepository(RoutePoint)
-    private routePointRepository: Repository<RoutePoint>,
+    private readonly routePointRepository: Repository<RoutePoint>,
     @InjectRepository(Province)
-    private provinceRepository: Repository<Province>,
+    private readonly provinceRepository: Repository<Province>,
   ) {}
+
+  async getListRoutePointNameByRoute(route_id: number): Promise<DTO_RP_RoutePointName[]> {
+    console.log('Get list route point by route id:', route_id);
+    try {
+      const routePoints = await this.routePointRepository.find({
+        where: { route_id },
+        relations: {
+          point: true,
+        },
+        order: {
+          display_order: 'ASC',
+        },
+        select: {
+          id: true,
+          display_order: true,
+          time_gap: true,
+          point: {
+            id: true,
+            name: true,
+            address: true,
+          },
+        },
+      });
+
+      return routePoints.map((rp) => ({
+        id: rp.id,
+        point_name: rp.point.name,
+        display_order: rp.display_order,
+        time_gap: rp.time_gap,
+        address: rp.point.address,
+      }));
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async getListPointNameByRoute(
     route_id: number,
@@ -125,45 +161,22 @@ export class BmsPointService {
   async updatePointConfigTimeByRoute(
     route_id: number,
     data: DTO_RQ_ItemPointConfigTime[],
-  ) {
-    console.log('🚀 [BẮT ĐẦU] Cập nhật cấu hình thời gian cho tuyến đường');
-    console.log('➡️ Dữ liệu đầu vào:', { route_id, data });
-
-    // --- Bước 1: Kiểm tra route_id ---
+  ): Promise<void> {
     if (!route_id || isNaN(route_id) || route_id <= 0) {
-      console.log('❌ Lỗi: route_id không hợp lệ');
-      throw new BadRequestException('Route data is invalid');
+      throw new BadRequestException('Dữ liệu tuyến không hợp lệ');
     }
-
-    // --- Bước 2: Kiểm tra dữ liệu cập nhật ---
     if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log('❌ Lỗi: dữ liệu cập nhật không hợp lệ hoặc rỗng');
-      throw new BadRequestException('Update data is invalid');
+      throw new BadRequestException('Dữ liệu cập nhật không hợp lệ');
     }
-
-    // --- Bước 3: Lấy danh sách điểm dừng của tuyến ---
-    console.log(
-      `🔍 Đang tìm các điểm dừng thuộc tuyến có ID = ${route_id} ...`,
-    );
     const routePoints = await this.routePointRepository.find({
       where: { route_id },
     });
-
-    console.log(`✅ Tìm thấy ${routePoints.length} điểm dừng trong tuyến`);
-
-    // --- Bước 4: Tạo Map để tra cứu nhanh theo ID ---
     const routePointMap = new Map<number, RoutePoint>();
     routePoints.forEach((rp) => routePointMap.set(rp.id, rp));
-    console.log('🗺️ Đã tạo Map tra cứu điểm dừng theo ID');
-
-    // --- Bước 5: Duyệt và tạo danh sách cập nhật ---
     const toUpdate: RoutePoint[] = [];
     data.forEach((item) => {
       const rp = routePointMap.get(item.id);
       if (rp) {
-        console.log(
-          `🔧 Cập nhật điểm dừng ID=${item.id}: time_gap=${item.time_gap}, display_order=${item.display_order}`,
-        );
         rp.time_gap = item.time_gap;
         rp.display_order = item.display_order;
         toUpdate.push(rp);
@@ -171,24 +184,13 @@ export class BmsPointService {
         console.log(`⚠️ Bỏ qua: Không tìm thấy điểm dừng có ID=${item.id}`);
       }
     });
-
-    // --- Bước 6: Kiểm tra có điểm nào cần cập nhật không ---
     if (toUpdate.length === 0) {
-      console.log('❌ Không có điểm dừng hợp lệ để cập nhật');
-      throw new BadRequestException('No valid route points to update');
+      throw new BadRequestException('Không có điểm dừng hợp lệ để cập nhật');
     }
-
-    // --- Bước 7: Tiến hành lưu thay đổi vào CSDL ---
-    console.log(
-      `💾 Đang lưu ${toUpdate.length} điểm dừng vào cơ sở dữ liệu...`,
-    );
     try {
       await this.routePointRepository.save(toUpdate);
-      console.log(`✅ Cập nhật thành công ${toUpdate.length} điểm dừng`);
-      console.log('🎯 [HOÀN THÀNH] Cập nhật cấu hình thời gian cho tuyến');
-      return { updated: toUpdate.length };
+      return;
     } catch (error) {
-      console.log('🔥 Lỗi khi lưu dữ liệu:', error.message || error);
       throw error;
     }
   }

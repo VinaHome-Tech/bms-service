@@ -5,7 +5,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Trip } from '../../entities/trip.entity';
+import { Trip } from './trip.entity';
 
 @Entity('tbl_trip_ticket_summary')
 export class TripTicketSummary {

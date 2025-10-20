@@ -25,13 +25,13 @@ export class BmsConfigFareService {
     private readonly routeRepository: Repository<Route>,
     @InjectRepository(SeatChart)
     private readonly seatChartRepository: Repository<SeatChart>,
-  ) {}
+  ) { }
 
   async createConfigFare(data: DTO_RQ_ConfigFare): Promise<DTO_RP_ConfigFare> {
     console.log('Creating config fare with data:', data);
     try {
       const route = await this.routeRepository.findOne({
-        select: ['id'],
+        select: [ 'id' ],
         where: { id: data.route_id },
       });
       if (!route) {
@@ -46,8 +46,8 @@ export class BmsConfigFareService {
         same_price: data.same_price,
         company_id: data.company_id,
         config_name: data.config_name,
-        start_date: data.date_range?.[0],
-        end_date: data.date_range?.[1],
+        start_date: data.date_range?.[ 0 ],
+        end_date: data.date_range?.[ 1 ],
       });
       const savedConfigFare = await this.configFareRepository.save(configFare);
       if (data.fare_configs?.length) {
@@ -79,7 +79,7 @@ export class BmsConfigFareService {
         double_room: savedConfigFare.double_room,
         same_price: savedConfigFare.same_price,
         config_name: savedConfigFare.config_name,
-        date_range: [savedConfigFare.start_date, savedConfigFare.end_date] as [
+        date_range: [ savedConfigFare.start_date, savedConfigFare.end_date ] as [
           Date,
           Date,
         ],
@@ -94,26 +94,24 @@ export class BmsConfigFareService {
   async getListConfigFareByCompany(
     companyId: string,
   ): Promise<DTO_RP_ConfigFare_3[]> {
+    console.time(`⏱ getListConfigFareByCompany`);
     try {
-      // 1️⃣ Lấy danh sách seat_chart chỉ của công ty này
+      const configFares = await this.configFareRepository
+        .createQueryBuilder('cf')
+        .leftJoinAndSelect('cf.route', 'r')
+        .leftJoinAndSelect('cf.fare_configs', 'fc')
+        .where('cf.company_id = :companyId', { companyId })
+        .orderBy('cf.route_id', 'ASC')
+        .addOrderBy('cf.id', 'ASC')
+        .getMany();
       const seatCharts = await this.seatChartRepository.find({
-        select: ['id', 'seat_chart_name'],
+        select: [ 'id', 'seat_chart_name' ],
         where: { company_id: companyId },
       });
-
-      // 2️⃣ Lấy toàn bộ config_fare kèm route và fare_configs
-      const configFares = await this.configFareRepository.find({
-        where: { company_id: companyId },
-        relations: ['route', 'fare_configs'],
-        order: { route_id: 'ASC', id: 'ASC' },
-      });
-
-      // 3️⃣ Gom nhóm theo route_id
+      const seatChartMap = new Map(seatCharts.map(s => [ s.id, s.seat_chart_name ]));
       const grouped = new Map<number, DTO_RP_ConfigFare_3>();
-
       for (const cf of configFares) {
         const routeId = cf.route_id;
-
         if (!grouped.has(routeId)) {
           grouped.set(routeId, {
             route_id: routeId,
@@ -122,20 +120,10 @@ export class BmsConfigFareService {
           });
         }
         const routeGroup = grouped.get(routeId)!;
-
-        // 4️⃣ Map seat_chart_id → seat_chart_name
-        const seatChartDtos: DTO_RP_ConfigFare_1[] = [];
-        if (Array.isArray(cf.seat_chart_id)) {
-          for (const id of cf.seat_chart_id) {
-            const seat = seatCharts.find((s) => s.id === id);
-            seatChartDtos.push({
-              seat_chart_id: id,
-              seat_chart_name: seat?.seat_chart_name ?? '',
-            });
-          }
-        }
-
-        // 5️⃣ Map config_fare
+        const seatChartDtos: DTO_RP_ConfigFare_1[] = (cf.seat_chart_id || []).map(id => ({
+          seat_chart_id: id,
+          seat_chart_name: seatChartMap.get(id) ?? '',
+        }));
         const mappedConfigFare: DTO_RP_ConfigFare_2 = {
           id: cf.id,
           route_id: cf.route_id,
@@ -145,35 +133,35 @@ export class BmsConfigFareService {
           double_room: !!cf.double_room,
           same_price: !!cf.same_price,
           config_name: cf.config_name,
-          date_range: [cf.start_date, cf.end_date] as [Date, Date],
-          fare_configs:
-            cf.fare_configs?.map(
-              (f): FareConfigDto => ({
-                id: f.id,
-                departure_point_id: f.departure_point_id,
-                arrival_point_id: f.arrival_point_id,
-                single_room_price: f.single_room_price,
-                double_room_price: f.double_room_price,
-              }),
-            ) ?? [],
+          date_range: [ cf.start_date, cf.end_date ] as [ Date, Date ],
+          fare_configs: cf.fare_configs?.map(
+            (f): FareConfigDto => ({
+              id: f.id,
+              departure_point_id: f.departure_point_id,
+              arrival_point_id: f.arrival_point_id,
+              single_room_price: f.single_room_price,
+              double_room_price: f.double_room_price,
+            }),
+          ) ?? [],
         };
-
         routeGroup.config_fares.push(mappedConfigFare);
       }
-
+      console.timeEnd(`⏱ getListConfigFareByCompany`);
       return Array.from(grouped.values());
     } catch (error) {
-      console.error('Error in getListConfigFareByCompany:', error);
+      console.timeEnd(`⏱ getListConfigFareByCompany`);
       throw error;
     }
   }
+
+
 
   async deleteConfigFare(configFareId: number): Promise<void> {
     console.log('Deleting config fare with ID:', configFareId);
     try {
       const configFare = await this.configFareRepository.findOne({
         where: { id: configFareId },
-        select: ['id'],
+        select: [ 'id' ],
       });
       if (!configFare) {
         throw new NotFoundException('Config fare not found');
@@ -190,18 +178,18 @@ export class BmsConfigFareService {
     console.log(`Updating config fare ID ${id} with data:`, data);
     try {
       const configFare = await this.configFareRepository.findOne({
-        select: ['id'],
+        select: [ 'id' ],
         where: { id },
       });
       if (!configFare) {
-        throw new NotFoundException('Config fare not found');
+        throw new NotFoundException('Cấu hình không tồn tại');
       }
       const route = await this.routeRepository.findOne({
-        select: ['id'],
+        select: [ 'id' ],
         where: { id: data.route_id },
       });
       if (!route) {
-        throw new NotFoundException('Route not found');
+        throw new NotFoundException('Tuyến không tồn tại');
       }
       configFare.route_id = route.id;
       configFare.trip_type = data.trip_type;
@@ -210,8 +198,8 @@ export class BmsConfigFareService {
       configFare.double_room = data.double_room;
       configFare.same_price = data.same_price;
       configFare.config_name = data.config_name;
-      configFare.start_date = data.date_range?.[0];
-      configFare.end_date = data.date_range?.[1];
+      configFare.start_date = data.date_range?.[ 0 ];
+      configFare.end_date = data.date_range?.[ 1 ];
 
       const updatedConfigFare =
         await this.configFareRepository.save(configFare);
@@ -253,7 +241,7 @@ export class BmsConfigFareService {
         date_range: [
           updatedConfigFare.start_date,
           updatedConfigFare.end_date,
-        ] as [Date, Date],
+        ] as [ Date, Date ],
         fare_configs: updatedConfigFare.fare_configs,
       };
     } catch (error) {

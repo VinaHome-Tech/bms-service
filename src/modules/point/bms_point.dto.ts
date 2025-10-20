@@ -20,3 +20,10 @@ export class DTO_RQ_ItemPointConfigTime {
   time_gap: string;
   display_order: number;
 }
+export class DTO_RP_RoutePointName {
+  id: number;
+  point_name: string;
+  display_order: number;
+  time_gap: string;
+  address: string;
+}

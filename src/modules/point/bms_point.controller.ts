@@ -8,6 +8,26 @@ import { DTO_RQ_ItemPointConfigTime } from './bms_point.dto';
 export class BmsPointController {
   constructor(private readonly bmsPointService: BmsPointService) {}
 
+  @MessagePattern({ bms: 'GET_LIST_ROUTE_POINT_NAME_BY_ROUTE' })
+  async getListRoutePointNameByRoute(@Payload() data: number) {
+    try {
+      const result =
+        await this.bmsPointService.getListRoutePointNameByRoute(data);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
   @MessagePattern({ bms: 'GET_LIST_POINT_NAME_BY_ROUTE' })
   async getListPointNameByRoute(@Payload() data: number) {
     try {

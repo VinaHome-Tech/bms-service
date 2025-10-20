@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { SeatChart } from './seat_chart.entity';
 import { Schedule } from './schedule.entity';
-import { TripTicketSummary } from '../modules/trip/trip_ticket_summary';
+import { TripTicketSummary } from './trip_ticket_summary.entity';
 import { Route } from './route.entity';
 import { Vehicle } from './vehicle.entity';
 

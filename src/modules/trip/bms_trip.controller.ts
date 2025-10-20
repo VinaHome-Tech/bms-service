@@ -1,16 +1,16 @@
 import { Controller, HttpStatus } from '@nestjs/common';
-import { TripService } from './trip.service';
+import { BmsTripService } from './bms_trip.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import {
   DTO_RQ_ChangeTimeTrip,
   DTO_RQ_GetListTrip,
   DTO_RQ_UpdateTrip,
-} from './trip.dto';
+} from './bms_trip.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
-export class TripController {
-  constructor(private readonly tripService: TripService) {}
+export class BmsTripController {
+  constructor(private readonly tripService: BmsTripService) {}
 
   // BM-37 Get List Seat By Trip
   @MessagePattern({ bms: 'get_list_seat_by_trip' })

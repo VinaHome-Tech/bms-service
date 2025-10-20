@@ -1,4 +1,4 @@
-import { DTO_RP_ListTrip, EmployeeItem } from './trip.dto';
+import { DTO_RP_ListTrip, EmployeeItem } from './bms_trip.dto';
 import { Trip } from '../../entities/trip.entity';
 
 export class TripMapper {
