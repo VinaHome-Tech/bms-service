@@ -6,14 +6,14 @@ import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class BmsOfficeController {
-  constructor(private readonly officeService: BmsOfficeService) {}
+  constructor(private readonly service: BmsOfficeService) {}
 
   // M1_v2.F1
   @MessagePattern({ bms: 'get_list_office_room_work_by_company_id' })
   async GetListOfficeRoomWorkByCompanyId(@Payload() id: string) {
     try {
       const result =
-        await this.officeService.GetListOfficeRoomWorkByCompanyId(id);
+        await this.service.GetListOfficeRoomWorkByCompanyId(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -28,28 +28,32 @@ export class BmsOfficeController {
       });
     }
   }
-  @MessagePattern({ bms: 'get_office_info' })
-  getOffice() {
-    return {
-      success: true,
-      statusCode: 200,
-      message: 'Office service is running',
-    };
+
+  // M1_v2.F2
+  @MessagePattern({ bms: 'get_list_office_by_company_id' })
+  async GetListOfficeByCompanyId(@Payload() id: string) {
+    try {
+      const result = await this.service.GetListOfficeByCompanyId(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || error.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
   }
 
+  // M1_v2.F3
   @MessagePattern({ bms: 'create_office' })
-  async createOffice(
-    @Payload()
-    payload: {
-      user: DTO_RQ_UserAction;
-      data_create: DTO_RQ_Office;
-    },
-  ) {
+  async CreateOffice(@Payload() payload: { id: string; data: DTO_RQ_Office }) {
     try {
-      const result = await this.officeService.createOffice(
-        payload.user,
-        payload.data_create,
-      );
+      const result = await this.service.CreateOffice(payload.id, payload.data);
       return {
         success: true,
         statusCode: HttpStatus.CREATED,
@@ -59,18 +63,80 @@ export class BmsOfficeController {
     } catch (error) {
       throw new RpcException({
         success: false,
-        message: error.response?.message || 'Service error!',
+        message: error.response?.message || error.message || 'Service error!',
         statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
+
+  // M1_v2.F4
+  @MessagePattern({ bms: 'update_office_by_id' })
+  async UpdateOffice(
+    @Payload() payload: { id: number; data: DTO_RQ_Office },
+  ) {
+    try {
+      const result = await this.service.UpdateOffice(
+        payload.id,
+        payload.data,
+      );
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || error.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  @MessagePattern({ bms: 'get_office_info' })
+  getOffice() {
+    return {
+      success: true,
+      statusCode: 200,
+      message: 'Office service is running',
+    };
+  }
+
+  // @MessagePattern({ bms: 'create_office' })
+  // async createOffice(
+  //   @Payload()
+  //   payload: {
+  //     user: DTO_RQ_UserAction;
+  //     data_create: DTO_RQ_Office;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.service.createOffice(
+  //       payload.user,
+  //       payload.data_create,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.CREATED,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   @MessagePattern({ bms: 'delete_office' })
   async deleteOffice(
     @Payload() payload: { id: number; user: DTO_RQ_UserAction },
   ) {
     try {
-      await this.officeService.deleteOffice(payload.id, payload.user);
+      await this.service.deleteOffice(payload.id, payload.user);
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -95,7 +161,7 @@ export class BmsOfficeController {
     },
   ) {
     try {
-      const result = await this.officeService.updateOffice(
+      const result = await this.service.updateOffice(
         payload.id,
         payload.user,
         payload.data_update,
@@ -118,7 +184,7 @@ export class BmsOfficeController {
   @MessagePattern({ bms: 'get_list_office_by_company' })
   async getListOfficeByCompany(@Payload() id: string) {
     try {
-      const result = await this.officeService.getListOfficeByCompany(id);
+      const result = await this.service.getListOfficeByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -137,7 +203,7 @@ export class BmsOfficeController {
   @MessagePattern({ bms: 'get_list_office_name_by_company' })
   async getListOfficeNameByCompany(@Payload() id: number) {
     try {
-      const result = await this.officeService.getListOfficeNameByCompany(id);
+      const result = await this.service.getListOfficeNameByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -159,7 +225,7 @@ export class BmsOfficeController {
   async getListOfficeRoomWorkByCompany(@Payload() id: string) {
     try {
       const result =
-        await this.officeService.getListOfficeRoomWorkByCompany(id);
+        await this.service.getListOfficeRoomWorkByCompany(id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
