@@ -14,6 +14,8 @@ async function bootstrap() {
         reconnect: true,
         maxReconnectAttempts: -1,
         reconnectTimeWait: 5000,
+        user: configuration().nats.user,
+        pass: configuration().nats.pass,
       },
     },
   );

@@ -15,5 +15,7 @@ export default () => ({
   },
   nats: {
     url: process.env.NATS_SERVER,
+    user: process.env.NATS_USER || '',
+    pass: process.env.NATS_PASS || '',
   },
 });

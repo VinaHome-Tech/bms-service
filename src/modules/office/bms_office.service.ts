@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DTO_RP_Office, DTO_RQ_Office } from './office.dto';
+import { DTO_RP_Office, DTO_RP_OfficeRoomWork, DTO_RQ_Office } from './bms_office.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Office } from '../../entities/office.entity';
@@ -12,7 +12,7 @@ import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { OfficeMapper } from './office.mapper';
 
 @Injectable()
-export class OfficeService {
+export class BmsOfficeService {
   constructor(
     // @InjectRepository(Company)
     // private readonly companyRepository: Repository<Company>,
@@ -22,7 +22,31 @@ export class OfficeService {
 
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
-  ) {}
+  ) { }
+
+  // M1_v2.F1
+  async GetListOfficeRoomWorkByCompanyId(id: string): Promise<DTO_RP_OfficeRoomWork[]> {
+    const offices = await this.officeRepository.find({
+      where: { company_id: id },
+      relations: [ 'phones' ],
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        status: true,
+        phones: {
+          id: true,
+          phone: true,
+        },
+      },
+    });
+    if (!offices.length) {
+      throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+    }
+    return offices;
+  }
+
+
 
   async createOffice(
     user: DTO_RQ_UserAction,

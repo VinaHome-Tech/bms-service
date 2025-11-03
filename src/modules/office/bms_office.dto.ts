@@ -6,6 +6,17 @@ export class DTO_RQ_Office {
   status: boolean;
   phones: DTO_RQ_OfficePhone[];
 }
+export class DTO_RP_OfficeRoomWork {
+  id: number;
+  name: string;
+  address: string;
+  status: boolean;
+  phones: DTO_RP_OfficePhone_2[];
+}
+export class DTO_RP_OfficePhone_2 {
+  id: number;
+  phone: string;
+}
 export class DTO_RQ_OfficePhone {
   id: number;
   phone: string;

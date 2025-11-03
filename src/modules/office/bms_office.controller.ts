@@ -1,12 +1,33 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { OfficeService } from './office.service';
-import { DTO_RQ_Office } from './office.dto';
+import { BmsOfficeService } from './bms_office.service';
+import { DTO_RQ_Office } from './bms_office.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
-export class OfficeController {
-  constructor(private readonly officeService: OfficeService) {}
+export class BmsOfficeController {
+  constructor(private readonly officeService: BmsOfficeService) {}
+
+  // M1_v2.F1
+  @MessagePattern({ bms: 'get_list_office_room_work_by_company_id' })
+  async GetListOfficeRoomWorkByCompanyId(@Payload() id: string) {
+    try {
+      const result =
+        await this.officeService.GetListOfficeRoomWorkByCompanyId(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || error.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
   @MessagePattern({ bms: 'get_office_info' })
   getOffice() {
     return {
