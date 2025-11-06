@@ -94,6 +94,25 @@ export class BmsOfficeController {
     }
   }
 
+  // M1_v2.F5
+  @MessagePattern({ bms: 'delete_office_by_id' })
+  async DeleteOffice(@Payload() id: number) {
+    try {
+      await this.service.DeleteOffice(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || error.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
   @MessagePattern({ bms: 'get_office_info' })
   getOffice() {
     return {
@@ -131,55 +150,55 @@ export class BmsOfficeController {
   //   }
   // }
 
-  @MessagePattern({ bms: 'delete_office' })
-  async deleteOffice(
-    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
-  ) {
-    try {
-      await this.service.deleteOffice(payload.id, payload.user);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'delete_office' })
+  // async deleteOffice(
+  //   @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  // ) {
+  //   try {
+  //     await this.service.deleteOffice(payload.id, payload.user);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ bms: 'update_office' })
-  async updateOffice(
-    @Payload()
-    payload: {
-      id: number;
-      user: DTO_RQ_UserAction;
-      data_update: DTO_RQ_Office;
-    },
-  ) {
-    try {
-      const result = await this.service.updateOffice(
-        payload.id,
-        payload.user,
-        payload.data_update,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'update_office' })
+  // async updateOffice(
+  //   @Payload()
+  //   payload: {
+  //     id: number;
+  //     user: DTO_RQ_UserAction;
+  //     data_update: DTO_RQ_Office;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.service.updateOffice(
+  //       payload.id,
+  //       payload.user,
+  //       payload.data_update,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || error.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   @MessagePattern({ bms: 'get_list_office_by_company' })
   async getListOfficeByCompany(@Payload() id: string) {

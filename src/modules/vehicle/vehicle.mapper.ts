@@ -1,5 +1,5 @@
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
-import { DTO_RP_Vehicle, DTO_RQ_Vehicle } from './vehicle.dto';
+import { DTO_RP_Vehicle, DTO_RQ_Vehicle } from './bms_vehicle.dto';
 import { Vehicle } from 'src/entities/vehicle.entity';
 
 export class VehicleMapper {

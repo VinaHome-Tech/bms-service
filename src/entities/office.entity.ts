@@ -40,7 +40,8 @@ export class Office {
 
   @OneToMany(() => OfficePhone, (phone) => phone.office, {
     cascade: true,
-    eager: true,
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
   })
   phones: OfficePhone[];
 }

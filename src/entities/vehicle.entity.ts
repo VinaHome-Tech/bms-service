@@ -36,9 +36,6 @@ export class Vehicle {
   @Column()
   company_id: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
-
   @OneToMany(() => Trip, (trip) => trip.vehicle)
   trips: Trip[];
 }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { VehicleController } from './vehicle.controller';
-import { VehicleService } from './vehicle.service';
+import { VehicleController } from './bms_vehicle.controller';
+import { VehicleService } from './bms_vehicle.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Vehicle } from 'src/entities/vehicle.entity';
 
