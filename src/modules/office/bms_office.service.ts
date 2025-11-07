@@ -14,15 +14,81 @@ import { OfficePhone } from 'src/entities/office_phone.entity';
 @Injectable()
 export class BmsOfficeService {
   constructor(
-    // @InjectRepository(Company)
-    // private readonly companyRepository: Repository<Company>,
-
     @InjectRepository(Office)
     private readonly officeRepository: Repository<Office>,
-
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
   ) { }
+
+
+  // M1_v2.F5
+  async DeleteOffice(id: number): Promise<void> {
+    const office = await this.officeRepository.findOne({
+      where: { id },
+    });
+    if (!office) {
+      throw new NotFoundException('Văn phòng không tồn tại');
+    }
+    await this.officeRepository.remove(office);
+  }
+  // M1_v2.F4
+  async UpdateOffice(id: number, data: DTO_RQ_Office): Promise<DTO_RP_Office> {
+    const office = await this.officeRepository.findOne({
+      where: { id },
+      relations: ['phones'],
+    });
+    if (!office) {
+      throw new NotFoundException('Văn phòng không tồn tại.');
+    }
+    if (data.name && data.name !== office.name) {
+      const existingOffice = await this.officeRepository.findOne({
+        where: { name: data.name, company_id: office.company_id },
+      });
+      if (existingOffice) {
+        throw new ConflictException('Tên văn phòng đã tồn tại.');
+      }
+    }
+    Object.assign(office, {
+      name: data.name,
+      code: data.code,
+      address: data.address,
+      note: data.note,
+      status: data.status,
+    });
+    if (data.phones) {
+      const existingPhoneIds = office.phones.map(p => p.id);
+      const newPhoneIds = data.phones.filter(p => p.id).map(p => p.id);
+      const phonesToDeleteIds = existingPhoneIds.filter(id => !newPhoneIds.includes(id));
+      if (phonesToDeleteIds.length > 0) {
+        await this.officePhoneRepository.delete(phonesToDeleteIds);
+      }
+      office.phones = data.phones.map(phoneData => {
+        if (phoneData.id && existingPhoneIds.includes(phoneData.id)) {
+          const existing = office.phones.find(p => p.id === phoneData.id);
+          if (existing) {
+            existing.phone = phoneData.phone;
+            existing.type = phoneData.type;
+            return existing;
+          }
+        }
+        return this.officePhoneRepository.create({
+          phone: phoneData.phone,
+          type: phoneData.type,
+          office: { id },
+        });
+      });
+    } else {
+      if (office.phones.length > 0) {
+        await this.officePhoneRepository.delete({ office: { id } });
+      }
+      office.phones = [];
+    }
+    const updatedOffice = await this.officeRepository.save(office);
+    if (updatedOffice.phones) {
+      updatedOffice.phones.forEach((p) => delete p.office);
+    }
+    return updatedOffice;
+  }
 
   // M1_v2.F3
   async CreateOffice(
@@ -74,13 +140,11 @@ export class BmsOfficeService {
     };
   }
 
-
-
   // M1_v2.F1
   async GetListOfficeRoomWorkByCompanyId(id: string): Promise<DTO_RP_OfficeRoomWork[]> {
     const offices = await this.officeRepository.find({
       where: { company_id: id },
-      relations: [ 'phones' ],
+      relations: ['phones'],
       order: { created_at: 'DESC' },
       select: {
         id: true,
@@ -104,7 +168,7 @@ export class BmsOfficeService {
   async GetListOfficeByCompanyId(id: string): Promise<DTO_RP_Office[]> {
     const offices = await this.officeRepository.find({
       where: { company_id: id },
-      relations: [ 'phones' ],
+      relations: ['phones'],
       order: { created_at: 'DESC' },
       select: {
         id: true,
@@ -117,6 +181,7 @@ export class BmsOfficeService {
         phones: {
           id: true,
           phone: true,
+          type: true,
         },
       },
     });
@@ -126,125 +191,136 @@ export class BmsOfficeService {
     return offices;
   }
 
+  // async createOffice(
+  //   user: DTO_RQ_UserAction,
+  //   data_create: DTO_RQ_Office,
+  // ): Promise<DTO_RP_Office> {
+  //   console.log('User:', user);
+  //   console.log('Data Create:', data_create);
+  //   const existingOffice = await this.officeRepository.findOne({
+  //     where: {
+  //       name: data_create.name,
+  //       company_id: user.company_id,
+  //     },
+  //   });
+  //   if (existingOffice) {
+  //     throw new ConflictException('Tên văn phòng đã tồn tại.');
+  //   }
+  //   const office = OfficeMapper.toCreateEntity(user, data_create);
+  //   const savedOffice = await this.officeRepository.save(office);
+  //   if (savedOffice.phones) {
+  //     savedOffice.phones.forEach((p) => delete p.office);
+  //   }
+  //   console.log('Saved Office:', savedOffice);
+  //   return OfficeMapper.toDTO(savedOffice);
+  // }
 
+  // async deleteOffice(id: number, user: DTO_RQ_UserAction): Promise<void> {
+  //   console.log('Delete Office ID:', id);
+  //   console.log('User:', user);
+  //   const office = await this.officeRepository.findOne({
+  //     where: { id },
+  //   });
 
-  async createOffice(
-    user: DTO_RQ_UserAction,
-    data_create: DTO_RQ_Office,
-  ): Promise<DTO_RP_Office> {
-    console.log('User:', user);
-    console.log('Data Create:', data_create);
-    const existingOffice = await this.officeRepository.findOne({
-      where: {
-        name: data_create.name,
-        company_id: user.company_id,
-      },
-    });
-    if (existingOffice) {
-      throw new ConflictException('Tên văn phòng đã tồn tại.');
-    }
-    const office = OfficeMapper.toCreateEntity(user, data_create);
-    const savedOffice = await this.officeRepository.save(office);
-    if (savedOffice.phones) {
-      savedOffice.phones.forEach((p) => delete p.office);
-    }
-    console.log('Saved Office:', savedOffice);
-    return OfficeMapper.toDTO(savedOffice);
-  }
+  //   if (!office) {
+  //     throw new NotFoundException('Văn phòng không tồn tại');
+  //   }
 
-  async deleteOffice(id: number, user: DTO_RQ_UserAction): Promise<void> {
-    console.log('Delete Office ID:', id);
-    console.log('User:', user);
-    const office = await this.officeRepository.findOne({
-      where: { id },
-    });
+  //   await this.officeRepository.remove(office);
+  // }
 
-    if (!office) {
-      throw new NotFoundException('Văn phòng không tồn tại');
-    }
+  // async updateOffice(
+  //   id: number,
+  //   user: DTO_RQ_UserAction,
+  //   data_update: DTO_RQ_Office,
+  // ): Promise<DTO_RP_Office> {
+  //   console.log('Update Office ID:', id);
+  //   console.log('User:', user);
+  //   console.log('Data Update:', data_update);
+  //   const office = await this.officeRepository.findOne({
+  //     where: { id },
+  //     relations: ['phones'],
+  //   });
 
-    await this.officeRepository.remove(office);
-  }
+  //   if (!office) {
+  //     throw new NotFoundException('Văn phòng không tồn tại');
+  //   }
 
-  async updateOffice(
-    id: number,
-    user: DTO_RQ_UserAction,
-    data_update: DTO_RQ_Office,
-  ): Promise<DTO_RP_Office> {
-    console.log('Update Office ID:', id);
-    console.log('User:', user);
-    console.log('Data Update:', data_update);
-    const office = await this.officeRepository.findOne({
-      where: { id },
-      relations: [ 'phones' ],
-    });
+  //   if (data_update.name) {
+  //     const existingOffice = await this.officeRepository.findOne({
+  //       where: {
+  //         name: data_update.name,
+  //         company_id: user.company_id,
+  //       },
+  //     });
+  //     if (existingOffice && existingOffice.id !== id) {
+  //       throw new ConflictException('Tên văn phòng đã tồn tại.');
+  //     }
+  //   }
 
-    if (!office) {
-      throw new NotFoundException('Văn phòng không tồn tại');
-    }
+  //   office.name = data_update.name;
+  //   office.code = data_update.code;
+  //   office.address = data_update.address;
+  //   office.note = data_update.note;
+  //   office.status = data_update.status;
 
-    if (data_update.name) {
-      const existingOffice = await this.officeRepository.findOne({
-        where: {
-          name: data_update.name,
-          company_id: user.company_id,
-        },
-      });
-      if (existingOffice && existingOffice.id !== id) {
-        throw new ConflictException('Tên văn phòng đã tồn tại.');
-      }
-    }
+  //   if (data_update.phones) {
+  //     const inputPhones = data_update.phones;
 
-    office.name = data_update.name;
-    office.code = data_update.code;
-    office.address = data_update.address;
-    office.note = data_update.note;
-    office.status = data_update.status;
+  //     // IDs present in the incoming payload
+  //     const inputPhoneIds = inputPhones.filter((p) => p.id).map((p) => p.id);
 
-    if (data_update.phones) {
-      const inputPhones = data_update.phones;
+  //     // Phones that exist in DB but are not present in the incoming payload -> delete them
+  //     const existingPhones = office.phones ?? [];
+  //     const phonesToDelete = existingPhones.filter((p) => !inputPhoneIds.includes(p.id));
+  //     if (phonesToDelete.length > 0) {
+  //       // Use remove on the managed entities so TypeORM performs DELETE
+  //       await this.officePhoneRepository.remove(phonesToDelete);
+  //     }
 
-      const inputPhoneIds = inputPhones.filter((p) => p.id).map((p) => p.id);
+  //     // Start with the remaining existing phones (those that matched input ids)
+  //     office.phones = existingPhones.filter((p) => inputPhoneIds.includes(p.id));
 
-      office.phones = office.phones.filter((existingPhone) => {
-        if (!inputPhoneIds.includes(existingPhone.id)) {
-          this.officePhoneRepository.delete(existingPhone.id);
-          return false;
-        }
-        return true;
-      });
+  //     // Update existing ones and create new ones
+  //     for (const phone of inputPhones) {
+  //       if (phone.id) {
+  //         const existing = office.phones.find((p) => p.id === phone.id);
+  //         if (existing) {
+  //           existing.phone = phone.phone;
+  //           existing.type = phone.type;
+  //         } else {
+  //           // If input contained an id but it wasn't part of the loaded relation (edge case), create it
+  //           const created = this.officePhoneRepository.create({
+  //             phone: phone.phone,
+  //             type: phone.type,
+  //             office: office,
+  //           });
+  //           office.phones.push(created);
+  //         }
+  //       } else {
+  //         const newPhone = this.officePhoneRepository.create({
+  //           phone: phone.phone,
+  //           type: phone.type,
+  //           office: office,
+  //         });
+  //         office.phones.push(newPhone);
+  //       }
+  //     }
+  //   }
 
-      for (const phone of inputPhones) {
-        if (phone.id) {
-          const existing = office.phones.find((p) => p.id === phone.id);
-          if (existing) {
-            existing.phone = phone.phone;
-            existing.type = phone.type;
-          }
-        } else {
-          const newPhone = this.officePhoneRepository.create({
-            phone: phone.phone,
-            type: phone.type,
-            office: office,
-          });
-          office.phones.push(newPhone);
-        }
-      }
-    }
+  //   const updatedOffice = await this.officeRepository.save(office);
 
-    const updatedOffice = await this.officeRepository.save(office);
+  //   if (updatedOffice.phones) {
+  //     updatedOffice.phones.forEach((p) => delete p.office);
+  //   }
 
-    if (updatedOffice.phones) {
-      updatedOffice.phones.forEach((p) => delete p.office);
-    }
-
-    return OfficeMapper.toDTO(updatedOffice);
-  }
+  //   return updatedOffice;
+  // }
 
   async getListOfficeByCompany(id: string): Promise<DTO_RP_Office[]> {
     const offices = await this.officeRepository.find({
       where: { company_id: id },
-      relations: [ 'phones' ],
+      relations: ['phones'],
       order: { created_at: 'DESC' },
     });
     return offices.map((office) => OfficeMapper.toDTO(office));

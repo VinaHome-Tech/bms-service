@@ -8,13 +8,13 @@ import { Repository } from 'typeorm';
 import {
   DTO_RP_ListRouteName,
   DTO_RP_ListRouteNameToConfig,
-  DTO_RP_Route,
-  DTO_RQ_Route,
+  
 } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
 import { Route } from 'src/entities/route.entity';
 import { RoutePoint } from 'src/entities/route_point.entity';
+import { DTO_RP_Route, DTO_RQ_Route } from './bms_route.dto';
 
 @Injectable()
 export class BmsRouteService {
@@ -24,6 +24,72 @@ export class BmsRouteService {
     @InjectRepository(RoutePoint)
     private readonly routePointRepository: Repository<RoutePoint>,
   ) { }
+
+
+  // M3_v2.F1
+  async GetListRouteByCompanyId(id: string): Promise<DTO_RP_Route[]> {
+    console.log('Received company ID:', id);
+    const routes = await this.routeRepository.find({
+      where: { company_id: id },
+      select: {
+        id: true,
+        route_name: true,
+        short_name: true,
+        journey: true,
+        distance: true,
+        base_price: true,
+        e_ticket_price: true,
+        status: true,
+        note: true,
+        display_order: true,
+      },
+      order: { display_order: 'ASC' },
+    });
+    if (!routes.length) {
+      throw new NotFoundException('Không có tuyến nào cho công ty này');
+    }
+    return  routes;
+  }
+
+  // M3_v2.F2
+  async CreateRoute(
+    id: string,
+    data: DTO_RQ_Route,
+  ): Promise<DTO_RP_Route> {
+    console.log('Create Route Company ID:', id);
+    console.log('Create Route Data:', data);
+    const existingRoute = await this.routeRepository.findOne({
+      where: {
+        route_name: data.route_name,
+        company_id: id,
+      },
+    });
+    if (existingRoute) {
+      throw new ConflictException('Tên tuyến đã tồn tại.');
+    }
+    const maxOrderRoute = await this.routeRepository
+      .createQueryBuilder('route')
+      .where('route.company_id = :companyId', { companyId: id })
+      .select('MAX(route.display_order)', 'max')
+      .getRawOne();
+    const maxDisplayOrder = maxOrderRoute?.max ?? 0;
+    const newDisplayOrder = Number(maxDisplayOrder) + 1;
+    const route = this.routeRepository.create({
+      base_price: data.base_price,
+      company_id: id,
+      distance: data.distance,
+      e_ticket_price: data.e_ticket_price,
+      journey: data.journey,
+      note: data.note,
+      route_name: data.route_name,
+      route_name_e_ticket: data.route_name_e_ticket,  
+      short_name: data.short_name,
+      status: data.status,
+      display_order: newDisplayOrder,
+    });
+    const savedRoute = await this.routeRepository.save(route);
+    return savedRoute;
+  }
 
   async getListRouteNameToConfigByCompany(
     id: string,

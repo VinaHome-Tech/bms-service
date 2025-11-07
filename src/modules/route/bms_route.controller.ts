@@ -1,21 +1,43 @@
 import { Controller, HttpStatus } from '@nestjs/common';
 import { BmsRouteService } from './bms_route.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_Route } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { DTO_RQ_Route } from './bms_route.dto';
 
 @Controller()
 export class BmsRouteController {
   constructor(private readonly routeService: BmsRouteService) {}
 
+
+  // M3_v2.F1
+  @MessagePattern({ bms: 'get_list_route_by_company_id' })
+  async GetListRouteByCompanyId(@Payload() id: string) {
+    try {
+      const result = await this.routeService.GetListRouteByCompanyId(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  // // M3_v2.F2
   @MessagePattern({ bms: 'create_route' })
-  async createRoute(
-    @Payload() payload: { user: DTO_RQ_UserAction; data_create: DTO_RQ_Route },
+  async CreateRoute(
+    @Payload() payload: { id: string; data: DTO_RQ_Route },
   ) {
     try {
-      const result = await this.routeService.createRoute(
-        payload.user,
-        payload.data_create,
+      const result = await this.routeService.CreateRoute(
+        payload.id,
+        payload.data,
       );
       return {
         success: true,

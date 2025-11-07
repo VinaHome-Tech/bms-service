@@ -38,13 +38,6 @@ export class Route {
   @Column()
   company_id: string;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  created_at: Date;
-
   @OneToMany(() => Schedule, (schedule) => schedule.route)
   schedule: Schedule[];
 

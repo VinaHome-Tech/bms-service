@@ -1,25 +1,40 @@
 import { Controller, HttpStatus } from '@nestjs/common';
-import { VehicleService } from './vehicle.service';
+import { VehicleService } from './bms_vehicle.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_Vehicle } from './vehicle.dto';
+import { DTO_RQ_Vehicle } from './bms_vehicle.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 
 @Controller()
 export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
 
+  // M2_v2.F1
+  @MessagePattern({ bms: 'get_list_vehicle_by_company_id' })
+  async GetListVehicleByCompanyId(@Payload() id: string) {
+    try { 
+      const result = await this.vehicleService.GetListVehicleByCompanyId(id);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: 'Success',
+        result,
+      };
+    } catch (error) {
+      throw new RpcException({
+        success: false,
+        message: error.response?.message || 'Service error!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  // M2_v2.F2
   @MessagePattern({ bms: 'create_vehicle' })
-  async createVehicle(
-    @Payload()
-    payload: {
-      user: DTO_RQ_UserAction;
-      data_create: DTO_RQ_Vehicle;
-    },
-  ) {
+  async CreateVehicle(@Payload() payload: { id: string; data: DTO_RQ_Vehicle }) {
     try {
-      const result = await this.vehicleService.createVehicle(
-        payload.user,
-        payload.data_create,
+      const result = await this.vehicleService.CreateVehicle(
+        payload.id,
+        payload.data,
       );
       return {
         success: true,
@@ -36,39 +51,16 @@ export class VehicleController {
     }
   }
 
-  @MessagePattern({ bms: 'get_list_vehicle_by_company' })
-  async getListVehicleByCompany(@Payload() id: string) {
-    try {
-      const result = await this.vehicleService.getListVehicleByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
-
+  // M2_v2.F3
   @MessagePattern({ bms: 'update_vehicle' })
   async updateVehicle(
     @Payload()
-    payload: {
-      id: number;
-      user: DTO_RQ_UserAction;
-      data_update: DTO_RQ_Vehicle;
-    },
+    payload: {id: number; data: DTO_RQ_Vehicle},
   ) {
     try {
-      const result = await this.vehicleService.updateVehicle(
+      const result = await this.vehicleService.UpdateVehicle(
         payload.id,
-        payload.user,
-        payload.data_update,
+        payload.data,
       );
       return {
         success: true,
@@ -85,20 +77,17 @@ export class VehicleController {
     }
   }
 
+  // M2_v2.F4
   @MessagePattern({ bms: 'delete_vehicle' })
-  async deleteVehicle(
-    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  async DeleteVehicle(
+    @Payload() payload: { id: number},
   ) {
     try {
-      const result = await this.vehicleService.deleteVehicle(
-        payload.id,
-        payload.user,
-      );
+      await this.vehicleService.DeleteVehicle(payload.id);
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: 'Success',
-        result,
       };
     } catch (error) {
       throw new RpcException({
@@ -108,6 +97,29 @@ export class VehicleController {
       });
     }
   }
+
+  // @MessagePattern({ bms: 'get_list_vehicle_by_company' })
+  // async getListVehicleByCompany(@Payload() id: string) {
+  //   try {
+  //     const result = await this.vehicleService.getListVehicleByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
+
+  
+
+  
 
   // BM-32: Get License Plate By Company
   @MessagePattern({ bms: 'get_license_plate_by_company' })
