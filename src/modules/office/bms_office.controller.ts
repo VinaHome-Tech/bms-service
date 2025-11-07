@@ -70,29 +70,29 @@ export class BmsOfficeController {
   }
 
   // M1_v2.F4
-  @MessagePattern({ bms: 'update_office_by_id' })
-  async UpdateOffice(
-    @Payload() payload: { id: number; data: DTO_RQ_Office },
-  ) {
-    try {
-      const result = await this.service.UpdateOffice(
-        payload.id,
-        payload.data,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'update_office_by_id' })
+  // async UpdateOffice(
+  //   @Payload() payload: { id: number; data: DTO_RQ_Office },
+  // ) {
+  //   try {
+  //     const result = await this.service.UpdateOffice(
+  //       payload.id,
+  //       payload.data,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || error.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   @MessagePattern({ bms: 'get_office_info' })
   getOffice() {

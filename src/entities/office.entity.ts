@@ -31,16 +31,9 @@ export class Office {
   @Column()
   company_id: string;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @OneToMany(() => OfficePhone, (phone) => phone.office, {
-    cascade: true,
-    eager: true,
-  })
+  @OneToMany(() => OfficePhone, (phone) => phone.office)
   phones: OfficePhone[];
 }

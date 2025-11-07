@@ -1,30 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { HttpExceptionFilter } from './utils/http-exception.filter';
 import configuration from './config/configuration';
+import { Logger } from '@nestjs/common';
+import { CustomValidationPipe } from './utils/validation.pipe';
+import { HttpExceptionFilter } from './utils/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.NATS,
-      options: {
-        servers: configuration().nats.url,
-        reconnect: true,
-        maxReconnectAttempts: -1,
-        reconnectTimeWait: 5000,
-        user: configuration().nats.user,
-        pass: configuration().nats.pass,
-      },
-    },
-  );
-
+  const app = await NestFactory.create(AppModule);
+  const logger = new Logger('BMS_SERVICE');
+  // Cấu hình CORS
+  // app.enableCors({
+  //   origin: ['http://localhost:3000'],
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //   credentials: false,
+  //   allowedHeaders: 'Content-Type, Authorization',
+  // });
+  app.setGlobalPrefix('v1');
+  app.useGlobalPipes(new CustomValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
-  await app.listen();
-  console.log('✅ BMS Service is running');
-  console.log('Port: ', configuration().connect.port);
-  console.log('Host: ', configuration().connect.host);
-  console.log('NATS Server: ', configuration().nats.url);
+  await app.listen(Number(configuration().service.port));
+  logger.log(
+    `BMS Service is running on port ${configuration().service.port}`,
+  );
 }
 bootstrap();

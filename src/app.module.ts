@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { OfficeModule } from './modules/office/office.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,11 +11,17 @@ import { VehicleModule } from './modules/vehicle/vehicle.module';
 import configuration from './config/configuration';
 import { PointModule } from './modules/point/point.module';
 import { ConfigFareModule } from './modules/config/config_fare.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
+      isGlobal: true,
+    }),
+    JwtModule.register({
+      global: true,
+      secret: configuration().jwt.secret,
     }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
@@ -47,10 +53,11 @@ export class AppModule implements OnModuleInit {
   constructor(private dataSource: DataSource) {}
 
   onModuleInit() {
+    const logger = new Logger('DATABASE');
     if (this.dataSource.isInitialized) {
-      console.log('✅ Kết nối PostgreSQL thành công!');
+      logger.log('Kết nối PostgreSQL thành công!');
     } else {
-      console.error('❌ Kết nối PostgreSQL thất bại!');
+      logger.error('Kết nối PostgreSQL thất bại!');
     }
   }
 }

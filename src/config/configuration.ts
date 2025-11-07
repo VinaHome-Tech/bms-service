@@ -1,4 +1,19 @@
 export default () => ({
+  service: {
+    port: process.env.PORT_SERVICE,
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+  },
+  database: {
+    host: process.env.DATABASE_HOST,
+    port: Number(process.env.DATABASE_PORT),
+    username: process.env.DATABASE_USERNAME,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_DATABASE,
+  },
+
+  
   connect: {
     port: parseInt(process.env.PORT_SERVICE || '3000', 10),
     host: process.env.HOST_SERVICE,
@@ -6,13 +21,7 @@ export default () => ({
   gateway: {
     public_api: process.env.PUBLIC_API_GATEWAY,
   },
-  database: {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  },
+  
   nats: {
     url: process.env.NATS_SERVER,
     user: process.env.NATS_USER || '',
