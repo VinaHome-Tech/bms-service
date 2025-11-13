@@ -35,7 +35,4 @@ export class Vehicle {
 
   @Column()
   company_id: string;
-
-  @OneToMany(() => Trip, (trip) => trip.vehicle)
-  trips: Trip[];
 }

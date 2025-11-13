@@ -2,18 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SeatChart } from './seat_chart.entity';
-import { Trip } from './trip.entity';
 import { Route } from './route.entity';
 
 @Entity('tbl_schedule')
-@Index(['company_id'])
 export class Schedule {
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,11 +39,7 @@ export class Schedule {
   @Column()
   trip_type: number; // Loại chuyến đi (1: Chuyến cố định chở khách, 2: Chuyến cố định chở hàng, 3: Xe hợp đồng)
 
-  @CreateDateColumn({
-    name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
   @Column()
@@ -58,12 +51,9 @@ export class Schedule {
   @JoinColumn({ name: 'route_id' })
   route: Route;
 
-  @ManyToOne(() => SeatChart, (seat_chart) => seat_chart.schedule, {
+  @ManyToOne(() => SeatChart, (seat_chart) => seat_chart.schedules, {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'seat_chart_id' })
   seat_chart: SeatChart;
-
-  @OneToMany(() => Trip, (trip) => trip.schedule)
-  trips: Trip[];
 }

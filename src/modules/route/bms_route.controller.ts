@@ -1,88 +1,79 @@
-import { Controller, HttpStatus } from '@nestjs/common';
+import { Controller, Delete, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { BmsRouteService } from './bms_route.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { DTO_RQ_Route } from './bms_route.dto';
+import { TokenGuard } from 'src/guards/token.guard';
+import { Roles } from 'src/decorator/roles.decorator';
+import { CompanyIdParam } from 'src/param/CompanyIdParam';
+import { NumberIdParam } from 'src/param/NumberIdParam';
 
-@Controller()
+@Controller('bms-route')
+@UseGuards(TokenGuard)
 export class BmsRouteController {
-  constructor(private readonly routeService: BmsRouteService) {}
+  constructor(private readonly routeService: BmsRouteService) { }
+
 
 
   // M3_v2.F1
-  @MessagePattern({ bms: 'get_list_route_by_company_id' })
-  async GetListRouteByCompanyId(@Payload() id: string) {
-    try {
-      const result = await this.routeService.GetListRouteByCompanyId(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Get('companies/:id/routes')
+  @Roles('ADMIN')
+  async GetListRouteByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.routeService.GetListRouteByCompanyId(param.id);
   }
 
-  // // M3_v2.F2
-  @MessagePattern({ bms: 'create_route' })
-  async CreateRoute(
-    @Payload() payload: { id: string; data: DTO_RQ_Route },
+  // M3_v2.F2
+  @Post('companies/:id/routes')
+  @Roles('ADMIN')
+  async CreateRoute(@Param() param: CompanyIdParam, @Payload() data: DTO_RQ_Route) {
+    return await this.routeService.CreateRoute(param.id, data);
+  }
+
+  // M3_v2.F3
+  @Put(':id')
+  @Roles('ADMIN')
+  async UpdateRoute(
+    @Param() param: NumberIdParam,
+    @Payload() data: DTO_RQ_Route,
   ) {
-    try {
-      const result = await this.routeService.CreateRoute(
-        payload.id,
-        payload.data,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.CREATED,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+    return await this.routeService.UpdateRoute(
+      param.id,
+      data,
+    );
   }
 
-  @MessagePattern({ bms: 'update_route' })
-  async updateRoute(
+  // M2_v2.F4
+  @Delete(':id')
+  @Roles('ADMIN')
+  async DeleteRoute(@Param() param: NumberIdParam) {
+    return await this.routeService.DeleteRoute(param.id);
+  }
+
+  // M3_v2.F5
+  @Put('companies/:id/routes/update-order')
+  @Roles('ADMIN')
+  async UpdateRouteOrder(
+    @Param() param: CompanyIdParam,
     @Payload()
-    payload: {
-      id: number;
-      user: DTO_RQ_UserAction;
-      data_update: DTO_RQ_Route;
+    data: {
+      route_id: number;
+      display_order: number;
     },
   ) {
-    try {
-      const result = await this.routeService.updateRoute(
-        payload.id,
-        payload.user,
-        payload.data_update,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+    return await this.routeService.UpdateRouteOrder(
+      data.route_id,
+      data.display_order,
+      param.id,
+    );
   }
+
+  // M3_v2.F6
+  @Get('companies/:id/route-names')
+  @Roles('ADMIN')
+  async GetListRouteNameByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.routeService.GetListRouteNameByCompanyId(param.id);
+  }
+
 
   @MessagePattern({ bms: 'get_list_route_by_company' })
   async getListRouteByCompany(@Payload() id: string) {

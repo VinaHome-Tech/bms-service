@@ -1,6 +1,9 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { DTO_RP_Office, DTO_RP_OfficeRoomWork, DTO_RQ_Office } from './bms_office.dto';
@@ -22,174 +25,264 @@ export class BmsOfficeService {
 
 
   // M1_v2.F5
-  async DeleteOffice(id: number): Promise<void> {
-    const office = await this.officeRepository.findOne({
-      where: { id },
-    });
-    if (!office) {
-      throw new NotFoundException('Văn phòng không tồn tại');
+  async DeleteOffice(id: number) {
+    try {
+      console.time('DeleteOffice');
+      const office = await this.officeRepository.findOne({
+        where: { id },
+        relations: [ 'phones' ], // <-- rất quan trọng
+      });
+      if (!office) {
+        throw new NotFoundException('Văn phòng không tồn tại');
+      }
+      if (office.phones && office.phones.length > 0) {
+        await this.officePhoneRepository.remove(office.phones);
+      }
+      await this.officeRepository.remove(office);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Xóa văn phòng thất bại');
+    } finally {
+      console.timeEnd('DeleteOffice');
     }
-    await this.officeRepository.remove(office);
   }
+
   // M1_v2.F4
-  async UpdateOffice(id: number, data: DTO_RQ_Office): Promise<DTO_RP_Office> {
-    const office = await this.officeRepository.findOne({
-      where: { id },
-      relations: ['phones'],
-    });
-    if (!office) {
-      throw new NotFoundException('Văn phòng không tồn tại.');
-    }
-    if (data.name && data.name !== office.name) {
-      const existingOffice = await this.officeRepository.findOne({
-        where: { name: data.name, company_id: office.company_id },
+  async UpdateOffice(id: number, data: DTO_RQ_Office) {
+    try {
+      console.time('UpdateOffice');
+      const office = await this.officeRepository.findOne({
+        where: { id },
+        relations: [ 'phones' ],
       });
-      if (existingOffice) {
-        throw new ConflictException('Tên văn phòng đã tồn tại.');
+      if (!office) {
+        throw new NotFoundException('Văn phòng không tồn tại.');
       }
-    }
-    Object.assign(office, {
-      name: data.name,
-      code: data.code,
-      address: data.address,
-      note: data.note,
-      status: data.status,
-    });
-    if (data.phones) {
-      const existingPhoneIds = office.phones.map(p => p.id);
-      const newPhoneIds = data.phones.filter(p => p.id).map(p => p.id);
-      const phonesToDeleteIds = existingPhoneIds.filter(id => !newPhoneIds.includes(id));
-      if (phonesToDeleteIds.length > 0) {
-        await this.officePhoneRepository.delete(phonesToDeleteIds);
-      }
-      office.phones = data.phones.map(phoneData => {
-        if (phoneData.id && existingPhoneIds.includes(phoneData.id)) {
-          const existing = office.phones.find(p => p.id === phoneData.id);
-          if (existing) {
-            existing.phone = phoneData.phone;
-            existing.type = phoneData.type;
-            return existing;
-          }
-        }
-        return this.officePhoneRepository.create({
-          phone: phoneData.phone,
-          type: phoneData.type,
-          office: { id },
+      if (data.name && data.name !== office.name) {
+        const existingOffice = await this.officeRepository.findOne({
+          where: { name: data.name, company_id: office.company_id },
         });
-      });
-    } else {
-      if (office.phones.length > 0) {
-        await this.officePhoneRepository.delete({ office: { id } });
+        if (existingOffice) {
+          throw new ConflictException('Tên văn phòng đã tồn tại.');
+        }
       }
-      office.phones = [];
+      Object.assign(office, {
+        name: data.name,
+        code: data.code,
+        address: data.address,
+        note: data.note,
+        status: data.status,
+      });
+      if (data.phones) {
+        const existingPhoneIds = office.phones.map(p => p.id);
+        const newPhoneIds = data.phones.filter(p => p.id).map(p => p.id);
+        const phonesToDeleteIds = existingPhoneIds.filter(id => !newPhoneIds.includes(id));
+        if (phonesToDeleteIds.length > 0) {
+          await this.officePhoneRepository.delete(phonesToDeleteIds);
+        }
+        office.phones = data.phones.map(phoneData => {
+          if (phoneData.id && existingPhoneIds.includes(phoneData.id)) {
+            const existing = office.phones.find(p => p.id === phoneData.id);
+            if (existing) {
+              existing.phone = phoneData.phone;
+              existing.type = phoneData.type;
+              return existing;
+            }
+          }
+          return this.officePhoneRepository.create({
+            phone: phoneData.phone,
+            type: phoneData.type,
+            office: { id },
+          });
+        });
+      } else {
+        if (office.phones.length > 0) {
+          await this.officePhoneRepository.delete({ office: { id } });
+        }
+        office.phones = [];
+      }
+      const updatedOffice = await this.officeRepository.save(office);
+      if (updatedOffice.phones) {
+        updatedOffice.phones.forEach((p) => delete p.office);
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: updatedOffice,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error updating office:', error);
+      throw new InternalServerErrorException('Cập nhật văn phòng thất bại');
+    } finally {
+      console.timeEnd('UpdateOffice');
     }
-    const updatedOffice = await this.officeRepository.save(office);
-    if (updatedOffice.phones) {
-      updatedOffice.phones.forEach((p) => delete p.office);
-    }
-    return updatedOffice;
   }
 
   // M1_v2.F3
   async CreateOffice(
     id: string,
     data: DTO_RQ_Office,
-  ): Promise<DTO_RP_Office> {
-    const existingOffice = await this.officeRepository.findOne({
-      where: {
-        name: data.name,
-        company_id: id,
-      },
-    });
-    if (existingOffice) {
-      throw new ConflictException('Tên văn phòng đã tồn tại.');
-    }
-    const office = new Office();
-    office.name = data.name;
-    office.code = data.code;
-    office.address = data.address;
-    office.note = data.note;
-    office.status = data.status;
-    office.company_id = id;
-    if (data.phones?.length) {
-      office.phones = data.phones.map((p) => {
-        const phone = new OfficePhone();
-        phone.phone = p.phone;
-        phone.type = p.type;
-        phone.office = office;
-        return phone;
+  ) {
+    console.time('CreateOffice');
+
+    try {
+      const existingOffice = await this.officeRepository.findOne({
+        where: { name: data.name, company_id: id },
       });
-    }
-    const savedOffice = await this.officeRepository.save(office);
-    if (savedOffice.phones) {
-      savedOffice.phones.forEach((p) => delete p.office);
-    }
-    return {
-      id: savedOffice.id,
-      name: savedOffice.name,
-      code: savedOffice.code,
-      address: savedOffice.address,
-      note: savedOffice.note,
-      status: savedOffice.status,
-      created_at: savedOffice.created_at,
-      phones: (savedOffice.phones || []).map((phone) => ({
+
+      if (existingOffice) {
+        throw new ConflictException('Tên văn phòng đã tồn tại.');
+      }
+
+      const newOffice = this.officeRepository.create({
+        name: data.name,
+        code: data.code,
+        address: data.address,
+        note: data.note,
+        status: data.status,
+        company_id: id,
+      });
+
+      const savedOffice = await this.officeRepository.save(newOffice);
+
+      if (data.phones?.length) {
+        const phoneEntities = data.phones.map((p) => {
+          const phone = new OfficePhone();
+          phone.phone = p.phone;
+          phone.type = p.type;
+          phone.office = savedOffice;
+          return phone;
+        });
+
+        await this.officePhoneRepository.save(phoneEntities);
+      }
+
+      const finalOffice = await this.officeRepository.findOne({
+        where: { id: savedOffice.id },
+        relations: [ 'phones' ]
+      });
+
+      const formattedPhones = (finalOffice.phones || []).map((phone) => ({
         id: phone.id,
         phone: phone.phone,
         type: phone.type,
-      })),
-    };
+      }));
+
+      const response = {
+        id: finalOffice.id,
+        name: finalOffice.name,
+        code: finalOffice.code,
+        address: finalOffice.address,
+        note: finalOffice.note,
+        status: finalOffice.status,
+        created_at: finalOffice.created_at,
+        phones: formattedPhones,
+      };
+
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.CREATED,
+        result: response,
+      };
+
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error creating office:', error);
+      throw new InternalServerErrorException('Tạo văn phòng thất bại');
+    } finally {
+      console.timeEnd('CreateOffice');
+    }
   }
 
   // M1_v2.F1
-  async GetListOfficeRoomWorkByCompanyId(id: string): Promise<DTO_RP_OfficeRoomWork[]> {
-    const offices = await this.officeRepository.find({
-      where: { company_id: id },
-      relations: ['phones'],
-      order: { created_at: 'DESC' },
-      select: {
-        id: true,
-        name: true,
-        address: true,
-        status: true,
-        phones: {
+  async GetListOfficeRoomWorkByCompanyId(id: string) {
+    try {
+      console.time('GetListOfficeRoomWorkByCompanyId');
+      const offices = await this.officeRepository.find({
+        where: { company_id: id },
+        relations: [ 'phones' ],
+        order: { id: 'ASC' },
+        select: {
           id: true,
-          phone: true,
-          type: true,
+          name: true,
+          address: true,
+          status: true,
+          phones: {
+            id: true,
+            phone: true,
+            type: true,
+          },
         },
-      },
-    });
-    if (!offices.length) {
-      throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+      });
+      if (!offices.length) {
+        throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: offices,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error(error);
+      throw new InternalServerErrorException('Lỗi khi lấy danh sách văn phòng');
+    } finally {
+      console.timeEnd('GetListOfficeRoomWorkByCompanyId');
     }
-    return offices;
   }
 
   // M1_v2.F2
-  async GetListOfficeByCompanyId(id: string): Promise<DTO_RP_Office[]> {
-    const offices = await this.officeRepository.find({
-      where: { company_id: id },
-      relations: ['phones'],
-      order: { created_at: 'DESC' },
-      select: {
-        id: true,
-        name: true,
-        code: true,
-        address: true,
-        note: true,
-        status: true,
-        created_at: true,
-        phones: {
+  async GetListOfficeByCompanyId(id: string) {
+    try {
+      console.time('GetListOfficeByCompanyId');
+      const offices = await this.officeRepository.find({
+        where: { company_id: id },
+        relations: [ 'phones' ],
+        order: { id: 'ASC' },
+        select: {
           id: true,
-          phone: true,
-          type: true,
+          name: true,
+          code: true,
+          address: true,
+          note: true,
+          status: true,
+          created_at: true,
+          phones: {
+            id: true,
+            phone: true,
+            type: true,
+          },
         },
-      },
-    });
-    if (!offices.length) {
-      throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+      });
+      if (!offices.length) {
+        throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: offices,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error(error);
+      throw new InternalServerErrorException('Lỗi khi lấy danh sách văn phòng');
+    } finally {
+      console.timeEnd('GetListOfficeByCompanyId');
     }
-    return offices;
   }
+
+
 
   // async createOffice(
   //   user: DTO_RQ_UserAction,
@@ -320,7 +413,7 @@ export class BmsOfficeService {
   async getListOfficeByCompany(id: string): Promise<DTO_RP_Office[]> {
     const offices = await this.officeRepository.find({
       where: { company_id: id },
-      relations: ['phones'],
+      relations: [ 'phones' ],
       order: { created_at: 'DESC' },
     });
     return offices.map((office) => OfficeMapper.toDTO(office));

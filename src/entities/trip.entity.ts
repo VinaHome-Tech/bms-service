@@ -55,11 +55,6 @@ export class Trip {
   @Column()
   ticket_price: number;
 
-  @ManyToOne(() => SeatChart, (seatChart) => seatChart.trips, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'seat_chart_id' })
-  seat_chart: SeatChart;
 
   @ManyToOne(() => Route, (route) => route.trips, {
     onDelete: 'CASCADE',
@@ -67,13 +62,8 @@ export class Trip {
   @JoinColumn({ name: 'route_id' })
   route: Route;
 
-  @ManyToOne(() => Vehicle, (vehicle) => vehicle.trips, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'vehicle_id' })
-  vehicle: Vehicle;
 
-  @ManyToOne(() => Schedule, (schedule) => schedule.trips, {
+  @ManyToOne(() => Schedule, {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'schedule_id' })

@@ -1,102 +1,70 @@
-import { Controller, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { VehicleService } from './bms_vehicle.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { DTO_RQ_Vehicle } from './bms_vehicle.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { TokenGuard } from 'src/guards/token.guard';
+import { Roles } from 'src/decorator/roles.decorator';
+import { CompanyIdParam } from 'src/param/CompanyIdParam';
+import { NumberIdParam } from 'src/param/NumberIdParam';
 
-@Controller()
+@Controller('bms-vehicle')
+@UseGuards(TokenGuard)
 export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
 
   // M2_v2.F1
-  @MessagePattern({ bms: 'get_list_vehicle_by_company_id' })
-  async GetListVehicleByCompanyId(@Payload() id: string) {
-    try { 
-      const result = await this.vehicleService.GetListVehicleByCompanyId(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Get('companies/:id/vehicles')
+  @Roles('ADMIN')
+  async GetListVehicleByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.vehicleService.GetListVehicleByCompanyId(param.id);
   }
 
   // M2_v2.F2
-  @MessagePattern({ bms: 'create_vehicle' })
-  async CreateVehicle(@Payload() payload: { id: string; data: DTO_RQ_Vehicle }) {
-    try {
-      const result = await this.vehicleService.CreateVehicle(
-        payload.id,
-        payload.data,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.CREATED,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Post('companies/:id/vehicles')
+  @Roles('ADMIN')
+  async CreateVehicle(@Param() param: CompanyIdParam, @Body() data: DTO_RQ_Vehicle) { 
+    return await this.vehicleService.CreateVehicle(
+      param.id,
+      data,
+    );
   }
 
   // M2_v2.F3
-  @MessagePattern({ bms: 'update_vehicle' })
-  async updateVehicle(
-    @Payload()
-    payload: {id: number; data: DTO_RQ_Vehicle},
+  @Put(':id')
+  @Roles('ADMIN')
+  async UpdateVehicle(
+    @Param() param: NumberIdParam,
+    @Body() data: DTO_RQ_Vehicle,
   ) {
-    try {
-      const result = await this.vehicleService.UpdateVehicle(
-        payload.id,
-        payload.data,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Server error',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+    return await this.vehicleService.UpdateVehicle(param.id, data);
   }
 
   // M2_v2.F4
-  @MessagePattern({ bms: 'delete_vehicle' })
-  async DeleteVehicle(
-    @Payload() payload: { id: number},
-  ) {
-    try {
-      await this.vehicleService.DeleteVehicle(payload.id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Server error',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Delete(':id')
+  @Roles('ADMIN')
+  async DeleteVehicle(@Param() param: NumberIdParam) {
+    return await this.vehicleService.DeleteVehicle(param.id);
   }
+  // @MessagePattern({ bms: 'delete_vehicle' })
+  // async DeleteVehicle(
+  //   @Payload() payload: { id: number},
+  // ) {
+  //   try {
+  //     await this.vehicleService.DeleteVehicle(payload.id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Server error',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   // @MessagePattern({ bms: 'get_list_vehicle_by_company' })
   // async getListVehicleByCompany(@Payload() id: string) {

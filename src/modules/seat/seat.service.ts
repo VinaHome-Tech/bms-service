@@ -8,7 +8,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SeatChart } from '../../entities/seat_chart.entity';
-import { SeatMapper } from './seat.mapper';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { Seat } from 'src/entities/seat.entity';
 
@@ -24,7 +23,7 @@ export class SeatService {
   async createSeatChart(
     user: DTO_RQ_UserAction,
     data_create: DTO_RQ_CreateSeatChart,
-  ): Promise<DTO_RP_SeatChart> {
+  ) {
     console.log('User:', user);
     console.log('Data Create:', data_create);
 
@@ -63,13 +62,13 @@ export class SeatService {
 
     const savedSeats = await this.seatRepository.save(seatsToCreate);
 
-    return SeatMapper.toDTO({
-      ...savedSeatChart,
-      seats: savedSeats,
-    });
+    // return SeatMapper.toDTO({
+    //   ...savedSeatChart,
+    //   seats: savedSeats,
+    // });
   }
 
-  async getSeatChartByCompany(id: string): Promise<DTO_RP_SeatChart[]> {
+  async getSeatChartByCompany(id: string){
     console.log('Received company ID:', id);
     try {
       const seatCharts = await this.seatChartRepository.find({
@@ -84,7 +83,7 @@ export class SeatService {
 
       console.log('Found seat charts:', seatCharts);
 
-      return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
+      // return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
     } catch (error) {
       console.error('Lỗi khi lấy sơ đồ ghế:', error);
       if (error instanceof NotFoundException) {
@@ -115,7 +114,7 @@ export class SeatService {
   async updateSeatChart(
     id: number,
     data_update: DTO_RQ_UpdateSeatChart,
-  ): Promise<DTO_RP_SeatChart> {
+  ){
     console.log(data_update);
 
     // Lấy thông tin seat chart hiện tại với tất cả seats liên quan
@@ -170,17 +169,17 @@ export class SeatService {
         await this.seatRepository.save(existingSeat);
       } else {
         // Thêm seat mới
-        const newSeat = this.seatRepository.create({
-          name: seatData.name,
-          code: seatData.code,
-          status: seatData.status,
-          floor: seatData.floor,
-          row: seatData.row,
-          column: seatData.column,
-          type: seatData.type,
-          seat_chart: updatedSeatChart,
-        });
-        await this.seatRepository.save(newSeat);
+        // const newSeat = this.seatRepository.create({
+        //   name: seatData.name,
+        //   code: seatData.code,
+        //   status: seatData.status,
+        //   floor: seatData.floor,
+        //   row: seatData.row,
+        //   column: seatData.column,
+        //   type: seatData.type,
+        //   seat_chart: updatedSeatChart,
+        // });
+        // await this.seatRepository.save(newSeat);
       }
     }
 
@@ -203,7 +202,7 @@ export class SeatService {
       );
     }
 
-    return SeatMapper.toDTO(finalSeatChart);
+    // return SeatMapper.toDTO(finalSeatChart);
   }
 
   async getSeatChartNameByCompany(id: string): Promise<DTO_RP_SeatChartName[]> {

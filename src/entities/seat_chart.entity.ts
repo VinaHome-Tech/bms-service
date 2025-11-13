@@ -25,24 +25,18 @@ export class SeatChart {
   total_column: number;
   @Column()
   total_seat: number;
-  @CreateDateColumn({
-    name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
-
   @Column()
   company_id: string;
 
   @OneToMany(() => Seat, (seat) => seat.seat_chart, {
     cascade: true,
+    onDelete: 'CASCADE',
   })
   seats: Seat[];
 
   @OneToMany(() => Schedule, (schedule) => schedule.seat_chart)
-  schedule: Schedule[];
+  schedules: Schedule[];
 
-  @OneToMany(() => Trip, (trip) => trip.seat_chart)
-  trips: Trip[];
 }

@@ -1,126 +1,54 @@
-import { Controller, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { BmsOfficeService } from './bms_office.service';
 import { DTO_RQ_Office } from './bms_office.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { Roles } from 'src/decorator/roles.decorator';
+import { TokenGuard } from 'src/guards/token.guard';
+import { CompanyIdParam } from 'src/param/CompanyIdParam';
+import { NumberIdParam } from 'src/param/NumberIdParam';
 
-@Controller()
+@Controller('bms-office')
+@UseGuards(TokenGuard)
 export class BmsOfficeController {
   constructor(private readonly service: BmsOfficeService) {}
 
   // M1_v2.F1
-  @MessagePattern({ bms: 'get_list_office_room_work_by_company_id' })
-  async GetListOfficeRoomWorkByCompanyId(@Payload() id: string) {
-    try {
-      const result =
-        await this.service.GetListOfficeRoomWorkByCompanyId(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Get('companies/:id/room-work')
+  @Roles('ADMIN', 'STAFF')
+  async GetListOfficeRoomWorkByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.service.GetListOfficeRoomWorkByCompanyId(param.id);
   }
 
   // M1_v2.F2
-  @MessagePattern({ bms: 'get_list_office_by_company_id' })
-  async GetListOfficeByCompanyId(@Payload() id: string) {
-    try {
-      const result = await this.service.GetListOfficeByCompanyId(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Get('companies/:id/offices')
+  @Roles('ADMIN')
+  async GetListOfficeByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.service.GetListOfficeByCompanyId(param.id);
   }
 
   // M1_v2.F3
-  @MessagePattern({ bms: 'create_office' })
-  async CreateOffice(@Payload() payload: { id: string; data: DTO_RQ_Office }) {
-    try {
-      const result = await this.service.CreateOffice(payload.id, payload.data);
-      return {
-        success: true,
-        statusCode: HttpStatus.CREATED,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Post('companies/:id/offices')
+  @Roles('ADMIN')
+  async CreateOffice(@Param() param: CompanyIdParam, @Body() body: DTO_RQ_Office) {
+    return await this.service.CreateOffice(param.id, body);
   }
 
   // M1_v2.F4
-  // @MessagePattern({ bms: 'update_office_by_id' })
-  // async UpdateOffice(
-  //   @Payload() payload: { id: number; data: DTO_RQ_Office },
-  // ) {
-  //   try {
-  //     const result = await this.service.UpdateOffice(
-  //       payload.id,
-  //       payload.data,
-  //     );
-  //     return {
-  //       success: true,
-  //       statusCode: HttpStatus.OK,
-  //       message: 'Success',
-  //       result,
-  //     };
-  //   } catch (error) {
-  //     throw new RpcException({
-  //       success: false,
-  //       message: error.response?.message || error.message || 'Service error!',
-  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-  //     });
-  //   }
-  // }
-
+  @Put(':id')
+  @Roles('ADMIN')
+  async UpdateOffice(@Param() param: NumberIdParam, @Body() body: DTO_RQ_Office) {
+    return await this.service.UpdateOffice(param.id, body);
+  }
+  
   // M1_v2.F5
-  @MessagePattern({ bms: 'delete_office_by_id' })
-  async DeleteOffice(@Payload() id: number) {
-    try {
-      await this.service.DeleteOffice(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
+  @Delete(':id')
+  @Roles('ADMIN')
+  async DeleteOffice(@Param() param: NumberIdParam) {
+    return await this.service.DeleteOffice(param.id);
   }
 
-  @MessagePattern({ bms: 'get_office_info' })
-  getOffice() {
-    return {
-      success: true,
-      statusCode: 200,
-      message: 'Office service is running',
-    };
-  }
+  
 
   // @MessagePattern({ bms: 'create_office' })
   // async createOffice(

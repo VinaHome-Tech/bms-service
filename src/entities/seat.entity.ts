@@ -23,8 +23,6 @@ export class Seat {
   row: number;
   @Column()
   column: number;
-  @Column()
-  type: number; // 1: Ghế đơn, 2: Ghế đôi,
 
   @ManyToOne(() => SeatChart, (seatChart) => seatChart.seats, {
     onDelete: 'CASCADE',

@@ -1,6 +1,9 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,7 +11,7 @@ import { Repository } from 'typeorm';
 import {
   DTO_RP_ListRouteName,
   DTO_RP_ListRouteNameToConfig,
-  
+
 } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
@@ -27,69 +30,232 @@ export class BmsRouteService {
 
 
   // M3_v2.F1
-  async GetListRouteByCompanyId(id: string): Promise<DTO_RP_Route[]> {
-    console.log('Received company ID:', id);
-    const routes = await this.routeRepository.find({
-      where: { company_id: id },
-      select: {
-        id: true,
-        route_name: true,
-        short_name: true,
-        journey: true,
-        distance: true,
-        base_price: true,
-        e_ticket_price: true,
-        status: true,
-        note: true,
-        display_order: true,
-      },
-      order: { display_order: 'ASC' },
-    });
-    if (!routes.length) {
-      throw new NotFoundException('Không có tuyến nào cho công ty này');
+  async GetListRouteByCompanyId(id: string) {
+    try {
+      console.time('GetListRouteByCompanyId');
+      const routes = await this.routeRepository.find({
+        where: { company_id: id },
+        select: {
+          id: true,
+          base_price: true,
+          distance: true,
+          e_ticket_price: true,
+          journey: true,
+          note: true,
+          route_name: true,
+          route_name_e_ticket: true,
+          short_name: true,
+          status: true,
+          display_order: true,
+        },
+        order: { display_order: 'ASC' },
+      });
+      if (!routes.length) {
+        throw new NotFoundException('Không có tuyến nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: routes,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error(error);
+      throw new InternalServerErrorException('Lấy danh sách tuyến thất bại');
+    } finally {
+      console.timeEnd('GetListRouteByCompanyId');
     }
-    return  routes;
   }
 
   // M3_v2.F2
   async CreateRoute(
     id: string,
     data: DTO_RQ_Route,
-  ): Promise<DTO_RP_Route> {
-    console.log('Create Route Company ID:', id);
-    console.log('Create Route Data:', data);
-    const existingRoute = await this.routeRepository.findOne({
-      where: {
-        route_name: data.route_name,
+  ) {
+    try {
+      console.time('CreateRoute');
+      const existingRoute = await this.routeRepository.findOne({
+        where: {
+          route_name: data.route_name,
+          company_id: id,
+        },
+      });
+      if (existingRoute) {
+        throw new ConflictException('Tên tuyến đã tồn tại.');
+      }
+      const maxOrderRoute = await this.routeRepository
+        .createQueryBuilder('route')
+        .where('route.company_id = :companyId', { companyId: id })
+        .select('MAX(route.display_order)', 'max')
+        .getRawOne();
+      const maxDisplayOrder = maxOrderRoute?.max ?? 0;
+      const newDisplayOrder = Number(maxDisplayOrder) + 1;
+      const route = this.routeRepository.create({
+        base_price: data.base_price,
         company_id: id,
-      },
-    });
-    if (existingRoute) {
-      throw new ConflictException('Tên tuyến đã tồn tại.');
+        distance: data.distance,
+        e_ticket_price: data.e_ticket_price,
+        journey: data.journey,
+        note: data.note,
+        route_name: data.route_name,
+        route_name_e_ticket: data.route_name_e_ticket,
+        short_name: data.short_name,
+        status: data.status,
+        display_order: newDisplayOrder,
+      });
+      const savedRoute = await this.routeRepository.save(route);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.CREATED,
+        result: savedRoute,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Thêm tuyến thất bại');
+    } finally {
+      console.timeEnd('CreateRoute');
     }
-    const maxOrderRoute = await this.routeRepository
-      .createQueryBuilder('route')
-      .where('route.company_id = :companyId', { companyId: id })
-      .select('MAX(route.display_order)', 'max')
-      .getRawOne();
-    const maxDisplayOrder = maxOrderRoute?.max ?? 0;
-    const newDisplayOrder = Number(maxDisplayOrder) + 1;
-    const route = this.routeRepository.create({
-      base_price: data.base_price,
-      company_id: id,
-      distance: data.distance,
-      e_ticket_price: data.e_ticket_price,
-      journey: data.journey,
-      note: data.note,
-      route_name: data.route_name,
-      route_name_e_ticket: data.route_name_e_ticket,  
-      short_name: data.short_name,
-      status: data.status,
-      display_order: newDisplayOrder,
-    });
-    const savedRoute = await this.routeRepository.save(route);
-    return savedRoute;
   }
+
+  // M3_v2.F3
+  async UpdateRoute(
+    id: number,
+    data: DTO_RQ_Route,
+  ) {
+    try {
+      console.time('UpdateRoute');
+      const route = await this.routeRepository.findOne({
+        where: { id: id },
+      });
+      if (!route) {
+        throw new NotFoundException('Tuyến không tồn tại');
+      }
+      const existingRoute = await this.routeRepository.findOne({
+        where: {
+          route_name: data.route_name,
+          company_id: route.company_id,
+        },
+      });
+      if (existingRoute && existingRoute.id !== id) {
+        throw new ConflictException('Tên tuyến đã tồn tại.');
+      }
+      Object.assign(route, data);
+      const updatedRoute = await this.routeRepository.save(route);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: updatedRoute,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error updating route:', error);
+      throw new InternalServerErrorException('Cập nhật tuyến thất bại');
+    } finally {
+      console.timeEnd('UpdateRoute');
+    }
+  }
+
+  // M3_v2.F4
+  async DeleteRoute(
+    id: number,
+  ) {
+    try {
+      console.time('DeleteRoute');
+      const route = await this.routeRepository.findOne({
+        where: { id: id },
+      });
+      if (!route) {
+        throw new NotFoundException('Tuyến không tồn tại');
+      }
+      await this.routeRepository.remove(route);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting route:', error);
+      throw new InternalServerErrorException('Xoá tuyến thất bại');
+    } finally {
+      console.timeEnd('DeleteRoute');
+    }
+  }
+
+  // M3_v2.F5
+  async UpdateRouteOrder(
+    route_id: number,
+    display_order: number,
+    id: string,
+  ) {
+    try {
+      console.time('UpdateRouteOrder');
+      const route = await this.routeRepository.findOne({
+        where: {
+          id: route_id,
+          company_id: id,
+        },
+      });
+      if (!route) {
+        throw new NotFoundException(
+          'Dữ liệu tuyến không tồn tại',
+        );
+      }
+      route.display_order = display_order;
+      const updatedRoute = await this.routeRepository.save(route);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: updatedRoute,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error updating route order:', error);
+      throw new InternalServerErrorException('Cập nhật thứ tự tuyến thất bại');
+    } finally {
+      console.timeEnd('UpdateRouteOrder');
+    }
+  }
+
+  // M3_v2.F6
+  async GetListRouteNameByCompanyId(
+    id: string,
+  ) {
+    try {
+      console.time('GetListRouteNameByCompanyId');
+      const routes = await this.routeRepository.find({
+        where: { company_id: id },
+        select: {
+          id: true,
+          route_name: true,
+        },
+        order: { display_order: 'ASC' },
+      });
+      if (!routes.length) {
+        throw new NotFoundException('Không có tuyến nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: routes,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error(error);
+      throw new InternalServerErrorException('Lấy danh sách tên tuyến thất bại');
+    } finally {
+      console.timeEnd('GetListRouteNameByCompanyId');
+    }
+  }
+
+
+
 
   async getListRouteNameToConfigByCompany(
     id: string,

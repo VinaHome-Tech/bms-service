@@ -1,12 +1,30 @@
+import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+
 export class DTO_RQ_Vehicle {
+  @IsString()
   license_plate: string;
+  @IsString()
+  @IsOptional()
   engine_number: string;
+  @IsString()
+  @IsOptional()
   frame_number: string;
+  @IsInt()
   status: number;
+  @IsString()
+  @IsOptional()
   color: string;
+  @IsString()
+  @IsOptional()
   brand: string;
+  @IsString()
+  @IsOptional()
   phone: string;
+  @IsDateString()
+  @IsOptional()
   registration_expiry: Date;
+  @IsDateString()
+  @IsOptional()
   maintenance_due: Date;
 }
 export class DTO_RQ_UpdateVehicle {

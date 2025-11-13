@@ -5,13 +5,15 @@ import { Schedule } from '../../entities/schedule.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SeatChart } from '../../entities/seat_chart.entity';
 import { Route } from 'src/entities/route.entity';
+import { BmsScheduleController } from './bms_schedule.controller';
+import { BmsScheduleService } from './bms_schedule.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Schedule, Route, SeatChart])
   ],
-  controllers: [ScheduleController],
-  providers: [ScheduleService],
+  controllers: [ScheduleController, BmsScheduleController],
+  providers: [ScheduleService, BmsScheduleService],
   exports: [],
 })
 export class ScheduleModule {}

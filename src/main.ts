@@ -8,14 +8,7 @@ import { HttpExceptionFilter } from './utils/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('BMS_SERVICE');
-  // Cấu hình CORS
-  // app.enableCors({
-  //   origin: ['http://localhost:3000'],
-  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  //   credentials: false,
-  //   allowedHeaders: 'Content-Type, Authorization',
-  // });
-  app.setGlobalPrefix('v1');
+  app.setGlobalPrefix('v2');
   app.useGlobalPipes(new CustomValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(Number(configuration().service.port));

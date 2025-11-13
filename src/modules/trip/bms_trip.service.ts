@@ -33,8 +33,6 @@ export class BmsTripService {
     private readonly scheduleRepository: Repository<Schedule>,
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
-    @InjectRepository(Vehicle)
-    private readonly vehicleRepository: Repository<Vehicle>,
     @InjectRepository(SeatChart)
     private readonly seatChartRepository: Repository<SeatChart>,
     @InjectRepository(TripTicketSummary)
@@ -341,44 +339,44 @@ export class BmsTripService {
       );
 
       console.time('🔹 Create new trips');
-      const newTrips = matchedSchedules
-        .filter((s) => !existingTripScheduleIds.has(s.id))
-        .map((schedule) =>
-          this.tripRepository.create({
-            route: schedule.route,
-            seat_chart: schedule.seat_chart,
-            trip_type: schedule.trip_type,
-            departure_time: schedule.start_time,
-            departure_date: date,
-            company_id: company,
-            schedule: schedule,
-            ticket_price: schedule.route.base_price,
-          }),
-        );
+      // const newTrips = matchedSchedules
+      //   .filter((s) => !existingTripScheduleIds.has(s.id))
+      //   .map((schedule) =>
+      //     this.tripRepository.create({
+      //       route: schedule.route,
+      //       seat_chart: schedule.seat_chart,
+      //       trip_type: schedule.trip_type,
+      //       departure_time: schedule.start_time,
+      //       departure_date: date,
+      //       company_id: company,
+      //       schedule: schedule,
+      //       ticket_price: schedule.route.base_price,
+      //     }),
+      //   );
 
-      const savedTrips = newTrips.length
-        ? await this.tripRepository.save(newTrips)
-        : [];
-      console.timeEnd('🔹 Create new trips');
-      console.log('✅ newTrips:', savedTrips.length);
+      // const savedTrips = newTrips.length
+      //   ? await this.tripRepository.save(newTrips)
+      //   : [];
+      // console.timeEnd('🔹 Create new trips');
+      // console.log('✅ newTrips:', savedTrips.length);
 
-      if (savedTrips.length > 0) {
-        console.time('🔹 Save ticket summaries');
-        const newSummaries = savedTrips.map((trip) => {
-          const schedule = matchedSchedules.find(
-            (s) => s.id === trip.schedule.id,
-          );
-          return this.tripTicketSummaryRepository.create({
-            trip,
-            total_tickets: schedule?.seat_chart?.total_seat || 0,
-            booked_tickets: 0,
-            total_tickets_price: 0,
-          });
-        });
-        await this.tripTicketSummaryRepository.save(newSummaries);
-        console.timeEnd('🔹 Save ticket summaries');
-        console.log('✅ ticketSummaries:', newSummaries.length);
-      }
+      // // if (savedTrips.length > 0) {
+      // //   console.time('🔹 Save ticket summaries');
+      // //   const newSummaries = savedTrips.map((trip) => {
+      // //     const schedule = matchedSchedules.find(
+      // //       (s) => s.id === trip.schedule.id,
+      // //     );
+      // //     return this.tripTicketSummaryRepository.create({
+      // //       trip,
+      // //       total_tickets: schedule?.seat_chart?.total_seat || 0,
+      // //       booked_tickets: 0,
+      // //       total_tickets_price: 0,
+      // //     });
+      // //   });
+      //   await this.tripTicketSummaryRepository.save(newSummaries);
+      //   console.timeEnd('🔹 Save ticket summaries');
+      //   console.log('✅ ticketSummaries:', newSummaries.length);
+      // }
 
       // --- Cập nhật tạm thời có thể comment lại để debug ---
       // console.time('🔹 Update existing trip summaries');
@@ -448,12 +446,12 @@ export class BmsTripService {
       console.log('✅ tripsInDay:', tripsInDay.length);
 
       console.time('🔹 Map trips to DTO');
-      const result = await TripMapper.mapToTripListDTO(tripsInDay);
+      // const result = await TripMapper.mapToTripListDTO(tripsInDay);
       console.timeEnd('🔹 Map trips to DTO');
 
       console.timeEnd('⏱️ getListTripByRouteAndDate');
-      console.log('✅ Final result length:', result.length);
-      return result;
+      // console.log('✅ Final result length:', result.length);
+      // return result;
     } catch (error) {
       console.timeEnd('⏱️ getListTripByRouteAndDate');
       console.error('❌ Lỗi khi lấy danh sách trip theo route và date:', error);
@@ -573,7 +571,7 @@ export class BmsTripService {
     user: DTO_RQ_UserAction,
     data_update: DTO_RQ_UpdateTrip,
     id: number,
-  ): Promise<DTO_RP_UpdateTrip> {
+  ){
     console.log('Update Trip ID:', id);
     console.log('User:', user);
     console.log('Data Update:', data_update);
@@ -616,13 +614,13 @@ export class BmsTripService {
 
     if (data_update.vehicle_id) {
       console.log('Kiểm tra phương tiện mới:', data_update.vehicle_id);
-      const vehicle = await this.vehicleRepository.findOne({
-        where: { id: data_update.vehicle_id },
-      });
-      if (!vehicle) {
-        console.error('Phương tiện không tồn tại:', data_update.vehicle_id);
-        throw new BadRequestException('Phương tiện không tồn tại');
-      }
+      // const vehicle = await this.vehicleRepository.findOne({
+      //   where: { id: data_update.vehicle_id },
+      // });
+      // if (!vehicle) {
+      //   console.error('Phương tiện không tồn tại:', data_update.vehicle_id);
+      //   throw new BadRequestException('Phương tiện không tồn tại');
+      // }
     }
 
     // Merge data
@@ -630,30 +628,30 @@ export class BmsTripService {
     const updatedTrip = this.tripRepository.merge(existingTrip, {
       departure_time: data_update.departure_time,
       note: data_update.note,
-      seat_chart: data_update.seat_chart_id
-        ? await this.seatChartRepository.findOne({
-            where: { id: data_update.seat_chart_id },
-          })
-        : existingTrip.seat_chart,
+      // seat_chart: data_update.seat_chart_id
+      //   ? await this.seatChartRepository.findOne({
+      //       where: { id: data_update.seat_chart_id },
+      //     })
+      //   : existingTrip.seat_chart,
       route: data_update.route_id
         ? await this.routeRepository.findOne({
             where: { id: data_update.route_id },
           })
         : existingTrip.route,
       trip_type: data_update.trip_type,
-      vehicle: data_update.vehicle_id
-        ? await this.vehicleRepository.findOne({
-            where: { id: data_update.vehicle_id },
-          })
-        : existingTrip.vehicle,
+      // vehicle: data_update.vehicle_id
+      //   ? await this.vehicleRepository.findOne({
+      //       where: { id: data_update.vehicle_id },
+      //     })
+      //   : existingTrip.vehicle,
     });
     console.log('Dữ liệu chuyến đi sau khi merge:', {
       departure_time: updatedTrip.departure_time,
       note: updatedTrip.note,
-      seat_chart_id: updatedTrip.seat_chart?.id || null,
+      // seat_chart_id: updatedTrip.seat_chart?.id || null,
       route_id: updatedTrip.route?.id || null,
       trip_type: updatedTrip.trip_type,
-      vehicle_id: updatedTrip.vehicle?.id || null,
+      // vehicle_id: updatedTrip.vehicle?.id || null,
     });
 
     console.log('\n=== Cập nhật tài xế ===');
@@ -692,13 +690,13 @@ export class BmsTripService {
         departure_time: savedTrip.departure_time,
         route_id: savedTrip.route?.id || null,
         route_name: savedTrip.route?.route_name || '',
-        seat_chart_id: savedTrip.seat_chart?.id || null,
-        seat_chart_name: savedTrip.seat_chart?.seat_chart_name || '',
+        // seat_chart_id: savedTrip.seat_chart?.id || null,
+        // seat_chart_name: savedTrip.seat_chart?.seat_chart_name || '',
         note: savedTrip.note || '',
         trip_type: savedTrip.trip_type,
-        vehicle_id: savedTrip.vehicle?.id || null,
-        license_plate: savedTrip.vehicle?.license_plate || '',
-        vehicle_phone: savedTrip.vehicle?.phone || '',
+        // vehicle_id: savedTrip.vehicle?.id || null,
+        // license_plate: savedTrip.vehicle?.license_plate || '',
+        // vehicle_phone: savedTrip.vehicle?.phone || '',
         assistant: this.mapPersonnel(savedTrip.assistant),
         driver: this.mapPersonnel(savedTrip.driver),
       };
@@ -706,7 +704,7 @@ export class BmsTripService {
       console.log('Kết quả trả về');
       console.log(JSON.stringify(response, null, 2));
 
-      return response;
+      // return response;
     } catch (error) {
       console.error('Lỗi khi truy vấn chuyến đi:', error);
       throw error;

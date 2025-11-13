@@ -1,5 +1,7 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -24,8 +26,9 @@ export class VehicleService {
   ) { }
 
   // M2_v2.F1
-  async GetListVehicleByCompanyId(id: string): Promise<DTO_RP_Vehicle[]> {
+  async GetListVehicleByCompanyId(id: string) {
     try {
+      console.time('GetListVehicleByCompanyId');
       const vehicles = await this.vehicleRepository.find({
         where: { company_id: id },
         order: { id: 'ASC' },
@@ -45,18 +48,25 @@ export class VehicleService {
       if (!vehicles.length) {
         throw new NotFoundException('Không có phương tiện nào cho công ty này');
       }
-      return vehicles;
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: vehicles,
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Đã xảy ra lỗi khi truy vấn phương tiện');
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Láy danh sách phương tiện thất bại');
+    } finally {
+      console.timeEnd('GetListVehicleByCompanyId');
     }
   }
 
   // M2_v2.F2
-  async CreateVehicle(id: string, data: DTO_RQ_Vehicle): Promise<DTO_RP_Vehicle> {
+  async CreateVehicle(id: string, data: DTO_RQ_Vehicle) {
     try {
+      console.time('CreateVehicle');
       const vehicle = await this.vehicleRepository.findOne({
         where: {
           license_plate: data.license_plate,
@@ -67,46 +77,84 @@ export class VehicleService {
         throw new ConflictException('Biển số xe đã tồn tại.');
       }
       const newVehicle = this.vehicleRepository.create({ ...data, company_id: id });
-      return await this.vehicleRepository.save(newVehicle);
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
+      const response = await this.vehicleRepository.save(newVehicle);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.CREATED,
+        result: response,
       }
-      throw new InternalServerErrorException('Đã xảy ra lỗi khi tạo phương tiện');
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Tạo phương tiện thất bại');
+    } finally {
+      console.timeEnd('CreateVehicle');
     }
   }
 
   // M2_v2.F3
-  async UpdateVehicle(id: number, data: DTO_RQ_Vehicle): Promise<DTO_RP_Vehicle> {
-    const vehicle = await this.vehicleRepository.findOne({
-      where: { id },
-    });
-    if (!vehicle) {
-      throw new NotFoundException('Phương tiện không tồn tại');
-    }
-    if (data.license_plate && data.license_plate !== vehicle.license_plate) {
-      const existingVehicle = await this.vehicleRepository.findOne({
-        where: {
-          company_id: vehicle.company_id,
-          license_plate: data.license_plate,
-        },
+  async UpdateVehicle(id: number, data: DTO_RQ_Vehicle) {
+    try {
+      console.time('UpdateVehicle');
+      const vehicle = await this.vehicleRepository.findOne({
+        where: { id },
       });
-
-      if (existingVehicle) {
-        throw new ConflictException('Biển số xe đã tồn tại trong công ty này');
+      if (!vehicle) {
+        throw new NotFoundException('Phương tiện không tồn tại');
       }
+      if (data.license_plate && data.license_plate !== vehicle.license_plate) {
+        const existingVehicle = await this.vehicleRepository.findOne({
+          where: {
+            company_id: vehicle.company_id,
+            license_plate: data.license_plate,
+          },
+        });
+
+        if (existingVehicle) {
+          throw new ConflictException('Biển số xe đã tồn tại trong công ty này');
+        }
+      }
+      Object.assign(vehicle, data);
+      const response = await this.vehicleRepository.save(vehicle);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: response,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Cập nhật phương tiện thất bại');
+    } finally {
+      console.timeEnd('UpdateVehicle');
     }
-    Object.assign(vehicle, data);
-    return await this.vehicleRepository.save(vehicle);
   }
 
   // M2_v2.F4
-  async DeleteVehicle(id: number): Promise<void> {
-    const vehicle = await this.vehicleRepository.findOne({ where: { id } });
-    if (!vehicle) {
-      throw new NotFoundException('Phương tiện không tồn tại');
+  async DeleteVehicle(id: number) {
+    try {
+      console.time('DeleteVehicle');
+      const vehicle = await this.vehicleRepository.findOne({ where: { id } });
+
+      if (!vehicle) {
+        throw new NotFoundException('Phương tiện không tồn tại');
+      }
+
+      await this.vehicleRepository.remove(vehicle);
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Xoá phương tiện thất bại');
+    } finally {
+      console.timeEnd('DeleteVehicle');
     }
-    await this.vehicleRepository.remove(vehicle);
   }
 
   // async createVehicle(
@@ -192,37 +240,37 @@ export class VehicleService {
   // }
 
   // BM-32: Get License Plate By Company
-  async getLicensePlateByCompany(id: string): Promise<DTO_RP_LicensePlate[]> {
-    const vehicles = await this.vehicleRepository
-      .createQueryBuilder('v')
-      .select(['v.id AS id', 'v.license_plate AS license_plate'])
-      .where('v.company_id = :id', { id })
-      .andWhere('v.status = :status', { status: 1 })
-      .getRawMany<DTO_RP_LicensePlate>();
+  async getLicensePlateByCompany(id: string): Promise < DTO_RP_LicensePlate[] > {
+  const vehicles = await this.vehicleRepository
+    .createQueryBuilder('v')
+    .select([ 'v.id AS id', 'v.license_plate AS license_plate' ])
+    .where('v.company_id = :id', { id })
+    .andWhere('v.status = :status', { status: 1 })
+    .getRawMany<DTO_RP_LicensePlate>();
 
-    if (!vehicles.length) {
-      throw new NotFoundException('Không có phương tiện nào');
-    }
+  if(!vehicles.length) {
+  throw new NotFoundException('Không có phương tiện nào');
+}
 
-    return vehicles;
+return vehicles;
   }
 
   // BM-34 Get List Registration Expiry
   async getListRegistrationExpiry(
-    id: string,
-  ): Promise<DTO_RP_RegistrationExpiry[]> {
-    const vehicles = await this.vehicleRepository.find({
-      where: { company_id: id },
-      select: {
-        id: true,
-        license_plate: true,
-        registration_expiry: true,
-      },
-      order: { registration_expiry: 'ASC' },
-    });
-    if (!vehicles.length) {
-      throw new NotFoundException('Không có phương tiện nào');
-    }
-    return vehicles;
+  id: string,
+): Promise < DTO_RP_RegistrationExpiry[] > {
+  const vehicles = await this.vehicleRepository.find({
+    where: { company_id: id },
+    select: {
+      id: true,
+      license_plate: true,
+      registration_expiry: true,
+    },
+    order: { registration_expiry: 'ASC' },
+  });
+  if(!vehicles.length) {
+  throw new NotFoundException('Không có phương tiện nào');
+}
+return vehicles;
   }
 }
