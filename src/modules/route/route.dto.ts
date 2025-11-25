@@ -41,3 +41,26 @@ export class DTO_RP_ListRouteName {
   id: number;
   route_name: string;
 }
+
+export class DTO_RP_RouteItem {
+  id: number;
+  route_name: string;
+  status: boolean;
+}
+
+export class DTO_RQ_RoutePoint {
+  point_ids: number[];
+}
+
+export class DTO_RP_RoutePoint {
+  id: number;
+  route_id: number;
+  point_id: number;
+}
+
+export class DTO_RP_ListRouteNameToConfig {
+  id: number;
+  route_name: string;
+  display_price: number;
+  point_length: number;
+}

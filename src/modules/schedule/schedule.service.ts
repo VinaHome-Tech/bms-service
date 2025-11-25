@@ -6,17 +6,14 @@ import {
 import { DTO_RP_Schedule, DTO_RQ_Schedule } from './schedule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Company } from '../company/company.entity';
-import { Route } from '../route/route.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Schedule } from './schedule.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
+import { Schedule } from '../../entities/schedule.entity';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
+import { Route } from 'src/entities/route.entity';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
 
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
@@ -31,7 +28,7 @@ export class ScheduleService {
   async createSchedule(
     user: DTO_RQ_UserAction,
     data_create: DTO_RQ_Schedule,
-  ): Promise<DTO_RP_Schedule> {
+  ) {
     console.log('User:', user);
     console.log('Data Create:', data_create);
     const existingRoute = await this.routeRepository.findOne({
@@ -70,52 +67,52 @@ export class ScheduleService {
       ? parseDateWithoutTimezone(data_create.end_date)
       : null;
 
-    const scheduleEntity = this.scheduleRepository.create({
-      ...data_create,
-      company_id: user.company_id,
-      route: { id: data_create.route_id },
-      seat_chart: data_create.seat_chart_id
-        ? { id: data_create.seat_chart_id }
-        : null,
-      start_date: startDate,
-      end_date: endDate,
-      weekdays: data_create.weekdays,
-    });
+    // const scheduleEntity = this.scheduleRepository.create({
+    //   ...data_create,
+    //   company_id: user.company_id,
+    //   route: { id: data_create.route_id },
+    //   seat_chart: data_create.seat_chart_id
+    //     ? { id: data_create.seat_chart_id }
+    //     : null,
+    //   start_date: startDate,
+    //   end_date: endDate,
+    //   weekdays: data_create.weekdays,
+    // });
 
-    const savedSchedule = await this.scheduleRepository.save(scheduleEntity);
-    if (!savedSchedule) {
-      throw new BadRequestException('Không thể tạo lịch chạy');
-    }
+    // const savedSchedule = await this.scheduleRepository.save(scheduleEntity);
+    // if (!savedSchedule) {
+    //   throw new BadRequestException('Không thể tạo lịch chạy');
+    // }
 
-    const fullSchedule = await this.scheduleRepository.findOne({
-      where: { id: savedSchedule.id },
-      relations: ['route', 'seat_chart'],
-    });
+    // const fullSchedule = await this.scheduleRepository.findOne({
+    //   where: { id: savedSchedule.id },
+    //   relations: ['route', 'seat_chart'],
+    // });
 
-    if (!fullSchedule) {
-      throw new BadRequestException(
-        'Không thể lấy thông tin lịch trình sau khi tạo',
-      );
-    }
+    // if (!fullSchedule) {
+    //   throw new BadRequestException(
+    //     'Không thể lấy thông tin lịch trình sau khi tạo',
+    //   );
+    // }
 
-    const response: DTO_RP_Schedule = {
-      id: fullSchedule.id,
-      route_id: fullSchedule.route.id,
-      route_name: fullSchedule.route.route_name,
-      seat_chart_id: fullSchedule.seat_chart?.id || null,
-      seat_chart_name: fullSchedule.seat_chart?.seat_chart_name || null,
-      start_time: fullSchedule.start_time,
-      repeat_type: fullSchedule.repeat_type,
-      weekdays: fullSchedule.weekdays,
-      odd_even_type: fullSchedule.odd_even_type,
-      start_date: fullSchedule.start_date ? data_create.start_date : null,
-      end_date: fullSchedule.is_known_end_date ? data_create.end_date : null,
-      is_known_end_date: fullSchedule.is_known_end_date,
-      trip_type: fullSchedule.trip_type,
-    };
+    // const response: DTO_RP_Schedule = {
+    //   id: fullSchedule.id,
+    //   route_id: fullSchedule.route.id,
+    //   route_name: fullSchedule.route.route_name,
+    //   seat_chart_id: fullSchedule.seat_chart?.id || null,
+    //   seat_chart_name: fullSchedule.seat_chart?.seat_chart_name || null,
+    //   start_time: fullSchedule.start_time,
+    //   repeat_type: fullSchedule.repeat_type,
+    //   weekdays: fullSchedule.weekdays,
+    //   odd_even_type: fullSchedule.odd_even_type,
+    //   start_date: fullSchedule.start_date ? data_create.start_date : null,
+    //   end_date: fullSchedule.is_known_end_date ? data_create.end_date : null,
+    //   is_known_end_date: fullSchedule.is_known_end_date,
+    //   trip_type: fullSchedule.trip_type,
+    // };
 
-    console.log('Created schedule:', response);
-    return response;
+    // console.log('Created schedule:', response);
+    // return response;
   }
 
   async getListSchedulesByCompany(id: string): Promise<DTO_RP_Schedule[]> {
@@ -129,53 +126,53 @@ export class ScheduleService {
 
     if (!schedules?.length) return [];
 
-    const response: DTO_RP_Schedule[] = schedules.map((schedule) => {
-      const adjustTimezone = (date: Date) => {
-        if (!date) return null;
-        return new Date(date.getTime() + 7 * 60 * 60 * 1000);
-      };
+    // const response: DTO_RP_Schedule[] = schedules.map((schedule) => {
+    //   const adjustTimezone = (date: Date) => {
+    //     if (!date) return null;
+    //     return new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    //   };
 
-      // Format date to YYYY-MM-DD
-      const formatDate = (date: Date | null) => {
-        if (!date) return null;
-        return date.toISOString().split('T')[0];
-      };
+    //   // Format date to YYYY-MM-DD
+    //   const formatDate = (date: Date | null) => {
+    //     if (!date) return null;
+    //     return date.toISOString().split('T')[0];
+    //   };
 
-      const localStartDate = adjustTimezone(schedule.start_date);
-      const localEndDate = schedule.end_date
-        ? adjustTimezone(schedule.end_date)
-        : null;
-      const weekdays =
-        typeof schedule.weekdays === 'string'
-          ? (schedule.weekdays as string).replace(/[{}"]/g, '').split(',')
-          : Array.isArray(schedule.weekdays)
-            ? schedule.weekdays
-            : typeof schedule.weekdays === 'number'
-              ? [schedule.weekdays]
-              : typeof schedule.weekdays === 'undefined' ||
-                  schedule.weekdays === null
-                ? []
-                : [];
+    //   const localStartDate = adjustTimezone(schedule.start_date);
+    //   const localEndDate = schedule.end_date
+    //     ? adjustTimezone(schedule.end_date)
+    //     : null;
+    //   const weekdays =
+    //     typeof schedule.weekdays === 'string'
+    //       ? (schedule.weekdays as string).replace(/[{}"]/g, '').split(',')
+    //       : Array.isArray(schedule.weekdays)
+    //         ? schedule.weekdays
+    //         : typeof schedule.weekdays === 'number'
+    //           ? [schedule.weekdays]
+    //           : typeof schedule.weekdays === 'undefined' ||
+    //               schedule.weekdays === null
+    //             ? []
+    //             : [];
 
-      return {
-        id: schedule.id,
-        route_id: schedule.route.id,
-        route_name: schedule.route.route_name,
-        seat_chart_id: schedule.seat_chart?.id || null,
-        seat_chart_name: schedule.seat_chart?.seat_chart_name || null,
-        start_time: schedule.start_time,
-        repeat_type: schedule.repeat_type,
-        weekdays,
-        odd_even_type: schedule.odd_even_type,
-        start_date: formatDate(localStartDate),
-        end_date: schedule.is_known_end_date ? formatDate(localEndDate) : null, // Fixed timezone
-        is_known_end_date: schedule.is_known_end_date,
-        trip_type: schedule.trip_type,
-      };
-    });
+    //   return {
+    //     id: schedule.id,
+    //     route_id: schedule.route.id,
+    //     route_name: schedule.route.route_name,
+    //     // seat_chart_id: schedule.seat_chart?.id || null,
+    //     // seat_chart_name: schedule.seat_chart?.seat_chart_name || null,
+    //     start_time: schedule.start_time,
+    //     repeat_type: schedule.repeat_type,
+    //     weekdays,
+    //     odd_even_type: schedule.odd_even_type,
+    //     start_date: formatDate(localStartDate),
+    //     end_date: schedule.is_known_end_date ? formatDate(localEndDate) : null, // Fixed timezone
+    //     is_known_end_date: schedule.is_known_end_date,
+    //     trip_type: schedule.trip_type,
+    //   };
+    // });
 
-    console.log('Retrieved schedules:', response);
-    return response;
+    // console.log('Retrieved schedules:', response);
+    // return response;
   }
 
   async deleteSchedule(id: number, user: DTO_RQ_UserAction): Promise<void> {
@@ -201,7 +198,7 @@ export class ScheduleService {
     id: number,
     user: DTO_RQ_UserAction,
     data_update: DTO_RQ_Schedule,
-  ): Promise<DTO_RP_Schedule> {
+  ) {
     console.log('Update ID', id);
     console.log('User:', user);
     console.log('Data Update:', data_update);
@@ -222,24 +219,24 @@ export class ScheduleService {
       if (!updatedSchedule) {
         throw new BadRequestException('Không thể cập nhật lịch chạy');
       }
-      const response: DTO_RP_Schedule = {
-        id: updatedSchedule.id,
-        route_id: updatedSchedule.route_id,
-        route_name: updatedSchedule.route?.route_name || '',
-        seat_chart_id: updatedSchedule.seat_chart_id,
-        seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
-        start_time: updatedSchedule.start_time,
-        repeat_type: updatedSchedule.repeat_type,
-        weekdays: updatedSchedule.weekdays || [],
-        odd_even_type: updatedSchedule.odd_even_type || null,
-        start_date: updatedSchedule.start_date,
-        end_date: updatedSchedule.end_date || null,
-        is_known_end_date: updatedSchedule.is_known_end_date || false,
-        trip_type: updatedSchedule.trip_type || 0,
-      };
+      // const response: DTO_RP_Schedule = {
+      //   id: updatedSchedule.id,
+      //   route_id: updatedSchedule.route_id,
+      //   route_name: updatedSchedule.route?.route_name || '',
+      //   // seat_chart_id: updatedSchedule.seat_chart_id,
+      //   // seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
+      //   start_time: updatedSchedule.start_time,
+      //   repeat_type: updatedSchedule.repeat_type,
+      //   weekdays: updatedSchedule.weekdays || [],
+      //   odd_even_type: updatedSchedule.odd_even_type || null,
+      //   start_date: updatedSchedule.start_date,
+      //   end_date: updatedSchedule.end_date || null,
+      //   is_known_end_date: updatedSchedule.is_known_end_date || false,
+      //   trip_type: updatedSchedule.trip_type || 0,
+      // };
 
-      console.log('Successfully updated schedule:', response);
-      return response;
+      // console.log('Successfully updated schedule:', response);
+      // return response;
     } catch (error) {
       console.error('Error updating schedule:', error);
       throw error;

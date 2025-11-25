@@ -1,44 +1,33 @@
-import { DTO_RP_ListTrip, EmployeeItem } from './trip.dto';
-import { Trip } from './trip.entity';
+import { DTO_RP_ListTrip, EmployeeItem } from './bms_trip.dto';
+import { Trip } from '../../entities/trip.entity';
 
 export class TripMapper {
-  static mapToTripListDTO(trips: Trip[]): DTO_RP_ListTrip[] {
-    return trips.map((trip) => {
-      // const tickets = (trip.tickets || []).filter(
-      //   (ticket) =>
-      //     ticket.seat_status === true &&
-      //     ticket.seat_name != null &&
-      //     ticket.seat_name.trim() !== '',
-      // );
-      // const bookedTickets = tickets.filter((ticket) => ticket.booked_status);
-
-      return {
-        trip_id: trip.id,
-        trip_type: trip.trip_type,
-        departure_date: trip.departure_date,
-        departure_time: trip.departure_time?.split(':').slice(0, 2).join(':'),
-        vehicle_id: trip.vehicle?.id || null,
-        note: trip.note,
-        driver: this.mapDriversToEmployeeItems(trip.driver),
-        assistant: this.mapAssistantsToEmployeeItems(trip.assistant),
-        route_id: trip.route?.id || null,
-        route_name: trip.route?.route_name || null,
-        seat_chart_id: trip.seat_chart?.id || null,
-        seat_chart_name: trip.seat_chart?.seat_chart_name || null,
-        license_plate: trip.vehicle?.license_plate || null,
-        vehicle_phone: trip.vehicle?.phone || null,
-        tickets_booked: trip.ticket_summary?.booked_tickets || 0,
-        total_ticket: trip.ticket_summary?.total_tickets || 0,
-        confirmation_depart: trip.confirmation_depart,
-        // total_fare: bookedTickets.reduce(
-        //   (sum, ticket) => sum + (ticket.ticket_display_price || 0),
-        //   0,
-        // ),
-        total_fare: 0,
-        total_tickets_price: trip.ticket_summary?.total_tickets_price || 0,
-      };
-    });
-  }
+  // static mapToTripListDTO(trips: Trip[]): DTO_RP_ListTrip[] {
+  //   // return trips.map((trip) => {
+  //   //   return {
+  //   //     trip_id: trip.id,
+  //   //     trip_type: trip.trip_type,
+  //   //     departure_date: trip.departure_date,
+  //   //     departure_time: trip.departure_time?.split(':').slice(0, 2).join(':'),
+  //   //     // vehicle_id: trip.vehicle?.id || null,
+  //   //     note: trip.note,
+  //   //     driver: this.mapDriversToEmployeeItems(trip.driver),
+  //   //     assistant: this.mapAssistantsToEmployeeItems(trip.assistant),
+  //   //     route_id: trip.route?.id || null,
+  //   //     route_name: trip.route?.route_name || null,
+  //   //     seat_chart_id: trip.seat_chart?.id || null,
+  //   //     seat_chart_name: trip.seat_chart?.seat_chart_name || null,
+  //   //     // license_plate: trip.vehicle?.license_plate || null,
+  //   //     // vehicle_phone: trip.vehicle?.phone || null,
+  //   //     tickets_booked: trip.ticket_summary?.booked_tickets || 0,
+  //   //     total_ticket: trip.ticket_summary?.total_tickets || 0,
+  //   //     confirmation_depart: trip.confirmation_depart,
+  //   //     ticket_price: trip.ticket_price || 0,
+  //   //     total_fare: 0,
+  //   //     total_tickets_price: trip.ticket_summary?.total_tickets_price || 0,
+  //   //   };
+  //   // });
+  // }
   private static mapDriversToEmployeeItems(drivers: any): EmployeeItem[] {
     if (!drivers) return [];
 

@@ -1,7 +1,7 @@
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
-import { DTO_RP_Office, DTO_RQ_Office } from './office.dto';
-import { Office } from './office.entity';
-import { OfficePhone } from './office_phone.entity';
+import { DTO_RP_Office, DTO_RQ_Office } from './bms_office.dto';
+import { Office } from '../../entities/office.entity';
+import { OfficePhone } from 'src/entities/office_phone.entity';
 
 export class OfficeMapper {
   static toDTO(office: Office): DTO_RP_Office {

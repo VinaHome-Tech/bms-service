@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TripController } from './trip.controller';
-import { TripService } from './trip.service';
+import { BmsTripController } from './bms_trip.controller';
+import { BmsTripService } from './bms_trip.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Trip } from './trip.entity';
-import { Route } from '../route/route.entity';
-import { Schedule } from '../schedule/schedule.entity';
-import { SeatChart } from '../seat/seat_chart.entity';
-import { Vehicle } from '../vehicle/vehicle.entity';
-import { TripTicketSummary } from './trip_ticket_summary';
+import { Trip } from '../../entities/trip.entity';
+import { Schedule } from '../../entities/schedule.entity';
+import { SeatChart } from '../../entities/seat_chart.entity';
+import { TripTicketSummary } from '../../entities/trip_ticket_summary.entity';
+import { Route } from 'src/entities/route.entity';
+import { Vehicle } from 'src/entities/vehicle.entity';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { TripTicketSummary } from './trip_ticket_summary';
       TripTicketSummary,
     ]),
   ],
-  controllers: [TripController],
-  providers: [TripService],
+  controllers: [BmsTripController],
+  providers: [BmsTripService],
 })
 export class TripModule {}

@@ -75,4 +75,8 @@ export class DTO_RP_ItemSeat {
   type: number;
   base_price: number;
   company_id: string;
+  route_id: number;
+  route_name: string;
+  departure_date: Date;
+  departure_time: string;
 }

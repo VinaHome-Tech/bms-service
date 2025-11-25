@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common';
-import { OfficeController } from './office.controller';
-import { OfficeService } from './office.service';
-import { Office } from './office.entity';
+import { BmsOfficeController } from './bms_office.controller';
+import { BmsOfficeService } from './bms_office.service';
+import { Office } from '../../entities/office.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OfficePhone } from './office_phone.entity';
-import { CompanyModule } from '../company/company.module';
+import { OfficePhone } from 'src/entities/office_phone.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Office, OfficePhone]), CompanyModule],
-  controllers: [OfficeController],
-  providers: [OfficeService],
+  imports: [TypeOrmModule.forFeature([Office, OfficePhone])],
+  controllers: [BmsOfficeController],
+  providers: [BmsOfficeService],
   exports: [],
 })
 export class OfficeModule {}

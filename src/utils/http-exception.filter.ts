@@ -1,60 +1,34 @@
 import {
   ExceptionFilter,
   Catch,
-  HttpException,
   ArgumentsHost,
+  HttpException,
 } from '@nestjs/common';
-import { HttpStatus } from '@nestjs/common/enums';
-import { RpcException } from '@nestjs/microservices';
+import { Response } from 'express';
 
-@Catch(HttpException, RpcException)
+@Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: HttpException | RpcException, host: ArgumentsHost) {
-    // Chuyển đổi host sang ngữ cảnh microservice
-    host.switchToRpc();
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
 
-    let statusCode: number;
-    let message: string;
-    const success: boolean = false;
+    const status = exception.getStatus();
+    const res = exception.getResponse();
 
-    // Xử lý RpcException
-    if (exception instanceof RpcException) {
-      const error = exception.getError();
-
-      // Nếu error đã có cấu trúc đầy đủ
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'statusCode' in error
-      ) {
-        return error;
-      }
-
-      // Nếu error là string
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-      message =
-        typeof error === 'string' ? error : 'Lỗi dịch vụ không xác định';
-    }
-    // Xử lý HttpException
-    else {
-      statusCode = exception.getStatus();
-      const response = exception.getResponse();
-
-      if (typeof response === 'string') {
-        message = response;
-      } else if (typeof response === 'object' && response !== null) {
-        message = response['message'] || 'Lỗi dịch vụ';
-        if (Array.isArray(message)) {
-          message = message.join(', ');
-        }
+    let message = 'Lỗi hệ thống!';
+    if (typeof res === 'string') {
+      message = res;
+    } else if (typeof res === 'object' && res !== null && 'message' in res) {
+      message = (res as any).message;
+      if (Array.isArray(message)) {
+        message = message.join(', ');
       }
     }
 
-    // Trả về response thống nhất
-    return {
-      success,
-      statusCode,
+    response.status(status).json({
+      success: false,
+      statusCode: status,
       message,
-    };
+    });
   }
 }
