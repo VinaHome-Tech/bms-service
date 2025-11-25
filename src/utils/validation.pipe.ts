@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-// utils/validation.pipe.ts
 import {
   ArgumentMetadata,
   BadRequestException,
@@ -29,15 +27,21 @@ export class CustomValidationPipe extends ValidationPipe {
       return await super.transform(value, metadata);
     } catch (error) {
       if (error instanceof BadRequestException) {
-        const response = error.getResponse();
-        console.error('Validation Error:', JSON.stringify(response, null, 2));
+        const res = error.getResponse() as any;
+
+        // 👉 CHUẨN HÓA message (có thể là string hoặc array)
+        const messages = Array.isArray(res.message)
+          ? res.message
+          : [res.message];
+
         throw new BadRequestException({
           success: false,
+          statusCode: 400,
           message: 'Dữ liệu không hợp lệ',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          errors: response['message'],
+          errors: messages, // luôn là array để client dễ hiểu
         });
       }
+
       throw error;
     }
   }

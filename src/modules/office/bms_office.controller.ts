@@ -35,16 +35,16 @@ export class BmsOfficeController {
   }
 
   // M1_v2.F4
-  @Put(':id')
-  @Roles('ADMIN')
-  async UpdateOffice(@Param() param: NumberIdParam, @Body() body: DTO_RQ_Office) {
-    return await this.service.UpdateOffice(param.id, body);
-  }
+  // @Put(':id')
+  // @Roles('ADMIN')
+  // async UpdateOffice(@Param() param: any, @Body() body: DTO_RQ_Office) {
+  //   return await this.service.UpdateOffice(param.id, body);
+  // }
   
   // M1_v2.F5
   @Delete(':id')
   @Roles('ADMIN')
-  async DeleteOffice(@Param() param: NumberIdParam) {
+  async DeleteOffice(@Param() param: any) {
     return await this.service.DeleteOffice(param.id);
   }
 
@@ -128,63 +128,63 @@ export class BmsOfficeController {
   //   }
   // }
 
-  @MessagePattern({ bms: 'get_list_office_by_company' })
-  async getListOfficeByCompany(@Payload() id: string) {
-    try {
-      const result = await this.service.getListOfficeByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_office_by_company' })
+  // async getListOfficeByCompany(@Payload() id: string) {
+  //   try {
+  //     const result = await this.service.getListOfficeByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || error.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ bms: 'get_list_office_name_by_company' })
-  async getListOfficeNameByCompany(@Payload() id: number) {
-    try {
-      const result = await this.service.getListOfficeNameByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Lấy danh sách tên văn phòng thành công',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message:
-          error.response?.message || error.message || 'Lỗi máy chủ dịch vụ!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_office_name_by_company' })
+  // async getListOfficeNameByCompany(@Payload() id: number) {
+  //   try {
+  //     const result = await this.service.getListOfficeNameByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Lấy danh sách tên văn phòng thành công',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message:
+  //         error.response?.message || error.message || 'Lỗi máy chủ dịch vụ!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   // BM-33 Get List Office Room Work By Company
-  @MessagePattern({ bms: 'get_list_office_room_work_by_company' })
-  async getListOfficeRoomWorkByCompany(@Payload() id: string) {
-    try {
-      const result =
-        await this.service.getListOfficeRoomWorkByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || error.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_office_room_work_by_company' })
+  // async getListOfficeRoomWorkByCompany(@Payload() id: string) {
+  //   try {
+  //     const result =
+  //       await this.service.getListOfficeRoomWorkByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || error.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 }

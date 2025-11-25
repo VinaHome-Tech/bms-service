@@ -7,7 +7,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { RoutePoint } from './route_point.entity';
+// import { RoutePoint } from './route_point.entity';
 import { ConfigFare } from './config-fare.entity';
 
 @Entity('tbl_route')
@@ -44,8 +44,8 @@ export class Route {
   @OneToMany(() => Trip, (trip) => trip.route)
   trips: Trip[];
 
-  @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
-  routePoints: RoutePoint[];
+  // @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
+  // routePoints: RoutePoint[];
   @OneToMany(() => ConfigFare, (configFare) => configFare.route)
   configFares: ConfigFare[];
 }

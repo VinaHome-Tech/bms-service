@@ -28,47 +28,47 @@ export class PlatformRouteController {
     }
   }
 
-  @MessagePattern({ vht: 'UPDATE_ROUTE_POINTS' })
-  async updateRoutePoints(
-    @Payload() data: { route_id: number; data_update: DTO_RQ_RoutePoint },
-  ) {
-    try {
-      const result = await this.platformRouteService.updateRoutePoints(
-        data.route_id,
-        data.data_update,
-      );
+  // @MessagePattern({ vht: 'UPDATE_ROUTE_POINTS' })
+  // async updateRoutePoints(
+  //   @Payload() data: { route_id: number; data_update: DTO_RQ_RoutePoint },
+  // ) {
+  //   try {
+  //     const result = await this.platformRouteService.updateRoutePoints(
+  //       data.route_id,
+  //       data.data_update,
+  //     );
 
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ vht: 'GET_ROUTE_POINTS' })
-  async getRoutePoints(@Payload() route_id: number) {
-    try {
-      const result = await this.platformRouteService.getRoutePoints(route_id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ vht: 'GET_ROUTE_POINTS' })
+  // async getRoutePoints(@Payload() route_id: number) {
+  //   try {
+  //     const result = await this.platformRouteService.getRoutePoints(route_id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 }

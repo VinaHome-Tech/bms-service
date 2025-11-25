@@ -1,32 +1,63 @@
-import { Type } from "class-transformer";
-import { IsBoolean, IsInt, IsOptional, IsString, ValidateNested } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, MinLength, ValidateNested } from "class-validator";
+
 
 export class DTO_RQ_Office {
+  @IsUUID()
+  @IsOptional()
+  id?: string;
+  
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   name: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   code: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   address: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsOptional()
-  note: string;
+  @MaxLength(255)
+  note?: string;
+
   @IsBoolean()
   status: boolean;
 
-  @ValidateNested()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => DTO_RQ_OfficePhone)
   phones: DTO_RQ_OfficePhone[];
 }
+
 export class DTO_RQ_OfficePhone {
-  @IsInt()
+  @IsUUID()
   @IsOptional()
-  id: number;
+  id?: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MinLength(3)
+  @MaxLength(20)
   phone: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MinLength(1)
+  @MaxLength(20)
   type: string;
 }
+
 export class DTO_RP_OfficeRoomWork {
   id: number;
   name: string;
@@ -35,13 +66,13 @@ export class DTO_RP_OfficeRoomWork {
   phones: DTO_RP_OfficePhone_2[];
 }
 export class DTO_RP_OfficePhone_2 {
-  id: number;
+  id: string;
   phone: string;
 }
 
 
 export class DTO_RP_Office {
-  id: number;
+  id: string;
   name: string;
   code: string;
   address: string;
@@ -64,7 +95,7 @@ export class DTO_RP_Office_2 {
 }
 
 export class DTO_RP_OfficePhone {
-  id: number;
+  id: string;
   phone: string;
   type: string;
 }

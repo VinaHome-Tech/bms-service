@@ -9,14 +9,17 @@ import { Office } from './office.entity';
 
 @Entity('tbl_office_phone')
 export class OfficePhone {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 20, nullable: false })
   phone: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 20, nullable: false })
   type: string;
+
+  @Column({ type: 'uuid', nullable: false })
+  office_id: string;
 
   @ManyToOne(() => Office, (office) => office.phones, {
     onDelete: 'CASCADE',
@@ -24,3 +27,4 @@ export class OfficePhone {
   @JoinColumn({ name: 'office_id' })
   office: Office;
 }
+

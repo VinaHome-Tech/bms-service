@@ -11,25 +11,25 @@ import { Schedule } from './schedule.entity';
 
 @Entity('tbl_office')
 export class Office {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: false })
   name: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: false })
   code: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: false })
   address: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: true })
   note: string;
 
-  @Column()
+  @Column({ type: 'boolean', nullable: false })
   status: boolean;
 
-  @Column()
+  @Column({ type: 'uuid', nullable: false })
   company_id: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })

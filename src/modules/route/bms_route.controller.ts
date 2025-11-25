@@ -193,24 +193,24 @@ export class BmsRouteController {
     }
   }
 
-  @MessagePattern({ bms: 'GET_LIST_ROUTE_NAME_TO_CONFIG_BY_COMPANY' })
-  async getListRouteNameToConfigByCompany(@Payload() id: string) {
-    try {
-      const result = await this.routeService.getListRouteNameToConfigByCompany(
-        id,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'GET_LIST_ROUTE_NAME_TO_CONFIG_BY_COMPANY' })
+  // async getListRouteNameToConfigByCompany(@Payload() id: string) {
+  //   try {
+  //     const result = await this.routeService.getListRouteNameToConfigByCompany(
+  //       id,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 }

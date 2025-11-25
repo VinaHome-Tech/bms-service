@@ -16,7 +16,7 @@ import {
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { RouteMapper } from './route.mapper';
 import { Route } from 'src/entities/route.entity';
-import { RoutePoint } from 'src/entities/route_point.entity';
+// import { RoutePoint } from 'src/entities/route_point.entity';
 import { DTO_RP_Route, DTO_RQ_Route } from './bms_route.dto';
 
 @Injectable()
@@ -24,8 +24,8 @@ export class BmsRouteService {
   constructor(
     @InjectRepository(Route)
     private readonly routeRepository: Repository<Route>,
-    @InjectRepository(RoutePoint)
-    private readonly routePointRepository: Repository<RoutePoint>,
+    // @InjectRepository(RoutePoint)
+    // private readonly routePointRepository: Repository<RoutePoint>,
   ) { }
 
 
@@ -292,38 +292,38 @@ export class BmsRouteService {
 
 
 
-  async getListRouteNameToConfigByCompany(
-    id: string,
-  ): Promise<DTO_RP_ListRouteNameToConfig[]> {
-    console.time('⏱ getListRouteNameToConfigByCompany');
-    try {
-      const routes = await this.routeRepository.find({
-        where: { company_id: id, status: true },
-        relations: [ 'routePoints' ],
-        select: {
-          id: true,
-          route_name: true,
-          base_price: true,
-          routePoints: { id: true },
-        },
-        order: { display_order: 'ASC' },
-      });
-      if (!routes.length) {
-        console.timeEnd('⏱ getListRouteNameToConfigByCompany');
-        return [];
-      }
-      console.timeEnd('⏱ getListRouteNameToConfigByCompany');
-      return routes.map((route) => ({
-        id: route.id,
-        route_name: route.route_name,
-        display_price: route.base_price,
-        point_length: route.routePoints.length,
-      }));
-    } catch (error) {
-      console.timeEnd('⏱ getListRouteNameToConfigByCompany');
-      throw error;
-    }
-  }
+  // async getListRouteNameToConfigByCompany(
+  //   id: string,
+  // ): Promise<DTO_RP_ListRouteNameToConfig[]> {
+  //   console.time('⏱ getListRouteNameToConfigByCompany');
+  //   try {
+  //     const routes = await this.routeRepository.find({
+  //       where: { company_id: id, status: true },
+  //       relations: [ 'routePoints' ],
+  //       select: {
+  //         id: true,
+  //         route_name: true,
+  //         base_price: true,
+  //         routePoints: { id: true },
+  //       },
+  //       order: { display_order: 'ASC' },
+  //     });
+  //     if (!routes.length) {
+  //       console.timeEnd('⏱ getListRouteNameToConfigByCompany');
+  //       return [];
+  //     }
+  //     console.timeEnd('⏱ getListRouteNameToConfigByCompany');
+  //     return routes.map((route) => ({
+  //       id: route.id,
+  //       route_name: route.route_name,
+  //       display_price: route.base_price,
+  //       point_length: route.routePoints.length,
+  //     }));
+  //   } catch (error) {
+  //     console.timeEnd('⏱ getListRouteNameToConfigByCompany');
+  //     throw error;
+  //   }
+  // }
 
 
   async createRoute(

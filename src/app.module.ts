@@ -9,7 +9,7 @@ import { ScheduleModule } from './modules/schedule/schedule.module';
 import { TripModule } from './modules/trip/trip.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
 import configuration from './config/configuration';
-import { PointModule } from './modules/point/point.module';
+// import { PointModule } from './modules/point/point.module';
 import { ConfigFareModule } from './modules/config/config_fare.module';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -32,7 +32,7 @@ import { JwtModule } from '@nestjs/jwt';
         password: configuration().database.password,
         database: configuration().database.database,
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         ssl: false,
       }),
     }),
@@ -43,7 +43,7 @@ import { JwtModule } from '@nestjs/jwt';
     ScheduleModule,
     TripModule,
     VehicleModule,
-    PointModule,
+    // PointModule,
     ConfigFareModule,
   ],
   controllers: [],
