@@ -23,7 +23,7 @@ export class BmsSeatController {
   // M4_v2.F1
   @Get('companies/:id/seat-charts')
   @Roles('ADMIN')
-  async GetListSeatChartByCompanyId(@Param() param: CompanyIdParam) {
+  async GetListSeatChartByCompanyId(@Param() param: UUIDParam) {
     return this.service.GetListSeatChartByCompanyId(param.id);
   }
 

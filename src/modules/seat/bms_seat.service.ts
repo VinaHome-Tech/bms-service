@@ -18,38 +18,47 @@ export class BmsSeatService {
   // M4_v2.F1
   async GetListSeatChartByCompanyId(companyId: string) {
     try {
-      console.time('GetListSeatChartByCompanyId');
       const seatCharts = await this.seatChartRepo.find({
-        where: {
-          company_id: companyId,
-        },
+        where: { company_id: companyId },
         relations: ['seats'],
-        select: {
-          id: true,
-          seat_chart_name: true,
-          seat_chart_type: true,
-          total_floor: true,
-          total_row: true,
-          total_column: true,
-          total_seat: true,
-          seats: true,
-        },
-        order: { id: 'ASC' },
+        order: { created_at: 'ASC' },
       });
+
+      const formatted = seatCharts.map((chart) => ({
+        id: chart.id,
+        seat_chart_name: chart.seat_chart_name,
+        seat_chart_type: chart.seat_chart_type,
+        total_floor: chart.total_floor,
+        total_row: chart.total_row,
+        total_column: chart.total_column,
+        total_seat: chart.total_seat,
+        seats: chart.seats.map((s) => ({
+          id: s.id,
+          code: s.code,
+          name: s.name,
+          status: s.status,
+          floor: s.floor,
+          row: s.row,
+          column: s.column,
+        })),
+      }));
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.OK,
-        result: seatCharts,
-      }
+        result: formatted,
+      };
+
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Lấy danh sách sơ đồ ghế thất bại');
-    } finally {
-      console.timeEnd('GetListSeatChartByCompanyId');
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau',
+      );
     }
   }
+
 
   // M4_v2.F2
   async CreateSeatChart(companyId: string, data: DTO_RQ_SeatChart) {
@@ -262,7 +271,7 @@ export class BmsSeatService {
       if (error instanceof HttpException) throw error;
       console.error(error);
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau');
-    } 
+    }
   }
 
 
