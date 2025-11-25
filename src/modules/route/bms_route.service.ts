@@ -165,43 +165,109 @@ export class BmsRouteService {
 
 
   // M3_v2.F3
-  async UpdateRoute(
-    id: string,
-    data: DTO_RQ_Route,
-  ) {
+  async UpdateRoute(id: string, data: DTO_RQ_Route) {
     try {
-      console.time('UpdateRoute');
+      // === 1. Lấy tuyến hiện tại ===
       const route = await this.routeRepository.findOne({
-        where: { id: id },
+        where: { id },
       });
+
       if (!route) {
-        throw new NotFoundException('Tuyến không tồn tại');
+        throw new NotFoundException('Tuyến không tồn tại.');
       }
-      const existingRoute = await this.routeRepository.findOne({
+
+      // === 2. Normalize dữ liệu ===
+      const routeName = data.route_name.trim();
+      const shortName = data.short_name.trim();
+      const journey = data.journey?.trim() || null;
+      const note = data.note?.trim() || null;
+      const routeNameETicket = data.route_name_e_ticket?.trim() || null;
+
+      // === 3. Kiểm tra trùng route_name ===
+      const existRoute = await this.routeRepository.findOne({
         where: {
-          route_name: data.route_name,
           company_id: route.company_id,
+          route_name: routeName,
         },
       });
-      if (existingRoute && existingRoute.id !== id) {
+
+      if (existRoute && existRoute.id !== id) {
         throw new ConflictException('Tên tuyến đã tồn tại.');
       }
-      Object.assign(route, data);
-      const updatedRoute = await this.routeRepository.save(route);
+
+      // === 4. Kiểm tra trùng short_name ===
+      const existShort = await this.routeRepository.findOne({
+        where: {
+          company_id: route.company_id,
+          short_name: shortName,
+        },
+      });
+
+      if (existShort && existShort.id !== id) {
+        throw new ConflictException('Tên tuyến rút gọn đã tồn tại.');
+      }
+
+      // === 5. Kiểm tra trùng route_name_e_ticket ===
+      if (routeNameETicket) {
+        const existET = await this.routeRepository.findOne({
+          where: {
+            company_id: route.company_id,
+            route_name_e_ticket: routeNameETicket,
+          },
+        });
+
+        if (existET && existET.id !== id) {
+          throw new ConflictException('Tên tuyến điện tử đã tồn tại.');
+        }
+      }
+
+      // === 6. Gán lại dữ liệu đã chuẩn hóa ===
+      route.route_name = routeName;
+      route.route_name_e_ticket = routeNameETicket;
+      route.short_name = shortName;
+      route.journey = journey;
+      route.note = note;
+      route.base_price = data.base_price;
+      route.e_ticket_price = data.e_ticket_price;
+      route.distance = data.distance;
+      route.status = data.status;
+      route.display_order = data.display_order ?? route.display_order;
+
+      const saved = await this.routeRepository.save(route);
+
+      // === 7. Format response không lộ dữ liệu nhạy cảm ===
+      const result = {
+        id: saved.id,
+        route_name: saved.route_name,
+        route_name_e_ticket: saved.route_name_e_ticket,
+        short_name: saved.short_name,
+        journey: saved.journey,
+        note: saved.note,
+        base_price: saved.base_price,
+        e_ticket_price: saved.e_ticket_price,
+        distance: saved.distance,
+        status: saved.status,
+        display_order: saved.display_order,
+      };
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.OK,
-        result: updatedRoute,
-      }
+        result,
+      };
+
     } catch (error) {
+      this.logger.error('UpdateRoute error:', error.stack);
+
       if (error instanceof HttpException) throw error;
-      console.error('Error updating route:', error);
-      throw new InternalServerErrorException('Cập nhật tuyến thất bại');
-    } finally {
-      console.timeEnd('UpdateRoute');
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.'
+      );
     }
   }
+
 
   // M3_v2.F4
   async DeleteRoute(
