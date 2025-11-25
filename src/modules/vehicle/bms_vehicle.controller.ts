@@ -46,6 +46,14 @@ export class VehicleController {
   async DeleteVehicle(@Param() param: NumberIdParam) {
     return await this.vehicleService.DeleteVehicle(param.id);
   }
+
+  @Get('companies/:id/vehicles/license-plates')
+  @Roles('ADMIN', 'STAFF')
+  async GetListLicensePlateVehicleByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.vehicleService.GetListLicensePlateVehicleByCompanyId(
+      param.id,
+    );
+  }
   // @MessagePattern({ bms: 'delete_vehicle' })
   // async DeleteVehicle(
   //   @Payload() payload: { id: number},

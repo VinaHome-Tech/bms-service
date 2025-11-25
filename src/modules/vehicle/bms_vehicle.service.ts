@@ -157,6 +157,36 @@ export class VehicleService {
     }
   }
 
+  async GetListLicensePlateVehicleByCompanyId(id: string) {
+    try {
+      console.time('GetListLicensePlateVehicleByCompanyId');
+      const vehicles = await this.vehicleRepository.find({
+        where: { company_id: id },
+        select: {
+          id: true,
+          license_plate: true,
+          phone: true,
+        },
+        order: { id: 'ASC' },
+      });
+      if (!vehicles.length) {
+        throw new NotFoundException('Không có phương tiện nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: vehicles,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error deleting office:', error);
+      throw new InternalServerErrorException('Láy danh sách phương tiện thất bại');
+    } finally {
+      console.timeEnd('GetListLicensePlateVehicleByCompanyId');
+    }
+  }
+
   // async createVehicle(
   //   user: DTO_RQ_UserAction,
   //   data_create: DTO_RQ_Vehicle,
