@@ -22,21 +22,21 @@ export class BmsScheduleController {
     // M5_v2.F1
     @Get('companies/:id/schedules')
     @Roles('ADMIN')
-    async GetListScheduleByCompanyId(@Param() param: CompanyIdParam) {
+    async GetListScheduleByCompanyId(@Param() param: UUIDParam) {
         return this.service.GetListScheduleByCompanyId(param.id);
     }
 
     // M5_v2.F3
     @Put(':id')
     @Roles('ADMIN')
-    async UpdateSchedule(@Param() param: any, @Body() data: DTO_RQ_Schedule) {
+    async UpdateSchedule(@Param() param: UUIDParam, @Body() data: DTO_RQ_Schedule) {
         return this.service.UpdateSchedule(param.id, data);
     }
 
     // M5_v2.F4
     @Delete(':id')
     @Roles('ADMIN')
-    async DeleteSchedule(@Param() param: any) {
+    async DeleteSchedule(@Param() param: UUIDParam) {
         return this.service.DeleteSchedule(param.id);
     }
 }
