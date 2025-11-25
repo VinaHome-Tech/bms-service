@@ -60,7 +60,7 @@ export class VehicleService {
       if (error instanceof HttpException) throw error;
       this.logger.error(error);
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
-    } 
+    }
   }
 
   // M2_v2.F2
@@ -155,27 +155,97 @@ export class VehicleService {
   // M2_v2.F3
   async UpdateVehicle(id: string, data: DTO_RQ_Vehicle) {
     try {
-      console.time('UpdateVehicle');
-      const vehicle = await this.vehicleRepository.findOne({
-        where: { id },
-      });
+      // === 1. Lấy dữ liệu hiện tại ===
+      const vehicle = await this.vehicleRepository.findOne({ where: { id } });
+
       if (!vehicle) {
-        throw new NotFoundException('Phương tiện không tồn tại');
+        throw new NotFoundException('Phương tiện không tồn tại.');
       }
-      if (data.license_plate && data.license_plate !== vehicle.license_plate) {
-        const existingVehicle = await this.vehicleRepository.findOne({
+
+      // === 2. Normalize dữ liệu ===
+      const licensePlate = data.license_plate?.trim().toUpperCase();
+      const engineNumber = data.engine_number?.trim() || null;
+      const frameNumber = data.frame_number?.trim() || null;
+
+      // === 3. Check duplicate license plate ===
+      if (licensePlate && licensePlate !== vehicle.license_plate) {
+        const existPlate = await this.vehicleRepository.findOne({
           where: {
             company_id: vehicle.company_id,
-            license_plate: data.license_plate,
+            license_plate: licensePlate,
           },
         });
 
-        if (existingVehicle) {
-          throw new ConflictException('Biển số xe đã tồn tại trong công ty này');
+        if (existPlate) {
+          throw new ConflictException('Biển số xe đã tồn tại.');
         }
       }
-      Object.assign(vehicle, data);
-      const response = await this.vehicleRepository.save(vehicle);
+
+      // === 4. Kiểm tra trùng số máy ===
+      if (engineNumber && engineNumber !== vehicle.engine_number) {
+        const existEngine = await this.vehicleRepository.findOne({
+          where: {
+            company_id: vehicle.company_id,
+            engine_number: engineNumber,
+          },
+        });
+        if (existEngine) {
+          throw new ConflictException('Số máy đã tồn tại.');
+        }
+      }
+
+      // === 5. Kiểm tra trùng số khung ===
+      if (frameNumber && frameNumber !== vehicle.frame_number) {
+        const existFrame = await this.vehicleRepository.findOne({
+          where: {
+            company_id: vehicle.company_id,
+            frame_number: frameNumber,
+          },
+        });
+        if (existFrame) {
+          throw new ConflictException('Số khung đã tồn tại.');
+        }
+      }
+
+      // === 6. Validate ngày ===
+      if (data.registration_expiry) {
+        const regDate = new Date(data.registration_expiry);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (regDate < today) {
+          throw new BadRequestException('Ngày đăng kiểm phải từ hôm nay trở đi.');
+        }
+      }
+
+      // === 7. Gán giá trị mới ===
+      vehicle.license_plate = licensePlate ?? vehicle.license_plate;
+      vehicle.engine_number = engineNumber;
+      vehicle.frame_number = frameNumber;
+      vehicle.color = data.color?.trim() ?? vehicle.color;
+      vehicle.brand = data.brand?.trim() ?? vehicle.brand;
+      vehicle.phone = data.phone?.trim() ?? vehicle.phone;
+      vehicle.registration_expiry = data.registration_expiry ?? vehicle.registration_expiry;
+      vehicle.maintenance_due = data.maintenance_due ?? vehicle.maintenance_due;
+      vehicle.status = data.status;
+
+      const saved = await this.vehicleRepository.save(vehicle);
+
+      // === 8. Chuẩn hoá response ===
+      const response = {
+        id: saved.id,
+        license_plate: saved.license_plate,
+        engine_number: saved.engine_number,
+        frame_number: saved.frame_number,
+        status: saved.status,
+        color: saved.color,
+        brand: saved.brand,
+        phone: saved.phone,
+        registration_expiry: saved.registration_expiry,
+        maintenance_due: saved.maintenance_due,
+        updated_at: saved.updated_at,
+      };
+
       return {
         success: true,
         message: 'Success',
@@ -183,13 +253,16 @@ export class VehicleService {
         result: response,
       };
     } catch (error) {
+      this.logger.error(error);
+
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting office:', error);
-      throw new InternalServerErrorException('Cập nhật phương tiện thất bại');
-    } finally {
-      console.timeEnd('UpdateVehicle');
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.'
+      );
     }
   }
+
 
   // M2_v2.F4
   async DeleteVehicle(id: string) {
@@ -210,7 +283,7 @@ export class VehicleService {
       if (error instanceof HttpException) throw error;
       this.logger.error(error);
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
-    } 
+    }
   }
 
   async GetListLicensePlateVehicleByCompanyId(id: string) {

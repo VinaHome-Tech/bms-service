@@ -35,7 +35,7 @@ export class VehicleController {
   @Put(':id')
   @Roles('ADMIN')
   async UpdateVehicle(
-    @Param() param: any,
+    @Param() param: UUIDParam,
     @Body() data: DTO_RQ_Vehicle,
   ) {
     return await this.vehicleService.UpdateVehicle(param.id, data);
