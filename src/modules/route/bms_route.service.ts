@@ -371,7 +371,6 @@ export class BmsRouteService {
     id: string,
   ) {
     try {
-      console.time('GetListRouteNameByCompanyId');
       const routes = await this.routeRepository.find({
         where: { company_id: id },
         select: {
@@ -381,7 +380,7 @@ export class BmsRouteService {
         order: { display_order: 'ASC' },
       });
       if (!routes.length) {
-        throw new NotFoundException('Không có tuyến nào cho công ty này');
+        throw new NotFoundException('Không có tuyến nào.');
       }
       return {
         success: true,
@@ -391,11 +390,8 @@ export class BmsRouteService {
       }
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Lấy danh sách tên tuyến thất bại');
-    } finally {
-      console.timeEnd('GetListRouteNameByCompanyId');
-    }
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
+    } 
   }
 
   // M3_v2.F7

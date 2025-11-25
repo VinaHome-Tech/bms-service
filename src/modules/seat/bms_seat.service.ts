@@ -176,11 +176,14 @@ export class BmsSeatService {
 
   // M4_v2.F3
   async UpdateSeatChart(seatChartId: string, data: DTO_RQ_SeatChart) {
-    try {
-      console.time('UpdateSeatChart');
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-      // ✅ Load luôn seats
-      const seatChart = await this.seatChartRepo.findOne({
+    try {
+
+      // === 1. Load seat chart + seats ===
+      const seatChart = await queryRunner.manager.findOne(SeatChart, {
         where: { id: seatChartId },
         relations: ['seats'],
       });
@@ -189,77 +192,113 @@ export class BmsSeatService {
         throw new NotFoundException('Sơ đồ ghế không tồn tại');
       }
 
-      seatChart.seat_chart_name = data.seat_chart_name;
+      // === 2. Normalize dữ liệu ===
+      const name = data.seat_chart_name.trim();
+      const seatsInput = data.seats.map((s) => ({
+        id: s.id,
+        name: (typeof s.name === 'string' && s.name.trim() !== '')
+          ? s.name.trim()
+          : null,
+        code: s.code.trim().toUpperCase(),
+        status: s.status,
+        floor: s.floor,
+        row: s.row,
+        column: s.column,
+      }));
+
+
+      // === 3. Validate duplicate code ===
+      const codeSet = new Set();
+      for (const s of seatsInput) {
+        if (codeSet.has(s.code)) {
+          throw new ConflictException(`Mã ghế '${s.code}' bị trùng.`);
+        }
+        codeSet.add(s.code);
+      }
+
+      // === 4. Validate position duplicate ===
+      const posSet = new Set();
+      for (const s of seatsInput) {
+        const key = `${s.floor}-${s.row}-${s.column}`;
+        if (posSet.has(key)) {
+          throw new ConflictException(
+            `Ghế bị trùng vị trí (floor ${s.floor}, row ${s.row}, column ${s.column})`
+          );
+        }
+        posSet.add(key);
+      }
+
+      // === 5. Cập nhật seat chart ===
+      seatChart.seat_chart_name = name;
       seatChart.seat_chart_type = data.seat_chart_type;
       seatChart.total_floor = data.total_floor;
       seatChart.total_row = data.total_row;
       seatChart.total_column = data.total_column;
-      seatChart.total_seat = data.seats.filter((s) => s.status === true).length;
+      seatChart.total_seat = seatsInput.filter((s) => s.status).length;
 
-      const updatedSeatChart = await this.seatChartRepo.save(seatChart);
+      await queryRunner.manager.save(seatChart);
 
-      const existingSeats = seatChart.seats || [];
-      const newSeatsData = data.seats || [];
+      // === 6. Map hiện tại ===
+      const existingSeats = seatChart.seats;
+      const existingMap = new Map(existingSeats.map((s) => [s.code, s]));
 
-      const existingSeatMap = new Map<string, any>(
-        existingSeats.map((s) => [s.code, s]),
-      );
+      const seatsToCreate: Seat[] = [];
+      const seatsToUpdate: Seat[] = [];
 
-      const newSeatCodeSet = new Set(newSeatsData.map((s) => s.code));
+      // === 7. Create or Update seats ===
+      for (const s of seatsInput) {
+        const oldSeat = existingMap.get(s.code);
 
-      const seatsToCreate = [];
-      const seatsToUpdate = [];
-
-      for (const seatData of newSeatsData) {
-        const existingSeat = existingSeatMap.get(seatData.code);
-        if (existingSeat) {
-          Object.assign(existingSeat, {
-            name: seatData.name,
-            status: seatData.status,
-            floor: seatData.floor,
-            row: seatData.row,
-            column: seatData.column,
-          });
-          seatsToUpdate.push(existingSeat);
+        if (oldSeat) {
+          // update
+          oldSeat.name = s.name ?? null;
+          oldSeat.status = s.status;
+          oldSeat.floor = s.floor;
+          oldSeat.row = s.row;
+          oldSeat.column = s.column;
+          seatsToUpdate.push(oldSeat);
         } else {
+          // create
           seatsToCreate.push(
-            this.seatRepo.create({
-              name: seatData.name,
-              code: seatData.code,
-              status: seatData.status,
-              floor: seatData.floor,
-              row: seatData.row,
-              column: seatData.column,
-              seat_chart: updatedSeatChart,
-            }),
+            queryRunner.manager.create(Seat, {
+              name: s.name ?? null,
+              code: s.code,
+              status: s.status,
+              floor: s.floor,
+              row: s.row,
+              column: s.column,
+              seat_chart: seatChart,
+            })
           );
         }
       }
 
-      if (seatsToUpdate.length) await this.seatRepo.save(seatsToUpdate);
-      if (seatsToCreate.length) await this.seatRepo.save(seatsToCreate);
+      if (seatsToUpdate.length > 0) {
+        await queryRunner.manager.save(Seat, seatsToUpdate);
+      }
 
-      // Xoá ghế không còn trong danh sách
-      const codesToKeep = Array.from(newSeatCodeSet);
-      await this.seatRepo.delete({
-        seat_chart: { id: seatChartId },
-        code: Not(In(codesToKeep)),
-      });
+      if (seatsToCreate.length > 0) {
+        await queryRunner.manager.save(Seat, seatsToCreate);
+      }
 
-      const finalSeatChart = await this.seatChartRepo.findOne({
-        where: { id: updatedSeatChart.id },
-        select: {
-          id: true,
-          seat_chart_name: true,
-          seat_chart_type: true,
-          total_floor: true,
-          total_row: true,
-          total_column: true,
-          total_seat: true,
-          seats: true,
-        },
+      // === 8. Delete old seats not in new input ===
+      const newCodes = seatsInput.map((s) => s.code);
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(Seat)
+        .where('seat_chart_id = :id', { id: seatChartId })
+        .andWhere('code NOT IN (:...codes)', { codes: newCodes })
+        .execute();
+
+      // === 9. Load final result ===
+      const finalSeatChart = await queryRunner.manager.findOne(SeatChart, {
+        where: { id: seatChartId },
         relations: ['seats'],
       });
+
+      await queryRunner.commitTransaction();
 
       return {
         success: true,
@@ -268,24 +307,41 @@ export class BmsSeatService {
         result: finalSeatChart,
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       if (error instanceof HttpException) throw error;
-      console.error(error);
+      console.error("Error:", error);
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau');
+    } finally {
+      await queryRunner.release();
     }
   }
 
 
+
   // M4_v2.F4
   async DeleteSeatChart(seatChartId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      console.time('DeleteSeatChart');
-      const seatChart = await this.seatChartRepo.findOne({ where: { id: seatChartId } });
+      const seatChart = await queryRunner.manager.findOne(SeatChart, {
+        where: { id: seatChartId },
+      });
+
       if (!seatChart) {
         throw new NotFoundException('Sơ đồ ghế không tồn tại');
       }
 
-      await this.seatRepo.delete({ seat_chart: { id: seatChartId } });
-      await this.seatChartRepo.delete(seatChartId);
+      // Xóa seats
+      await queryRunner.manager.delete(Seat, {
+        seat_chart_id: seatChartId,
+      });
+
+      // Xóa seat chart
+      await queryRunner.manager.delete(SeatChart, seatChartId);
+
+      await queryRunner.commitTransaction();
 
       return {
         success: true,
@@ -293,13 +349,15 @@ export class BmsSeatService {
         statusCode: HttpStatus.OK,
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Xoá sơ đồ ghế thất bại');
+
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau');
     } finally {
-      console.timeEnd('DeleteSeatChart');
+      await queryRunner.release();
     }
   }
+
 
   // M4_v2.F5
   async GetListSeatChartNameByCompanyId(companyId: string) {

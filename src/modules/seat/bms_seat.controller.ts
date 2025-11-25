@@ -30,14 +30,14 @@ export class BmsSeatController {
   // M4_v2.F3
   @Put(':id')
   @Roles('ADMIN')
-  async UpdateSeatChart(@Param() param: any, @Body() data: DTO_RQ_SeatChart) {
+  async UpdateSeatChart(@Param() param: UUIDParam, @Body() data: DTO_RQ_SeatChart) {
     return this.service.UpdateSeatChart(param.id, data);
   }
 
   // M4_v2.F4
   @Delete(':id')
   @Roles('ADMIN')
-  async DeleteSeatChart(@Param() param: any) {
+  async DeleteSeatChart(@Param() param: UUIDParam) {
     return this.service.DeleteSeatChart(param.id);
   }
 
