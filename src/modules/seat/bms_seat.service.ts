@@ -69,7 +69,7 @@ export class BmsSeatService {
 
     try {
       // === 1. Normalize ===
-      const name = data.seat_chart_name.trim();
+      const name = data.seat_chart_name.trim() || null;
       const seatType = data.seat_chart_type;
       const totalFloor = data.total_floor;
       const totalRow = data.total_row;
@@ -124,7 +124,7 @@ export class BmsSeatService {
       const seats = data.seats.map(s =>
         queryRunner.manager.create(Seat, {
           code: s.code.trim().toUpperCase(),
-          name: s.name.trim(),
+          name: s.name ? s.name.trim() : null,
           status: s.status,
           floor: s.floor,
           row: s.row,
