@@ -19,7 +19,7 @@ export class BmsRouteController {
   // M3_v2.F1
   @Get('companies/:id/routes')
   @Roles('ADMIN')
-  async GetListRouteByCompanyId(@Param() param: CompanyIdParam) {
+  async GetListRouteByCompanyId(@Param() param: UUIDParam) {
     return await this.routeService.GetListRouteByCompanyId(param.id);
   }
 
@@ -34,7 +34,7 @@ export class BmsRouteController {
   @Put(':id')
   @Roles('ADMIN')
   async UpdateRoute(
-    @Param() param: any,
+    @Param() param: UUIDParam,
     @Payload() data: DTO_RQ_Route,
   ) {
     return await this.routeService.UpdateRoute(
