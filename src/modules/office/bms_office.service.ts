@@ -30,19 +30,17 @@ export class BmsOfficeService {
 
   // M1_v2.F5
   async DeleteOffice(id: string) {
+    this.logger.log(`Deleting office ${id}`);
+
     try {
-      console.time('DeleteOffice');
-      const office = await this.officeRepository.findOne({
-        where: { id },
-        relations: ['phones'], // <-- rất quan trọng
-      });
+      const office = await this.officeRepository.findOne({ where: { id } });
       if (!office) {
         throw new NotFoundException('Văn phòng không tồn tại');
       }
-      if (office.phones && office.phones.length > 0) {
-        await this.officePhoneRepository.remove(office.phones);
-      }
-      await this.officeRepository.remove(office);
+
+      // Xóa nhanh bằng SQL (phones sẽ cascade)
+      await this.officeRepository.delete(id);
+
       return {
         success: true,
         message: 'Success',
@@ -50,12 +48,14 @@ export class BmsOfficeService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting office:', error);
-      throw new InternalServerErrorException('Xóa văn phòng thất bại');
-    } finally {
-      console.timeEnd('DeleteOffice');
+
+      this.logger.error(`DeleteOffice failed for ID ${id}`, error.stack);
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.',
+      );
     }
   }
+
 
   // M1_v2.F4
   // async UpdateOffice(id: string, data: DTO_RQ_Office) {
@@ -239,11 +239,10 @@ export class BmsOfficeService {
   // M1_v2.F1
   async GetListOfficeRoomWorkByCompanyId(id: string) {
     try {
-      console.time('GetListOfficeRoomWorkByCompanyId');
       const offices = await this.officeRepository.find({
         where: { company_id: id },
         relations: ['phones'],
-        order: { id: 'ASC' },
+        order: { created_at: 'ASC' },
         select: {
           id: true,
           name: true,
@@ -257,7 +256,7 @@ export class BmsOfficeService {
         },
       });
       if (!offices.length) {
-        throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+        throw new NotFoundException('Không có văn phòng nào.');
       }
       return {
         success: true,
@@ -267,10 +266,8 @@ export class BmsOfficeService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Lỗi khi lấy danh sách văn phòng');
-    } finally {
-      console.timeEnd('GetListOfficeRoomWorkByCompanyId');
+      this.logger.error(error);
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
     }
   }
 
