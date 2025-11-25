@@ -179,67 +179,67 @@ export class ScheduleService {
     console.log('Delete ID', id);
     console.log('User:', user);
 
-    const schedule = await this.scheduleRepository.findOne({
-      where: { id },
-      relations: ['route', 'seat_chart'],
-    });
+    // const schedule = await this.scheduleRepository.findOne({
+    //   where: { id },
+    //   relations: ['route', 'seat_chart'],
+    // });
 
-    if (!schedule) {
-      throw new NotFoundException('Lịch chạy không tồn tại');
-    }
+    // if (!schedule) {
+    //   throw new NotFoundException('Lịch chạy không tồn tại');
+    // }
 
-    const result = await this.scheduleRepository.delete(id);
-    if (result.affected === 0) {
-      throw new BadRequestException('Không thể xóa lịch chạy');
-    }
+    // const result = await this.scheduleRepository.delete(id);
+    // if (result.affected === 0) {
+    //   throw new BadRequestException('Không thể xóa lịch chạy');
+    // }
   }
 
-  async updateSchedule(
-    id: number,
-    user: DTO_RQ_UserAction,
-    data_update: DTO_RQ_Schedule,
-  ) {
-    console.log('Update ID', id);
-    console.log('User:', user);
-    console.log('Data Update:', data_update);
-    try {
-      const existingSchedule = await this.scheduleRepository.findOne({
-        where: { id },
-        relations: ['route', 'seat_chart'],
-      });
+  // async updateSchedule(
+  //   id: number,
+  //   user: DTO_RQ_UserAction,
+  //   data_update: DTO_RQ_Schedule,
+  // ) {
+  //   console.log('Update ID', id);
+  //   console.log('User:', user);
+  //   console.log('Data Update:', data_update);
+  //   try {
+  //     const existingSchedule = await this.scheduleRepository.findOne({
+  //       where: { id },
+  //       relations: ['route', 'seat_chart'],
+  //     });
 
-      if (!existingSchedule) {
-        throw new NotFoundException('Lịch chạy không tồn tại');
-      }
+  //     if (!existingSchedule) {
+  //       throw new NotFoundException('Lịch chạy không tồn tại');
+  //     }
 
-      const updatedSchedule = await this.scheduleRepository.save({
-        ...existingSchedule,
-        ...data_update,
-      });
-      if (!updatedSchedule) {
-        throw new BadRequestException('Không thể cập nhật lịch chạy');
-      }
-      // const response: DTO_RP_Schedule = {
-      //   id: updatedSchedule.id,
-      //   route_id: updatedSchedule.route_id,
-      //   route_name: updatedSchedule.route?.route_name || '',
-      //   // seat_chart_id: updatedSchedule.seat_chart_id,
-      //   // seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
-      //   start_time: updatedSchedule.start_time,
-      //   repeat_type: updatedSchedule.repeat_type,
-      //   weekdays: updatedSchedule.weekdays || [],
-      //   odd_even_type: updatedSchedule.odd_even_type || null,
-      //   start_date: updatedSchedule.start_date,
-      //   end_date: updatedSchedule.end_date || null,
-      //   is_known_end_date: updatedSchedule.is_known_end_date || false,
-      //   trip_type: updatedSchedule.trip_type || 0,
-      // };
+  //     const updatedSchedule = await this.scheduleRepository.save({
+  //       ...existingSchedule,
+  //       ...data_update,
+  //     });
+  //     if (!updatedSchedule) {
+  //       throw new BadRequestException('Không thể cập nhật lịch chạy');
+  //     }
+  //     // const response: DTO_RP_Schedule = {
+  //     //   id: updatedSchedule.id,
+  //     //   route_id: updatedSchedule.route_id,
+  //     //   route_name: updatedSchedule.route?.route_name || '',
+  //     //   // seat_chart_id: updatedSchedule.seat_chart_id,
+  //     //   // seat_chart_name: updatedSchedule.seat_chart?.seat_chart_name || '',
+  //     //   start_time: updatedSchedule.start_time,
+  //     //   repeat_type: updatedSchedule.repeat_type,
+  //     //   weekdays: updatedSchedule.weekdays || [],
+  //     //   odd_even_type: updatedSchedule.odd_even_type || null,
+  //     //   start_date: updatedSchedule.start_date,
+  //     //   end_date: updatedSchedule.end_date || null,
+  //     //   is_known_end_date: updatedSchedule.is_known_end_date || false,
+  //     //   trip_type: updatedSchedule.trip_type || 0,
+  //     // };
 
-      // console.log('Successfully updated schedule:', response);
-      // return response;
-    } catch (error) {
-      console.error('Error updating schedule:', error);
-      throw error;
-    }
-  }
+  //     // console.log('Successfully updated schedule:', response);
+  //     // return response;
+  //   } catch (error) {
+  //     console.error('Error updating schedule:', error);
+  //     throw error;
+  //   }
+  // }
 }

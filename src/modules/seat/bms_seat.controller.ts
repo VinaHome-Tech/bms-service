@@ -44,7 +44,7 @@ export class BmsSeatController {
   // M4_v2.F5
   @Get('companies/:id/seat-charts-name')
   @Roles('ADMIN')
-  async GetListSeatChartNameByCompanyId(@Param() param: CompanyIdParam) {
+  async GetListSeatChartNameByCompanyId(@Param() param: UUIDParam) {
     return this.service.GetListSeatChartNameByCompanyId(param.id);
   }
 }

@@ -1,19 +1,19 @@
-import { IsArray, IsBoolean, IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsDateString, IsInt, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class DTO_RQ_Schedule {
     @IsInt()
     @IsOptional()
-    id: number;
+    id: string;
     @IsDateString()
     start_date: Date;
     @IsDateString()
     @IsOptional()
     end_date: Date;
-    @IsInt()
-    route_id: number;
-    @IsInt()
+    @IsUUID()
+    route_id: string;
+    @IsUUID()
     @IsOptional()
-    seat_chart_id: number;
+    seat_chart_id: string;
     @IsString()
     start_time: string;
     @IsInt()

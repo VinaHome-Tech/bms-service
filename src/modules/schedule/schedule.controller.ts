@@ -79,33 +79,33 @@ export class ScheduleController {
     }
   }
 
-  @MessagePattern({ bms: 'update_schedule' })
-  async updateSchedule(
-    @Payload()
-    payload: {
-      id: number;
-      user: DTO_RQ_UserAction;
-      data_update: DTO_RQ_Schedule;
-    },
-  ) {
-    try {
-      const result = await this.scheduleService.updateSchedule(
-        payload.id,
-        payload.user,
-        payload.data_update,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Cập nhật lịch chạy thành công',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'update_schedule' })
+  // async updateSchedule(
+  //   @Payload()
+  //   payload: {
+  //     id: number;
+  //     user: DTO_RQ_UserAction;
+  //     data_update: DTO_RQ_Schedule;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.scheduleService.updateSchedule(
+  //       payload.id,
+  //       payload.user,
+  //       payload.data_update,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Cập nhật lịch chạy thành công',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 }

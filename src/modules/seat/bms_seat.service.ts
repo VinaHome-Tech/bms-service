@@ -362,7 +362,6 @@ export class BmsSeatService {
   // M4_v2.F5
   async GetListSeatChartNameByCompanyId(companyId: string) {
     try {
-      console.time('GetListSeatChartNameByCompanyId');
       const seatCharts = await this.seatChartRepo.find({
         where: {
           company_id: companyId,
@@ -381,11 +380,8 @@ export class BmsSeatService {
       }
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Lấy danh sách tên sơ đồ ghế thất bại');
-    } finally {
-      console.timeEnd('GetListSeatChartNameByCompanyId');
-    }
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
+    } 
   }
 
 }
