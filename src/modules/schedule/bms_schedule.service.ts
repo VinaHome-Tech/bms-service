@@ -109,11 +109,9 @@ export class BmsScheduleService {
     // M5_v2.F1
     async GetListScheduleByCompanyId(companyId: string) {
         try {
-            console.time('GetSchedules');
             const schedules = await this.scheduleRepository.find({
-                where: {
-                    company_id: companyId,
-                },
+                where: { company_id: companyId },
+                relations: ['route', 'seat_chart'],
                 select: {
                     id: true,
                     start_date: true,
@@ -133,40 +131,39 @@ export class BmsScheduleService {
                         seat_chart_name: true,
                     },
                 },
-                relations: ['route', 'seat_chart'],
-                order: {
-                    created_at: 'DESC',
-                },
+                order: { created_at: 'ASC' },
             });
-            const response = schedules.map(schedule => ({
-                id: schedule.id,
-                start_date: toVNDate(schedule.start_date),
-                end_date: schedule.end_date ? toVNDate(schedule.end_date) : null,
-                route_id: schedule.route.id,
-                route_name: schedule.route.route_name,
-                seat_chart_id: schedule.seat_chart ? schedule.seat_chart.id : null,
-                seat_chart_name: schedule.seat_chart ? schedule.seat_chart.seat_chart_name : null,
-                start_time: schedule.start_time,
-                trip_type: schedule.trip_type,
-                repeat_type: schedule.repeat_type,
-                weekdays: schedule.weekdays,
-                odd_even_type: schedule.odd_even_type,
-                is_known_end_date: schedule.is_known_end_date,
+
+            const response = schedules.map((s) => ({
+                id: s.id,
+                start_date: toVNDate(s.start_date),
+                end_date: s.end_date ? toVNDate(s.end_date) : null,
+                route_id: s.route?.id || null,
+                route_name: s.route?.route_name || null,
+                seat_chart_id: s.seat_chart?.id || null,
+                seat_chart_name: s.seat_chart?.seat_chart_name || null,
+                start_time: s.start_time.slice(0, 5), // chuẩn HH:mm
+                trip_type: s.trip_type,
+                repeat_type: s.repeat_type,
+                weekdays: s.weekdays || [],
+                odd_even_type: s.odd_even_type || null,
+                is_known_end_date: s.is_known_end_date,
             }));
+
             return {
                 success: true,
                 message: 'Success',
                 statusCode: HttpStatus.OK,
                 result: response,
-            }
+            };
         } catch (error) {
             if (error instanceof HttpException) throw error;
-            console.error(error);
-            throw new InternalServerErrorException('Lấy danh sách lịch chạy thất bại');
-        } finally {
-            console.timeEnd('GetSchedules');
+            throw new InternalServerErrorException(
+                'Lỗi hệ thống. Vui lòng thử lại sau.'
+            );
         }
     }
+
 
     // M5_v2.F3
     async UpdateSchedule(scheduleId: string, data: DTO_RQ_Schedule) {
