@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { DTO_RP_Office, DTO_RP_OfficeRoomWork, DTO_RQ_Office } from './bms_office.dto';
@@ -16,12 +17,14 @@ import { OfficePhone } from 'src/entities/office_phone.entity';
 
 @Injectable()
 export class BmsOfficeService {
+   private readonly logger = new Logger(BmsOfficeService.name);
   constructor(
     @InjectRepository(Office)
     private readonly officeRepository: Repository<Office>,
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
     private readonly dataSource: DataSource,
+   
   ) { }
 
 
@@ -129,8 +132,6 @@ export class BmsOfficeService {
 
   // M1_v2.F3
   async CreateOffice(companyId: string, data: DTO_RQ_Office) {
-    console.time('CreateOffice');
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -202,8 +203,6 @@ export class BmsOfficeService {
       // ==== 6. Commit transaction ====
       await queryRunner.commitTransaction();
 
-      console.timeEnd('CreateOffice');
-
       // ==== 7. Trả về dữ liệu đầy đủ ====
       return {
         success: true,
@@ -229,7 +228,7 @@ export class BmsOfficeService {
 
       if (error instanceof HttpException) throw error;
 
-      console.error('Error creating office:', error);
+      this.logger.error('Error creating office:', error);
       throw new InternalServerErrorException('Tạo văn phòng thất bại.');
     } finally {
       await queryRunner.release();
