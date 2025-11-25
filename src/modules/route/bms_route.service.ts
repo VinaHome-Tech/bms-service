@@ -274,7 +274,6 @@ export class BmsRouteService {
     id: string,
   ) {
     try {
-      console.time('DeleteRoute');
       const route = await this.routeRepository.findOne({
         where: { id: id },
       });
@@ -289,10 +288,8 @@ export class BmsRouteService {
       }
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting route:', error);
-      throw new InternalServerErrorException('Xoá tuyến thất bại');
-    } finally {
-      console.timeEnd('DeleteRoute');
+      this.logger.error(error);
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
     }
   }
 
