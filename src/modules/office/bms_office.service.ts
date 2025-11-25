@@ -58,77 +58,140 @@ export class BmsOfficeService {
 
 
   // M1_v2.F4
-  // async UpdateOffice(id: string, data: DTO_RQ_Office) {
-  //   try {
-  //     console.time('UpdateOffice');
-  //     const office = await this.officeRepository.findOne({
-  //       where: { id },
-  //       relations: [ 'phones' ],
-  //     });
-  //     if (!office) {
-  //       throw new NotFoundException('Văn phòng không tồn tại.');
-  //     }
-  //     if (data.name && data.name !== office.name) {
-  //       const existingOffice = await this.officeRepository.findOne({
-  //         where: { name: data.name, company_id: office.company_id },
-  //       });
-  //       if (existingOffice) {
-  //         throw new ConflictException('Tên văn phòng đã tồn tại.');
-  //       }
-  //     }
-  //     Object.assign(office, {
-  //       name: data.name,
-  //       code: data.code,
-  //       address: data.address,
-  //       note: data.note,
-  //       status: data.status,
-  //     });
-  //     if (data.phones) {
-  //       const existingPhoneIds = office.phones.map(p => p.id);
-  //       const newPhoneIds = data.phones.filter(p => p.id).map(p => p.id);
-  //       const phonesToDeleteIds = existingPhoneIds.filter(id => !newPhoneIds.includes(id));
-  //       if (phonesToDeleteIds.length > 0) {
-  //         await this.officePhoneRepository.delete(phonesToDeleteIds);
-  //       }
-  //       office.phones = data.phones.map(phoneData => {
-  //         if (phoneData.id && existingPhoneIds.includes(phoneData.id)) {
-  //           const existing = office.phones.find(p => p.id === phoneData.id);
-  //           if (existing) {
-  //             existing.phone = phoneData.phone;
-  //             existing.type = phoneData.type;
-  //             return existing;
-  //           }
-  //         }
-  //         return this.officePhoneRepository.create({
-  //           phone: phoneData.phone,
-  //           type: phoneData.type,
-  //           office: { id },
-  //         });
-  //       });
-  //     } else {
-  //       if (office.phones.length > 0) {
-  //         await this.officePhoneRepository.delete({ office: { id } });
-  //       }
-  //       office.phones = [];
-  //     }
-  //     const updatedOffice = await this.officeRepository.save(office);
-  //     if (updatedOffice.phones) {
-  //       updatedOffice.phones.forEach((p) => delete p.office);
-  //     }
-  //     return {
-  //       success: true,
-  //       message: 'Success',
-  //       statusCode: HttpStatus.OK,
-  //       result: updatedOffice,
-  //     }
-  //   } catch (error) {
-  //     if (error instanceof HttpException) throw error;
-  //     console.error('Error updating office:', error);
-  //     throw new InternalServerErrorException('Cập nhật văn phòng thất bại');
-  //   } finally {
-  //     console.timeEnd('UpdateOffice');
-  //   }
-  // }
+  async UpdateOffice(id: string, data: DTO_RQ_Office) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // === 1. Lấy office + phones ===
+      const office = await queryRunner.manager.findOne(Office, {
+        where: { id },
+        relations: ['phones'],
+      });
+
+      if (!office) {
+        throw new NotFoundException('Văn phòng không tồn tại.');
+      }
+
+      // === 2. Chuẩn hóa dữ liệu ===
+      const normalizedName = data.name.trim();
+      const normalizedCode = data.code.trim().toUpperCase();
+      const normalizedAddress = data.address.trim();
+      const normalizedNote = data.note?.trim() || null;
+
+      // === 3. Kiểm tra trùng name ===
+      if (normalizedName !== office.name) {
+        const existsName = await queryRunner.manager.findOne(Office, {
+          where: { name: normalizedName, company_id: office.company_id },
+        });
+        if (existsName) {
+          throw new ConflictException('Tên văn phòng đã tồn tại.');
+        }
+      }
+
+      // === 4. Kiểm tra trùng code ===
+      if (normalizedCode !== office.code) {
+        const existsCode = await queryRunner.manager.findOne(Office, {
+          where: { code: normalizedCode, company_id: office.company_id },
+        });
+        if (existsCode) {
+          throw new ConflictException('Mã văn phòng đã tồn tại.');
+        }
+      }
+
+      // === 5. Kiểm tra trùng phone trong request ===
+      const phoneList = data.phones?.map(p => p.phone.trim()) || [];
+      const duplicatePhone = phoneList.find(
+        (p, idx) => phoneList.indexOf(p) !== idx,
+      );
+      if (duplicatePhone) {
+        throw new ConflictException(
+          `Số điện thoại bị trùng trong cùng văn phòng: ${duplicatePhone}`,
+        );
+      }
+
+      // === 6. Update Office ===
+      office.name = normalizedName;
+      office.code = normalizedCode;
+      office.address = normalizedAddress;
+      office.note = normalizedNote;
+      office.status = data.status;
+
+      const existingPhoneIds = office.phones.map(p => p.id);
+      const requestPhoneIds = data.phones.filter(p => p.id).map(p => p.id);
+
+      // === 7. Xác định phones cần xóa ===
+      const phonesToDelete = existingPhoneIds.filter(id => !requestPhoneIds.includes(id));
+      if (phonesToDelete.length > 0) {
+        await queryRunner.manager.delete(OfficePhone, phonesToDelete);
+      }
+
+      // === 8. Xác định phones cần update + thêm mới ===
+      const updatedPhones: OfficePhone[] = [];
+
+      for (const p of data.phones) {
+        if (p.id && existingPhoneIds.includes(p.id)) {
+          // Update phone cũ
+          const existing = office.phones.find(x => x.id === p.id);
+          existing.phone = p.phone.trim();
+          existing.type = p.type.trim();
+          updatedPhones.push(existing);
+        } else {
+          // Thêm số mới
+          const newPhone = queryRunner.manager.create(OfficePhone, {
+            phone: p.phone.trim(),
+            type: p.type.trim(),
+            office_id: office.id,
+          });
+          updatedPhones.push(newPhone);
+        }
+      }
+
+      // === 9. Lưu office ===
+      const savedOffice = await queryRunner.manager.save(Office, office);
+
+      // === 10. Lưu phones ===
+      const savedPhones = await queryRunner.manager.save(OfficePhone, updatedPhones);
+
+      // === 11. Commit ===
+      await queryRunner.commitTransaction();
+
+      // === 12. Format response ===
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: {
+          id: savedOffice.id,
+          name: savedOffice.name,
+          code: savedOffice.code,
+          address: savedOffice.address,
+          note: savedOffice.note,
+          status: savedOffice.status,
+          created_at: savedOffice.created_at,
+          phones: savedPhones.map(p => ({
+            id: p.id,
+            phone: p.phone,
+            type: p.type,
+          })),
+        },
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      this.logger.error('UpdateOffice error', error.stack || error.message);
+
+      if (error instanceof HttpException) throw error;
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.'
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
 
   // M1_v2.F3
   async CreateOffice(companyId: string, data: DTO_RQ_Office) {

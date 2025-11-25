@@ -35,11 +35,11 @@ export class BmsOfficeController {
   }
 
   // M1_v2.F4
-  // @Put(':id')
-  // @Roles('ADMIN')
-  // async UpdateOffice(@Param() param: any, @Body() body: DTO_RQ_Office) {
-  //   return await this.service.UpdateOffice(param.id, body);
-  // }
+  @Put(':id')
+  @Roles('ADMIN')
+  async UpdateOffice(@Param() param: any, @Body() body: DTO_RQ_Office) {
+    return await this.service.UpdateOffice(param.id, body);
+  }
   
   // M1_v2.F5
   @Delete(':id')
