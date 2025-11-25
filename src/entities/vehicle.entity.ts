@@ -1,38 +1,45 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Trip } from './trip.entity';
 
 @Entity('tbl_vehicle')
 export class Vehicle {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  license_plate: string;
+  @Column({ type: 'varchar', length: 20, nullable: false })
+  license_plate: string;   // Biển số xe
 
-  @Column()
-  engine_number: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  engine_number: string;   // Số máy
 
-  @Column()
-  frame_number: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  frame_number: string;    // Số khung
 
-  @Column()
-  status: number;
+  @Column({ type: 'int', nullable: false })
+  status: number;      
 
-  @Column()
-  color: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  color: string;        // Màu xe
 
-  @Column()
-  brand: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  brand: string;          // Hãng xe
 
-  @Column()
-  phone: string;
+  @Column({ type: 'varchar', length: 15, nullable: true })
+  phone: string;           // phone liên hệ 
 
-  @Column()
-  registration_expiry: Date;
+  @Column({ type: 'date', nullable: true })
+  registration_expiry: Date; // Ngày hết hạn đăng kiểm
 
-  @Column()
-  maintenance_due: Date;
+  @Column({ type: 'date', nullable: true })
+  maintenance_due: Date;     // Ngày bảo dưỡng kế tiếp
 
-  @Column()
+  @Column({ type: 'uuid', nullable: false })
   company_id: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date;
 }
+

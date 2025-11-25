@@ -7,6 +7,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { TokenGuard } from 'src/guards/token.guard';
 import { CompanyIdParam } from 'src/param/CompanyIdParam';
 import { NumberIdParam } from 'src/param/NumberIdParam';
+import { UUIDParam } from 'src/param/UUIDParam';
 
 @Controller('bms-office')
 @UseGuards(TokenGuard)
@@ -37,14 +38,14 @@ export class BmsOfficeController {
   // M1_v2.F4
   @Put(':id')
   @Roles('ADMIN')
-  async UpdateOffice(@Param() param: any, @Body() body: DTO_RQ_Office) {
+  async UpdateOffice(@Param() param: UUIDParam, @Body() body: DTO_RQ_Office) {
     return await this.service.UpdateOffice(param.id, body);
   }
   
   // M1_v2.F5
   @Delete(':id')
   @Roles('ADMIN')
-  async DeleteOffice(@Param() param: any) {
+  async DeleteOffice(@Param() param: UUIDParam) {
     return await this.service.DeleteOffice(param.id);
   }
 

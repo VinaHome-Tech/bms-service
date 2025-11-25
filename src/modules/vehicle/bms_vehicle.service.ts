@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,18 +22,18 @@ import { Vehicle } from 'src/entities/vehicle.entity';
 
 @Injectable()
 export class VehicleService {
+  private readonly logger = new Logger(VehicleService.name);
   constructor(
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
   ) { }
 
   // M2_v2.F1
-  async GetListVehicleByCompanyId(id: string) {
+  async GetListVehicleByCompanyId(companyId: string) {
     try {
-      console.time('GetListVehicleByCompanyId');
       const vehicles = await this.vehicleRepository.find({
-        where: { company_id: id },
-        order: { id: 'ASC' },
+        where: { company_id: companyId },
+        order: { created_at: 'ASC' },
         select: {
           id: true,
           license_plate: true,
@@ -46,7 +48,7 @@ export class VehicleService {
         },
       });
       if (!vehicles.length) {
-        throw new NotFoundException('Không có phương tiện nào cho công ty này');
+        throw new NotFoundException('Không có phương tiện nào.');
       }
       return {
         success: true,
@@ -56,45 +58,102 @@ export class VehicleService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting office:', error);
-      throw new InternalServerErrorException('Láy danh sách phương tiện thất bại');
-    } finally {
-      console.timeEnd('GetListVehicleByCompanyId');
-    }
+      this.logger.error(error);
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
+    } 
   }
 
   // M2_v2.F2
-  async CreateVehicle(id: string, data: DTO_RQ_Vehicle) {
+  async CreateVehicle(companyId: string, data: DTO_RQ_Vehicle) {
     try {
-      console.time('CreateVehicle');
-      const vehicle = await this.vehicleRepository.findOne({
-        where: {
-          license_plate: data.license_plate,
-          company_id: id,
-        },
+      // === 1. Chuẩn hóa dữ liệu ===
+      const licensePlate = data.license_plate.trim().toUpperCase();
+      const engineNumber = data.engine_number?.trim() || null;
+      const frameNumber = data.frame_number?.trim() || null;
+
+      // === 2. Kiểm tra trùng biển số trong cùng công ty ===
+      const existPlate = await this.vehicleRepository.findOne({
+        where: { license_plate: licensePlate, company_id: companyId },
       });
-      if (vehicle) {
+
+      if (existPlate) {
         throw new ConflictException('Biển số xe đã tồn tại.');
       }
-      const newVehicle = this.vehicleRepository.create({ ...data, company_id: id });
-      const response = await this.vehicleRepository.save(newVehicle);
+
+      // === 3. Kiểm tra trùng số máy / số khung (nếu có) ===
+      if (engineNumber) {
+        const existEngine = await this.vehicleRepository.findOne({
+          where: { engine_number: engineNumber, company_id: companyId },
+        });
+        if (existEngine) {
+          throw new ConflictException('Số máy đã tồn tại.');
+        }
+      }
+
+      if (frameNumber) {
+        const existFrame = await this.vehicleRepository.findOne({
+          where: { frame_number: frameNumber, company_id: companyId },
+        });
+        if (existFrame) {
+          throw new ConflictException('Số khung đã tồn tại.');
+        }
+      }
+
+      // === 4. Logic validate ngày đăng kiểm ===
+      if (data.registration_expiry) {
+        const regDate = new Date(data.registration_expiry);
+        if (regDate < new Date('2000-01-01')) {
+          throw new BadRequestException('Ngày đăng kiểm không hợp lệ.');
+        }
+      }
+
+      // === 5. Tạo entity ===
+      const newVehicle = this.vehicleRepository.create({
+        ...data,
+        license_plate: licensePlate,
+        engine_number: engineNumber,
+        frame_number: frameNumber,
+        company_id: companyId,
+      });
+
+      const saved = await this.vehicleRepository.save(newVehicle);
+
+      // === 6. Chuẩn hóa response ===
+      const response = {
+        id: saved.id,
+        license_plate: saved.license_plate,
+        engine_number: saved.engine_number,
+        frame_number: saved.frame_number,
+        status: saved.status,
+        color: saved.color,
+        brand: saved.brand,
+        phone: saved.phone,
+        registration_expiry: saved.registration_expiry,
+        maintenance_due: saved.maintenance_due,
+        created_at: saved.created_at,
+      };
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.CREATED,
         result: response,
-      }
+      };
+
     } catch (error) {
+      this.logger.error(error);
+
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting office:', error);
-      throw new InternalServerErrorException('Tạo phương tiện thất bại');
-    } finally {
-      console.timeEnd('CreateVehicle');
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.'
+      );
     }
   }
 
+
   // M2_v2.F3
-  async UpdateVehicle(id: number, data: DTO_RQ_Vehicle) {
+  async UpdateVehicle(id: string, data: DTO_RQ_Vehicle) {
     try {
       console.time('UpdateVehicle');
       const vehicle = await this.vehicleRepository.findOne({
@@ -133,16 +192,15 @@ export class VehicleService {
   }
 
   // M2_v2.F4
-  async DeleteVehicle(id: number) {
+  async DeleteVehicle(id: string) {
     try {
-      console.time('DeleteVehicle');
       const vehicle = await this.vehicleRepository.findOne({ where: { id } });
 
       if (!vehicle) {
         throw new NotFoundException('Phương tiện không tồn tại');
       }
 
-      await this.vehicleRepository.remove(vehicle);
+      await this.vehicleRepository.delete(vehicle.id);
       return {
         success: true,
         message: 'Success',
@@ -150,11 +208,9 @@ export class VehicleService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error('Error deleting office:', error);
-      throw new InternalServerErrorException('Xoá phương tiện thất bại');
-    } finally {
-      console.timeEnd('DeleteVehicle');
-    }
+      this.logger.error(error);
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
+    } 
   }
 
   async GetListLicensePlateVehicleByCompanyId(id: string) {
@@ -270,37 +326,37 @@ export class VehicleService {
   // }
 
   // BM-32: Get License Plate By Company
-  async getLicensePlateByCompany(id: string): Promise < DTO_RP_LicensePlate[] > {
-  const vehicles = await this.vehicleRepository
-    .createQueryBuilder('v')
-    .select([ 'v.id AS id', 'v.license_plate AS license_plate' ])
-    .where('v.company_id = :id', { id })
-    .andWhere('v.status = :status', { status: 1 })
-    .getRawMany<DTO_RP_LicensePlate>();
+  async getLicensePlateByCompany(id: string): Promise<DTO_RP_LicensePlate[]> {
+    const vehicles = await this.vehicleRepository
+      .createQueryBuilder('v')
+      .select(['v.id AS id', 'v.license_plate AS license_plate'])
+      .where('v.company_id = :id', { id })
+      .andWhere('v.status = :status', { status: 1 })
+      .getRawMany<DTO_RP_LicensePlate>();
 
-  if(!vehicles.length) {
-  throw new NotFoundException('Không có phương tiện nào');
-}
+    if (!vehicles.length) {
+      throw new NotFoundException('Không có phương tiện nào');
+    }
 
-return vehicles;
+    return vehicles;
   }
 
   // BM-34 Get List Registration Expiry
-  async getListRegistrationExpiry(
-  id: string,
-): Promise < DTO_RP_RegistrationExpiry[] > {
-  const vehicles = await this.vehicleRepository.find({
-    where: { company_id: id },
-    select: {
-      id: true,
-      license_plate: true,
-      registration_expiry: true,
-    },
-    order: { registration_expiry: 'ASC' },
-  });
-  if(!vehicles.length) {
-  throw new NotFoundException('Không có phương tiện nào');
-}
-return vehicles;
-  }
+  // async getListRegistrationExpiry(
+  //   id: string,
+  // ): Promise<DTO_RP_RegistrationExpiry[]> {
+  //   const vehicles = await this.vehicleRepository.find({
+  //     where: { company_id: id },
+  //     select: {
+  //       id: true,
+  //       license_plate: true,
+  //       registration_expiry: true,
+  //     },
+  //     order: { registration_expiry: 'ASC' },
+  //   });
+  //   if (!vehicles.length) {
+  //     throw new NotFoundException('Không có phương tiện nào');
+  //   }
+  //   return vehicles;
+  // }
 }
