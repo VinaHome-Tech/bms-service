@@ -6,7 +6,7 @@ export class PublicSeatController {
   constructor(private readonly service: PublicSeatService) {}
 
   @Get()
-  async GetSeatDetailsBySeatChartId(@Query('seat_chart_id') seatChartId: number) {
+  async GetSeatDetailsBySeatChartId(@Query('seat_chart_id') seatChartId: string) {
     return this.service.GetSeatDetailsBySeatChartId(seatChartId);
   }
 }

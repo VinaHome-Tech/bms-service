@@ -5,6 +5,7 @@ import { Roles } from "src/decorator/roles.decorator";
 import { CompanyIdParam } from "src/param/CompanyIdParam";
 import { DTO_RQ_SeatChart } from "./bms_seat.dto";
 import { NumberIdParam } from "src/param/NumberIdParam";
+import { UUIDParam } from "src/param/UUIDParam";
 
 @Controller('bms-seat')
 @UseGuards(TokenGuard)
@@ -14,7 +15,7 @@ export class BmsSeatController {
   // M4_v2.F2
   @Post('companies/:id/seat-charts')
   @Roles('ADMIN')
-  async CreateSeatChart(@Param() param: CompanyIdParam, @Body() data: DTO_RQ_SeatChart) {
+  async CreateSeatChart(@Param() param: UUIDParam, @Body() data: DTO_RQ_SeatChart) {
     console.log(param.id, data);
     return this.service.CreateSeatChart(param.id, data);
   }
@@ -29,14 +30,14 @@ export class BmsSeatController {
   // M4_v2.F3
   @Put(':id')
   @Roles('ADMIN')
-  async UpdateSeatChart(@Param() param: NumberIdParam, @Body() data: DTO_RQ_SeatChart) {
+  async UpdateSeatChart(@Param() param: any, @Body() data: DTO_RQ_SeatChart) {
     return this.service.UpdateSeatChart(param.id, data);
   }
 
   // M4_v2.F4
   @Delete(':id')
   @Roles('ADMIN')
-  async DeleteSeatChart(@Param() param: NumberIdParam) {
+  async DeleteSeatChart(@Param() param: any) {
     return this.service.DeleteSeatChart(param.id);
   }
 

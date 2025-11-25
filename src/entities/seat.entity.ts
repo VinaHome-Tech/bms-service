@@ -9,20 +9,22 @@ import { SeatChart } from './seat_chart.entity';
 
 @Entity('tbl_seat')
 export class Seat {
-  @PrimaryGeneratedColumn()
-  id: number;
-  @Column()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  @Column({ type: 'varchar', length: 255, nullable: false })
   code: string;
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: true })
   name: string;
-  @Column()
+  @Column({ type: 'boolean', nullable: false })
   status: boolean;
-  @Column()
+  @Column({ type: 'int', nullable: false })
   floor: number;
-  @Column()
+  @Column({ type: 'int', nullable: false })
   row: number;
-  @Column()
+  @Column({ type: 'int', nullable: false })
   column: number;
+  @Column({ type: 'uuid', nullable: false })
+  seat_chart_id: string;
 
   @ManyToOne(() => SeatChart, (seatChart) => seatChart.seats, {
     onDelete: 'CASCADE',

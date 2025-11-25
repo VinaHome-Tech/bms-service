@@ -1,8 +1,8 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Seat } from "src/entities/seat.entity";
 import { SeatChart } from "src/entities/seat_chart.entity";
-import { In, Not, Repository } from "typeorm";
+import { DataSource, In, Not, Repository } from "typeorm";
 import { DTO_RQ_SeatChart } from "./bms_seat.dto";
 
 @Injectable()
@@ -12,6 +12,7 @@ export class BmsSeatService {
     private readonly seatChartRepo: Repository<SeatChart>,
     @InjectRepository(Seat)
     private readonly seatRepo: Repository<Seat>,
+    private readonly dataSource: DataSource,
   ) { }
 
   // M4_v2.F1
@@ -22,7 +23,7 @@ export class BmsSeatService {
         where: {
           company_id: companyId,
         },
-        relations: [ 'seats' ],
+        relations: ['seats'],
         select: {
           id: true,
           seat_chart_name: true,
@@ -52,72 +53,127 @@ export class BmsSeatService {
 
   // M4_v2.F2
   async CreateSeatChart(companyId: string, data: DTO_RQ_SeatChart) {
+    // --- Transaction ---
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      console.time('CreateSeatChart');
-      const seatChart = await this.seatChartRepo.findOne({
-        where: {
-          company_id: companyId,
-          seat_chart_name: data.seat_chart_name,
-        },
+      // === 1. Normalize ===
+      const name = data.seat_chart_name.trim();
+      const seatType = data.seat_chart_type;
+      const totalFloor = data.total_floor;
+      const totalRow = data.total_row;
+      const totalColumn = data.total_column;
+
+      // === 2. Check duplicate seat_chart_name ===
+      const existChart = await queryRunner.manager.findOne(SeatChart, {
+        where: { company_id: companyId, seat_chart_name: name }
       });
-      if (seatChart) {
-        throw new NotFoundException('Sơ đồ ghế đã tồn tại');
+
+      if (existChart) {
+        throw new ConflictException('Tên sơ đồ ghế đã tồn tại.');
       }
-      const newSeatChart = this.seatChartRepo.create({
-        seat_chart_name: data.seat_chart_name,
-        seat_chart_type: data.seat_chart_type,
-        total_floor: data.total_floor,
-        total_row: data.total_row,
-        total_column: data.total_column,
-        total_seat: data.seats.filter((seat) => seat.status === true).length,
+
+      // === 3. Validate duplicate seats ===
+      const seatKeys = new Set();
+
+      for (const seat of data.seats) {
+        const key = `${seat.floor}-${seat.row}-${seat.column}`;
+        if (seatKeys.has(key)) {
+          throw new ConflictException(
+            `Ghế bị trùng vị trí (floor ${seat.floor}, row ${seat.row}, column ${seat.column})`
+          );
+        }
+        seatKeys.add(key);
+      }
+
+      // === 4. Validate code duplicate ===
+      const seatCodes = new Set();
+      for (const seat of data.seats) {
+        const code = seat.code.trim().toUpperCase();
+        if (seatCodes.has(code)) {
+          throw new ConflictException(`Mã ghế '${code}' bị trùng.`);
+        }
+        seatCodes.add(code);
+      }
+
+      // === 5. Create SeatChart ===
+      const newSeatChart = queryRunner.manager.create(SeatChart, {
+        seat_chart_name: name,
+        seat_chart_type: seatType,
+        total_floor: totalFloor,
+        total_row: totalRow,
+        total_column: totalColumn,
+        total_seat: data.seats.filter(s => s.status === true).length,
         company_id: companyId,
       });
-      const savedSeatChart = await this.seatChartRepo.save(newSeatChart);
-      const seatsToCreate = data.seats.map((seat) => ({
-        name: seat.name,
-        code: seat.code,
-        status: seat.status,
-        floor: seat.floor,
-        row: seat.row,
-        column: seat.column,
-        seat_chart: savedSeatChart,
-      }));
-      await this.seatRepo.save(seatsToCreate);
-      const response = {
-        id: savedSeatChart.id,
-        seat_chart_name: savedSeatChart.seat_chart_name,
-        seat_chart_type: savedSeatChart.seat_chart_type,
-        total_floor: savedSeatChart.total_floor,
-        total_row: savedSeatChart.total_row,
-        total_column: savedSeatChart.total_column,
-        total_seat: savedSeatChart.total_seat,
-        seats: seatsToCreate,
-      }
+
+      const savedChart = await queryRunner.manager.save(newSeatChart);
+
+      // === 6. Create seats ===
+      const seats = data.seats.map(s =>
+        queryRunner.manager.create(Seat, {
+          code: s.code.trim().toUpperCase(),
+          name: s.name.trim(),
+          status: s.status,
+          floor: s.floor,
+          row: s.row,
+          column: s.column,
+          seat_chart_id: savedChart.id,
+        })
+      );
+
+      const savedSeats = await queryRunner.manager.save(Seat, seats);
+
+      await queryRunner.commitTransaction();
+
+      // === 7. Response ===
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.CREATED,
-        result: response,
-      }
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Tạo sơ đồ ghế thất bại');
-    } finally {
-      console.timeEnd('CreateSeatChart');
-    }
+        result: {
+          id: savedChart.id,
+          seat_chart_name: savedChart.seat_chart_name,
+          seat_chart_type: savedChart.seat_chart_type,
+          total_floor: savedChart.total_floor,
+          total_row: savedChart.total_row,
+          total_column: savedChart.total_column,
+          total_seat: savedChart.total_seat,
+          seats: savedSeats.map(s => ({
+            id: s.id,
+            code: s.code,
+            name: s.name,
+            status: s.status,
+            floor: s.floor,
+            row: s.row,
+            column: s.column,
+          })),
+        }
+      };
 
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) throw error;
+
+      console.error(error);
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau');
+    } finally {
+      await queryRunner.release();
+    }
   }
 
+
   // M4_v2.F3
-  async UpdateSeatChart(seatChartId: number, data: DTO_RQ_SeatChart) {
+  async UpdateSeatChart(seatChartId: string, data: DTO_RQ_SeatChart) {
     try {
       console.time('UpdateSeatChart');
 
       // ✅ Load luôn seats
       const seatChart = await this.seatChartRepo.findOne({
         where: { id: seatChartId },
-        relations: [ 'seats' ],
+        relations: ['seats'],
       });
 
       if (!seatChart) {
@@ -137,7 +193,7 @@ export class BmsSeatService {
       const newSeatsData = data.seats || [];
 
       const existingSeatMap = new Map<string, any>(
-        existingSeats.map((s) => [ s.code, s ]),
+        existingSeats.map((s) => [s.code, s]),
       );
 
       const newSeatCodeSet = new Set(newSeatsData.map((s) => s.code));
@@ -193,7 +249,7 @@ export class BmsSeatService {
           total_seat: true,
           seats: true,
         },
-        relations: [ 'seats' ],
+        relations: ['seats'],
       });
 
       return {
@@ -205,15 +261,13 @@ export class BmsSeatService {
     } catch (error) {
       if (error instanceof HttpException) throw error;
       console.error(error);
-      throw new InternalServerErrorException('Cập nhật sơ đồ ghế thất bại');
-    } finally {
-      console.timeEnd('UpdateSeatChart');
-    }
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau');
+    } 
   }
 
 
   // M4_v2.F4
-  async DeleteSeatChart(seatChartId: number) {
+  async DeleteSeatChart(seatChartId: string) {
     try {
       console.time('DeleteSeatChart');
       const seatChart = await this.seatChartRepo.findOne({ where: { id: seatChartId } });

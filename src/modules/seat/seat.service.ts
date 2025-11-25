@@ -68,32 +68,32 @@ export class SeatService {
     // });
   }
 
-  async getSeatChartByCompany(id: string){
-    console.log('Received company ID:', id);
-    try {
-      const seatCharts = await this.seatChartRepository.find({
-        where: { company_id: id },
-        order: { created_at: 'ASC' },
-        relations: ['seats'],
-      });
+  // async getSeatChartByCompany(id: string){
+  //   console.log('Received company ID:', id);
+  //   try {
+  //     const seatCharts = await this.seatChartRepository.find({
+  //       where: { company_id: id },
+  //       order: { created_at: 'ASC' },
+  //       relations: ['seats'],
+  //     });
 
-      if (!seatCharts.length) {
-        throw new NotFoundException('Không có sơ đồ ghế nào');
-      }
+  //     if (!seatCharts.length) {
+  //       throw new NotFoundException('Không có sơ đồ ghế nào');
+  //     }
 
-      console.log('Found seat charts:', seatCharts);
+  //     console.log('Found seat charts:', seatCharts);
 
-      // return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
-    } catch (error) {
-      console.error('Lỗi khi lấy sơ đồ ghế:', error);
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error('Đã xảy ra lỗi không xác định khi lấy sơ đồ ghế');
-    }
-  }
+  //     // return seatCharts.map((seatChart) => SeatMapper.toDTO(seatChart));
+  //   } catch (error) {
+  //     console.error('Lỗi khi lấy sơ đồ ghế:', error);
+  //     if (error instanceof NotFoundException) {
+  //       throw error;
+  //     }
+  //     throw new Error('Đã xảy ra lỗi không xác định khi lấy sơ đồ ghế');
+  //   }
+  // }
 
-  async deleteSeatChart(id: number, user: DTO_RQ_UserAction): Promise<void> {
+  async deleteSeatChart(id: string, user: DTO_RQ_UserAction): Promise<void> {
     console.log('Delete Seat Chart ID:', id);
     console.log('User:', user);
     const seatChart = await this.seatChartRepository.findOne({
@@ -112,7 +112,7 @@ export class SeatService {
   }
 
   async updateSeatChart(
-    id: number,
+    id: string,
     data_update: DTO_RQ_UpdateSeatChart,
   ){
     console.log(data_update);
@@ -205,19 +205,19 @@ export class SeatService {
     // return SeatMapper.toDTO(finalSeatChart);
   }
 
-  async getSeatChartNameByCompany(id: string): Promise<DTO_RP_SeatChartName[]> {
-    const seatCharts = await this.seatChartRepository.find({
-      where: { company_id: id },
-      select: ['id', 'seat_chart_name'],
-    });
+  // async getSeatChartNameByCompany(id: string): Promise<DTO_RP_SeatChartName[]> {
+  //   const seatCharts = await this.seatChartRepository.find({
+  //     where: { company_id: id },
+  //     select: ['id', 'seat_chart_name'],
+  //   });
 
-    if (!seatCharts || seatCharts.length === 0) {
-      throw new NotFoundException('Không tìm thấy sơ đồ ghế nào');
-    }
+  //   if (!seatCharts || seatCharts.length === 0) {
+  //     throw new NotFoundException('Không tìm thấy sơ đồ ghế nào');
+  //   }
 
-    return seatCharts.map((seatChart) => ({
-      id: seatChart.id,
-      seat_chart_name: seatChart.seat_chart_name,
-    }));
-  }
+  //   return seatCharts.map((seatChart) => ({
+  //     id: seatChart.id,
+  //     seat_chart_name: seatChart.seat_chart_name,
+  //   }));
+  // }
 }

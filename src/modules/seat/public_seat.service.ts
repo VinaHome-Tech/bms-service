@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Seat } from "src/entities/seat.entity";
 import { SeatChart } from "src/entities/seat_chart.entity";
-import { Seat } from "./bms_seat.dto";
+
 import { Repository } from "typeorm";
 
 @Injectable()
@@ -13,7 +14,7 @@ export class PublicSeatService {
         private readonly seatRepo: Repository<Seat>,
     ) { }
 
-    async GetSeatDetailsBySeatChartId(seatChartId: number) {
+    async GetSeatDetailsBySeatChartId(seatChartId: string) {
         const seatChart = await this.seatChartRepo.findOne({
             where: { id: seatChartId },
             relations: ['seats'],
