@@ -54,7 +54,7 @@ export class BmsRouteController {
   @Put('companies/:id/routes/update-order')
   @Roles('ADMIN')
   async UpdateRouteOrder(
-    @Param() param: CompanyIdParam,
+    @Param() param: UUIDParam,
     @Payload()
     data: {
       route_id: string;

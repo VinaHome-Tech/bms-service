@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
@@ -231,7 +232,6 @@ export class BmsRouteService {
       route.e_ticket_price = data.e_ticket_price;
       route.distance = data.distance;
       route.status = data.status;
-      route.display_order = data.display_order ?? route.display_order;
 
       const saved = await this.routeRepository.save(route);
 
@@ -297,37 +297,74 @@ export class BmsRouteService {
   async UpdateRouteOrder(
     route_id: string,
     display_order: number,
-    id: string,
+    companyId: string,
   ) {
     try {
-      console.time('UpdateRouteOrder');
+      // === 1. Validate display_order ===
+      if (!Number.isInteger(display_order) || display_order < 1) {
+        throw new BadRequestException('Thứ tự hiển thị không hợp lệ.');
+      }
+
+      // === 2. Tìm tuyến thuộc công ty ===
       const route = await this.routeRepository.findOne({
+        where: { id: route_id, company_id: companyId },
+      });
+
+      if (!route) {
+        throw new NotFoundException('Tuyến không tồn tại.');
+      }
+
+      // === 3. Kiểm tra xem display_order có trùng tuyến khác không ===
+      const conflictRoute = await this.routeRepository.findOne({
         where: {
-          id: route_id,
-          company_id: id,
+          company_id: companyId,
+          display_order: display_order,
         },
       });
-      if (!route) {
-        throw new NotFoundException(
-          'Dữ liệu tuyến không tồn tại',
-        );
+
+      // Nếu có tuyến khác đang dùng display_order này → hoán đổi order
+      if (conflictRoute && conflictRoute.id !== route_id) {
+        conflictRoute.display_order = route.display_order;
+        await this.routeRepository.save(conflictRoute);
       }
+
+      // === 4. Cập nhật order cho tuyến hiện tại ===
       route.display_order = display_order;
-      const updatedRoute = await this.routeRepository.save(route);
+      const saved = await this.routeRepository.save(route);
+
+      // === 5. Format response ===
+      const result = {
+        id: saved.id,
+        route_name: saved.route_name,
+        route_name_e_ticket: saved.route_name_e_ticket,
+        short_name: saved.short_name,
+        journey: saved.journey,
+        note: saved.note,
+        base_price: saved.base_price,
+        e_ticket_price: saved.e_ticket_price,
+        distance: saved.distance,
+        status: saved.status,
+        display_order: saved.display_order,
+      };
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.OK,
-        result: updatedRoute,
-      }
+        result,
+      };
+
     } catch (error) {
+      this.logger.error(error);
+
       if (error instanceof HttpException) throw error;
-      console.error('Error updating route order:', error);
-      throw new InternalServerErrorException('Cập nhật thứ tự tuyến thất bại');
-    } finally {
-      console.timeEnd('UpdateRouteOrder');
+
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.',
+      );
     }
   }
+
 
   // M3_v2.F6
   async GetListRouteNameByCompanyId(
