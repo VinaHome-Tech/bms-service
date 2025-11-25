@@ -17,14 +17,14 @@ import { OfficePhone } from 'src/entities/office_phone.entity';
 
 @Injectable()
 export class BmsOfficeService {
-   private readonly logger = new Logger(BmsOfficeService.name);
+  private readonly logger = new Logger(BmsOfficeService.name);
   constructor(
     @InjectRepository(Office)
     private readonly officeRepository: Repository<Office>,
     @InjectRepository(OfficePhone)
     private readonly officePhoneRepository: Repository<OfficePhone>,
     private readonly dataSource: DataSource,
-   
+
   ) { }
 
 
@@ -227,8 +227,7 @@ export class BmsOfficeService {
       await queryRunner.rollbackTransaction();
 
       if (error instanceof HttpException) throw error;
-
-      this.logger.error('Error creating office:', error);
+      this.logger.error(error);
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
     } finally {
       await queryRunner.release();
@@ -276,13 +275,12 @@ export class BmsOfficeService {
   }
 
   // M1_v2.F2
-  async GetListOfficeByCompanyId(id: string) {
+  async GetListOfficeByCompanyId(companyId: string) {
     try {
-      console.time('GetListOfficeByCompanyId');
       const offices = await this.officeRepository.find({
-        where: { company_id: id },
+        where: { company_id: companyId },
         relations: ['phones'],
-        order: { id: 'ASC' },
+        order: { created_at: 'ASC' },
         select: {
           id: true,
           name: true,
@@ -299,22 +297,24 @@ export class BmsOfficeService {
         },
       });
       if (!offices.length) {
-        throw new NotFoundException('Không tìm thấy văn phòng nào cho công ty này');
+        throw new NotFoundException('Không có văn phòng nào.');
       }
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.OK,
         result: offices,
-      }
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error(error);
-      throw new InternalServerErrorException('Lỗi khi lấy danh sách văn phòng');
-    } finally {
-      console.timeEnd('GetListOfficeByCompanyId');
+      this.logger.error(error);
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống. Vui lòng thử lại sau.'
+      );
     }
   }
+
 
 
 
