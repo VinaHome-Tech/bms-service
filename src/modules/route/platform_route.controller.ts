@@ -7,26 +7,26 @@ import { DTO_RQ_RoutePoint } from './route.dto';
 export class PlatformRouteController {
   constructor(private readonly platformRouteService: PlatformRouteService) {}
 
-  @MessagePattern({ vht: 'GET_LIST_ROUTE_BY_COMPANY' })
-  async getListRouteByCompany(@Payload() data: { companyId: string }) {
-    try {
-      const result = await this.platformRouteService.getListRouteByCompany(
-        data.companyId,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ vht: 'GET_LIST_ROUTE_BY_COMPANY' })
+  // async getListRouteByCompany(@Payload() data: { companyId: string }) {
+  //   try {
+  //     const result = await this.platformRouteService.getListRouteByCompany(
+  //       data.companyId,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   // @MessagePattern({ vht: 'UPDATE_ROUTE_POINTS' })
   // async updateRoutePoints(

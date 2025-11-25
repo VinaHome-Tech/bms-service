@@ -141,35 +141,35 @@ export class BmsTripController {
     }
   }
 
-  @MessagePattern({ bms: 'update_trip_information' })
-  async updateTripInformation(
-    @Payload()
-    payload: {
-      user: DTO_RQ_UserAction;
-      data_update: DTO_RQ_UpdateTrip;
-      id: number;
-    },
-  ) {
-    try {
-      const result = await this.tripService.updateTripInformation(
-        payload.user,
-        payload.data_update,
-        payload.id,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'update_trip_information' })
+  // async updateTripInformation(
+  //   @Payload()
+  //   payload: {
+  //     user: DTO_RQ_UserAction;
+  //     data_update: DTO_RQ_UpdateTrip;
+  //     id: number;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.tripService.updateTripInformation(
+  //       payload.user,
+  //       payload.data_update,
+  //       payload.id,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   @MessagePattern({ bms: 'update_note' })
   async updateNote(@Payload() payload: { id: number; note: string }) {

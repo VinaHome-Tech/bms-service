@@ -12,11 +12,11 @@ export class BmsScheduleController {
     constructor(private readonly service: BmsScheduleService) { }
 
     // M5_v2.F2
-    @Post('companies/:id/schedules')
-    @Roles('ADMIN')
-    async CreateSchedule(@Param() param: CompanyIdParam, @Body() data: DTO_RQ_Schedule) {
-        return this.service.CreateSchedule(param.id, data);
-    }
+    // @Post('companies/:id/schedules')
+    // @Roles('ADMIN')
+    // async CreateSchedule(@Param() param: CompanyIdParam, @Body() data: DTO_RQ_Schedule) {
+    //     return this.service.CreateSchedule(param.id, data);
+    // }
 
     // M5_v2.F1
     @Get('companies/:id/schedules')

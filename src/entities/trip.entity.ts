@@ -56,11 +56,6 @@ export class Trip {
   ticket_price: number;
 
 
-  @ManyToOne(() => Route, (route) => route.trips, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'route_id' })
-  route: Route;
 
 
   @ManyToOne(() => Schedule, {

@@ -7,6 +7,7 @@ import { TokenGuard } from 'src/guards/token.guard';
 import { Roles } from 'src/decorator/roles.decorator';
 import { CompanyIdParam } from 'src/param/CompanyIdParam';
 import { NumberIdParam } from 'src/param/NumberIdParam';
+import { UUIDParam } from 'src/param/UUIDParam';
 
 @Controller('bms-route')
 @UseGuards(TokenGuard)
@@ -25,7 +26,7 @@ export class BmsRouteController {
   // M3_v2.F2
   @Post('companies/:id/routes')
   @Roles('ADMIN')
-  async CreateRoute(@Param() param: CompanyIdParam, @Payload() data: DTO_RQ_Route) {
+  async CreateRoute(@Param() param: UUIDParam, @Payload() data: DTO_RQ_Route) {
     return await this.routeService.CreateRoute(param.id, data);
   }
 
@@ -33,7 +34,7 @@ export class BmsRouteController {
   @Put(':id')
   @Roles('ADMIN')
   async UpdateRoute(
-    @Param() param: NumberIdParam,
+    @Param() param: any,
     @Payload() data: DTO_RQ_Route,
   ) {
     return await this.routeService.UpdateRoute(
@@ -45,7 +46,7 @@ export class BmsRouteController {
   // M2_v2.F4
   @Delete(':id')
   @Roles('ADMIN')
-  async DeleteRoute(@Param() param: NumberIdParam) {
+  async DeleteRoute(@Param() param: any) {
     return await this.routeService.DeleteRoute(param.id);
   }
 
@@ -56,7 +57,7 @@ export class BmsRouteController {
     @Param() param: CompanyIdParam,
     @Payload()
     data: {
-      route_id: number;
+      route_id: string;
       display_order: number;
     },
   ) {
@@ -84,114 +85,114 @@ export class BmsRouteController {
   }
 
 
-  @MessagePattern({ bms: 'get_list_route_by_company' })
-  async getListRouteByCompany(@Payload() id: string) {
-    try {
-      const result = await this.routeService.getListRouteByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_route_by_company' })
+  // async getListRouteByCompany(@Payload() id: string) {
+  //   try {
+  //     const result = await this.routeService.getListRouteByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ bms: 'update_route_order' })
-  async updateRouteOrder(
-    @Payload()
-    data: {
-      route_id: number;
-      display_order: number;
-      company_id: string;
-    },
-  ) {
-    try {
-      const result = await this.routeService.updateRouteOrder(
-        data.route_id,
-        data.display_order,
-        data.company_id,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'update_route_order' })
+  // async updateRouteOrder(
+  //   @Payload()
+  //   data: {
+  //     route_id: number;
+  //     display_order: number;
+  //     company_id: string;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.routeService.updateRouteOrder(
+  //       data.route_id,
+  //       data.display_order,
+  //       data.company_id,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ bms: 'delete_route' })
-  async deleteRoute(
-    @Payload() payload: { id: number; user: DTO_RQ_UserAction },
-  ) {
-    try {
-      await this.routeService.deleteRoute(payload.id, payload.user);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'delete_route' })
+  // async deleteRoute(
+  //   @Payload() payload: { id: number; user: DTO_RQ_UserAction },
+  // ) {
+  //   try {
+  //     await this.routeService.deleteRoute(payload.id, payload.user);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
-  @MessagePattern({ bms: 'get_list_route_name_by_company' })
-  async getListRouteNameByCompany(@Payload() id: string) {
-    try {
-      const result = await this.routeService.getListRouteNameByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_route_name_by_company' })
+  // async getListRouteNameByCompany(@Payload() id: string) {
+  //   try {
+  //     const result = await this.routeService.getListRouteNameByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   // BM-36 Get List Route Name Action By Company
-  @MessagePattern({ bms: 'get_list_route_name_action_by_company' })
-  async getListRouteNameActionByCompany(@Payload() id: string) {
-    try {
-      const result =
-        await this.routeService.getListRouteNameActionByCompany(id);
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'get_list_route_name_action_by_company' })
+  // async getListRouteNameActionByCompany(@Payload() id: string) {
+  //   try {
+  //     const result =
+  //       await this.routeService.getListRouteNameActionByCompany(id);
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.OK,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   // @MessagePattern({ bms: 'GET_LIST_ROUTE_NAME_TO_CONFIG_BY_COMPANY' })
   // async getListRouteNameToConfigByCompany(@Payload() id: string) {

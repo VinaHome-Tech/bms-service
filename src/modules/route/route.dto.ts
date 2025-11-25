@@ -10,7 +10,7 @@ export class DTO_RQ_Route {
   status: boolean;
 }
 export class DTO_RQ_UpdateRoute {
-  id: number;
+  id: string;
   base_price: number;
   company_id: number;
   created_by: string;
@@ -24,7 +24,7 @@ export class DTO_RQ_UpdateRoute {
   status: boolean;
 }
 export class DTO_RP_Route {
-  id: number;
+  id: string;
   base_price: number;
   distance: number;
   e_ticket_price: number;

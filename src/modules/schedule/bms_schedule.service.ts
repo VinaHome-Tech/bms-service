@@ -19,78 +19,78 @@ export class BmsScheduleService {
     ) { }
 
     // M5_v2.F2
-    async CreateSchedule(companyId: string, data: DTO_RQ_Schedule) {
-        console.log(data);
-        try {
-            console.time('CreateSchedule');
-            const route = await this.routeRepository.findOne({
-                where: {
-                    id: data.route_id,
-                    company_id: companyId,
-                },
-                select: { id: true, route_name: true, company_id: true },
-            });
-            if (!route) {
-                throw new NotFoundException('Dữ liệu tuyến không tồn tại');
-            }
-            let seatChart: SeatChart | null = null;
-            if (data.seat_chart_id || data.trip_type != 2) {
-                seatChart = await this.seatChartRepository.findOne({
-                    where: {
-                        id: data.seat_chart_id,
-                        company_id: companyId,
-                    },
-                    select: { id: true, seat_chart_name: true, company_id: true },
-                });
-                if (!seatChart) {
-                    throw new NotFoundException('Dữ liệu sơ đồ ghế không tồn tại');
-                }
-            }
+    // async CreateSchedule(companyId: string, data: DTO_RQ_Schedule) {
+    //     console.log(data);
+    //     try {
+    //         console.time('CreateSchedule');
+    //         const route = await this.routeRepository.findOne({
+    //             where: {
+    //                 id: data.route_id,
+    //                 company_id: companyId,
+    //             },
+    //             select: { id: true, route_name: true, company_id: true },
+    //         });
+    //         if (!route) {
+    //             throw new NotFoundException('Dữ liệu tuyến không tồn tại');
+    //         }
+    //         let seatChart: SeatChart | null = null;
+    //         if (data.seat_chart_id || data.trip_type != 2) {
+    //             seatChart = await this.seatChartRepository.findOne({
+    //                 where: {
+    //                     id: data.seat_chart_id,
+    //                     company_id: companyId,
+    //                 },
+    //                 select: { id: true, seat_chart_name: true, company_id: true },
+    //             });
+    //             if (!seatChart) {
+    //                 throw new NotFoundException('Dữ liệu sơ đồ ghế không tồn tại');
+    //             }
+    //         }
 
-            const schedule = this.scheduleRepository.create({
-                start_date: data.start_date,
-                end_date: data.end_date,
-                route: data.route_id,
-                seat_chart: data.seat_chart_id,
-                start_time: data.start_time,
-                trip_type: data.trip_type,
-                repeat_type: data.repeat_type,
-                weekdays: data.weekdays,
-                odd_even_type: data.odd_even_type,
-                is_known_end_date: data.is_known_end_date,
-                company_id: companyId,
+    //         const schedule = this.scheduleRepository.create({
+    //             start_date: data.start_date,
+    //             end_date: data.end_date,
+    //             route: data.route_id,
+    //             seat_chart: data.seat_chart_id,
+    //             start_time: data.start_time,
+    //             trip_type: data.trip_type,
+    //             repeat_type: data.repeat_type,
+    //             weekdays: data.weekdays,
+    //             odd_even_type: data.odd_even_type,
+    //             is_known_end_date: data.is_known_end_date,
+    //             company_id: companyId,
 
-            } as DeepPartial<Schedule>);
-            await this.scheduleRepository.save(schedule);
-            const response = {
-                id: schedule.id,
-                start_date: schedule.start_date,
-                end_date: schedule.end_date,
-                route_id: schedule.route.id,
-                route_name: route.route_name,
-                seat_chart_id: seatChart ? seatChart.id : null,
-                seat_chart_name: seatChart ? seatChart.seat_chart_name : null,
-                start_time: schedule.start_time,
-                trip_type: schedule.trip_type,
-                repeat_type: schedule.repeat_type,
-                weekdays: schedule.weekdays,
-                odd_even_type: schedule.odd_even_type,
-                is_known_end_date: schedule.is_known_end_date,
-            }
-            return {
-                success: true,
-                message: 'Success',
-                statusCode: HttpStatus.CREATED,
-                result: response,
-            }
-        } catch (error) {
-            if (error instanceof HttpException) throw error;
-            console.error(error);
-            throw new InternalServerErrorException('Thêm lịch chạy thất bại');
-        } finally {
-            console.timeEnd('CreateSchedule');
-        }
-    }
+    //         } as DeepPartial<Schedule>);
+    //         await this.scheduleRepository.save(schedule);
+    //         const response = {
+    //             id: schedule.id,
+    //             start_date: schedule.start_date,
+    //             end_date: schedule.end_date,
+    //             route_id: schedule.route.id,
+    //             route_name: route.route_name,
+    //             seat_chart_id: seatChart ? seatChart.id : null,
+    //             seat_chart_name: seatChart ? seatChart.seat_chart_name : null,
+    //             start_time: schedule.start_time,
+    //             trip_type: schedule.trip_type,
+    //             repeat_type: schedule.repeat_type,
+    //             weekdays: schedule.weekdays,
+    //             odd_even_type: schedule.odd_even_type,
+    //             is_known_end_date: schedule.is_known_end_date,
+    //         }
+    //         return {
+    //             success: true,
+    //             message: 'Success',
+    //             statusCode: HttpStatus.CREATED,
+    //             result: response,
+    //         }
+    //     } catch (error) {
+    //         if (error instanceof HttpException) throw error;
+    //         console.error(error);
+    //         throw new InternalServerErrorException('Thêm lịch chạy thất bại');
+    //     } finally {
+    //         console.timeEnd('CreateSchedule');
+    //     }
+    // }
 
     // M5_v2.F1
     async GetListScheduleByCompanyId(companyId: string) {

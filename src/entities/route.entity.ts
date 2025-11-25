@@ -6,43 +6,46 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 // import { RoutePoint } from './route_point.entity';
 import { ConfigFare } from './config-fare.entity';
 
 @Entity('tbl_route')
 export class Route {
-  @PrimaryGeneratedColumn()
-  id: number;
-  @Column()
-  base_price: number;
-  @Column()
-  distance: number;
-  @Column()
-  e_ticket_price: number;
-  @Column()
-  journey: string;
-  @Column()
-  note: string;
-  @Column()
-  route_name: string;
-  @Column()
-  route_name_e_ticket: string;
-  @Column()
-  short_name: string;
-  @Column()
-  status: boolean;
-  @Column()
-  display_order: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  @Column({ type: 'double precision', nullable: false })
+  base_price: number; // Giá vé cơ bản của tuyến
+  @Column({ type: 'int', nullable: true })
+  distance: number; // Quãng đường của tuyến (km)
+  @Column({ type: 'double precision', nullable: false })
+  e_ticket_price: number; // Giá vé điện tử
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  journey: string; // Lộ trình
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  note: string; // Ghi chú tuyến
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  route_name: string; // Tên tuyến
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  route_name_e_ticket: string; // Tên tuyến trên vé điện tử
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  short_name: string; // Tên rút gọn tuyến
+  @Column({ type: 'boolean', nullable: false })
+  status: boolean;      // Trạng thái tuyến
+  @Column({ type: 'int', nullable: true })
+  display_order: number; // Thứ tự hiển thị
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
 
-  @Column()
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date;
+
+  @Column({ type: 'uuid', nullable: false })
   company_id: string;
 
   @OneToMany(() => Schedule, (schedule) => schedule.route)
   schedule: Schedule[];
-
-  @OneToMany(() => Trip, (trip) => trip.route)
-  trips: Trip[];
 
   // @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
   // routePoints: RoutePoint[];

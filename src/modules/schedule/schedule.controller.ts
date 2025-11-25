@@ -8,33 +8,33 @@ import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  @MessagePattern({ bms: 'create_schedule' })
-  async createSchedule(
-    @Payload()
-    payload: {
-      user: DTO_RQ_UserAction;
-      data_create: DTO_RQ_Schedule;
-    },
-  ) {
-    try {
-      const result = await this.scheduleService.createSchedule(
-        payload.user,
-        payload.data_create,
-      );
-      return {
-        success: true,
-        statusCode: HttpStatus.CREATED,
-        message: 'Success',
-        result,
-      };
-    } catch (error) {
-      throw new RpcException({
-        success: false,
-        message: error.response?.message || 'Service error!',
-        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      });
-    }
-  }
+  // @MessagePattern({ bms: 'create_schedule' })
+  // async createSchedule(
+  //   @Payload()
+  //   payload: {
+  //     user: DTO_RQ_UserAction;
+  //     data_create: DTO_RQ_Schedule;
+  //   },
+  // ) {
+  //   try {
+  //     const result = await this.scheduleService.createSchedule(
+  //       payload.user,
+  //       payload.data_create,
+  //     );
+  //     return {
+  //       success: true,
+  //       statusCode: HttpStatus.CREATED,
+  //       message: 'Success',
+  //       result,
+  //     };
+  //   } catch (error) {
+  //     throw new RpcException({
+  //       success: false,
+  //       message: error.response?.message || 'Service error!',
+  //       statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     });
+  //   }
+  // }
 
   @MessagePattern({ bms: 'get_list_schedules_by_company' })
   async getListSchedulesByCompany(@Payload() id: string) {

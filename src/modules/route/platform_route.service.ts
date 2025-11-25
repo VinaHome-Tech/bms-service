@@ -48,26 +48,26 @@ export class PlatformRouteService {
   //   }
   // }
 
-  async getListRouteByCompany(companyId: string): Promise<DTO_RP_RouteItem[]> {
-    try {
-      console.log('Fetching routes for company ID:', companyId);
-      const routes = await this.routeRepository.find({
-        where: { company_id: companyId },
-        select: ['id', 'route_name', 'status'],
-        order: { display_order: 'ASC' },
-      });
-      if (!routes.length) {
-        return [];
-      }
-      return routes.map((route) => ({
-        id: route.id,
-        route_name: route.route_name,
-        status: route.status,
-      }));
-    } catch (error) {
-      throw error;
-    }
-  }
+  // async getListRouteByCompany(companyId: string): Promise<DTO_RP_RouteItem[]> {
+  //   try {
+  //     console.log('Fetching routes for company ID:', companyId);
+  //     const routes = await this.routeRepository.find({
+  //       where: { company_id: companyId },
+  //       select: ['id', 'route_name', 'status'],
+  //       order: { display_order: 'ASC' },
+  //     });
+  //     if (!routes.length) {
+  //       return [];
+  //     }
+  //     return routes.map((route) => ({
+  //       id: route.id,
+  //       route_name: route.route_name,
+  //       status: route.status,
+  //     }));
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   // async getRoutePoints(route_id: number): Promise<DTO_RP_RoutePoint[]> {
   //   try {
