@@ -229,7 +229,7 @@ export class BmsOfficeService {
       if (error instanceof HttpException) throw error;
 
       this.logger.error('Error creating office:', error);
-      throw new InternalServerErrorException('Tạo văn phòng thất bại.');
+      throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
     } finally {
       await queryRunner.release();
     }
