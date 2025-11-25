@@ -74,6 +74,15 @@ export class BmsRouteController {
     return await this.routeService.GetListRouteNameByCompanyId(param.id);
   }
 
+  // M3_v2.F7
+  @Get('companies/:id/route-names-action')
+  @Roles('ADMIN', 'STAFF')
+  async GetListRouteNameActionByCompanyId(@Param() param: CompanyIdParam) {
+    return await this.routeService.GetListRouteNameActionByCompanyId(
+      param.id,
+    );
+  }
+
 
   @MessagePattern({ bms: 'get_list_route_by_company' })
   async getListRouteByCompany(@Payload() id: string) {

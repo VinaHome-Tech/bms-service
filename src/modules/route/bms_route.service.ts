@@ -254,6 +254,41 @@ export class BmsRouteService {
     }
   }
 
+  // M3_v2.F7
+  async GetListRouteNameActionByCompanyId(
+    id: string,
+  ) {
+    try {
+      console.time('GetListRouteNameActionByCompanyId');
+      const routes = await this.routeRepository.find({
+        where: {
+          company_id: id,
+          status: true,
+        },
+        select: {
+          id: true,
+          route_name: true,
+        },
+        order: { display_order: 'ASC' },
+      });
+      if (!routes.length) {
+        throw new NotFoundException('Không có tuyến nào cho công ty này');
+      }
+      return {
+        success: true,
+        message: 'Success',
+        statusCode: HttpStatus.OK,
+        result: routes,
+      }
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error(error);
+      throw new InternalServerErrorException('Lấy danh sách tên tuyến thất bại');
+    } finally {
+      console.timeEnd('GetListRouteNameActionByCompanyId');
+    }
+  }
+
 
 
 
