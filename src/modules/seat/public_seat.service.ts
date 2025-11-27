@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, HttpException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Seat } from "src/entities/seat.entity";
 import { SeatChart } from "src/entities/seat_chart.entity";
@@ -15,14 +15,25 @@ export class PublicSeatService {
     ) { }
 
     async GetSeatDetailsBySeatChartId(seatChartId: string) {
-        const seatChart = await this.seatChartRepo.findOne({
-            where: { id: seatChartId },
-            relations: ['seats'],
-        });
-        if (!seatChart) {
-            throw new NotFoundException('Dữ liệu sơ đồ ghế không tồn tại');
+        try {
+            const seats = await this.seatRepo.find({
+                where: { seat_chart: { id: seatChartId } },
+                select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    status: true,
+                    floor: true,
+                    row: true,
+                    column: true,
+                },
+            });
+            return seats;
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+            throw new InternalServerErrorException("Lấy thông tin sơ đồ ghế thất bại");
         }
-
-        return seatChart.seats;
     }
+
+
 }

@@ -12,6 +12,10 @@ export default () => ({
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_DATABASE,
   },
+  rabbitmq: {
+    url: process.env.RABBITMQ_URL,
+    queue: process.env.RABBITMQ_QUEUE,
+  },
 
   
   connect: {
@@ -27,4 +31,5 @@ export default () => ({
     user: process.env.NATS_USER || '',
     pass: process.env.NATS_PASS || '',
   },
+
 });
