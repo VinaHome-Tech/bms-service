@@ -1,15 +1,3 @@
-// import {
-//   Entity,
-//   PrimaryGeneratedColumn,
-//   Column,
-//   ManyToOne,
-//   JoinColumn,
-//   OneToMany,
-// } from 'typeorm';
-// import { Province } from './provinces.entity';
-// import { Ward } from './wards.entity';
-// import { RoutePoint } from './route_point.entity';
-
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('tbl_point')

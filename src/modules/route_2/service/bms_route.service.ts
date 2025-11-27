@@ -10,16 +10,17 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  DTO_RP_ListRouteName,
-  DTO_RP_ListRouteNameToConfig,
+// import {
+//   DTO_RP_ListRouteName,
+//   DTO_RP_ListRouteNameToConfig,
 
-} from './route.dto';
+// } from './route.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
-import { RouteMapper } from './route.mapper';
+// import { RouteMapper } from './route.mapper';
 import { Route } from 'src/entities/route.entity';
+import { DTO_RQ_Route } from '../dto/bms_route.dto';
 // import { RoutePoint } from 'src/entities/route_point.entity';
-import { DTO_RP_Route, DTO_RQ_Route } from './bms_route.dto';
+// import { DTO_RP_Route, DTO_RQ_Route } from './bms_route.dto';
 
 @Injectable()
 export class BmsRouteService {
@@ -371,27 +372,27 @@ export class BmsRouteService {
     id: string,
   ) {
     try {
-      const routes = await this.routeRepository.find({
-        where: { company_id: id },
-        select: {
-          id: true,
-          route_name: true,
-        },
-        order: { display_order: 'ASC' },
-      });
-      if (!routes.length) {
+      const routes = await this.routeRepository
+        .createQueryBuilder('route')
+        .select(['route.id', 'route.route_name'])
+        .where('route.company_id = :id', { id })
+        .orderBy('route.display_order', 'ASC')
+        .getMany();
+
+      if (routes.length === 0) {
         throw new NotFoundException('Không có tuyến nào.');
       }
+
       return {
         success: true,
         message: 'Success',
         statusCode: HttpStatus.OK,
         result: routes,
-      }
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Lỗi hệ thống. Vui lòng thử lại sau.');
-    } 
+    }
   }
 
   // M3_v2.F7

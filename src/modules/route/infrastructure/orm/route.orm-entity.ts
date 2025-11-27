@@ -1,18 +1,8 @@
-import { Schedule } from 'src/entities/schedule.entity';
-import { Trip } from 'src/entities/trip.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-// import { RoutePoint } from './route_point.entity';
-import { ConfigFare } from './config-fare.entity';
+import { Schedule } from "src/entities/schedule.entity";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-@Entity('tbl_route3')
-export class Route {
+@Entity('tbl_route_2')
+export class RouteOrmEntity  {
   @PrimaryGeneratedColumn('uuid')
   id: string;
   @Column({ type: 'double precision', nullable: false })
@@ -44,11 +34,11 @@ export class Route {
   @Column({ type: 'uuid', nullable: false })
   company_id: string;
 
-  @OneToMany(() => Schedule, (schedule) => schedule.route)
-  schedule: Schedule[];
+//   @OneToMany(() => Schedule, (schedule) => schedule.route)
+//   schedule: Schedule[];
 
   // @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
   // routePoints: RoutePoint[];
-  @OneToMany(() => ConfigFare, (configFare) => configFare.route)
-  configFares: ConfigFare[];
+//   @OneToMany(() => ConfigFare, (configFare) => configFare.route)
+//   configFares: ConfigFare[];
 }

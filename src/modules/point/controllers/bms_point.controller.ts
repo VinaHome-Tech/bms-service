@@ -5,7 +5,8 @@
 // import { DTO_RQ_ItemPointConfigTime } from './bms_point.dto';
 
 import { Controller, Post } from "@nestjs/common";
-import { BmsPointService } from "./bms_point.service";
+import { BmsPointService } from "../bms/bms_point.service";
+// import { BmsPointService } from "./bms_point.service";
 
 @Controller('bms-point')
 export class BmsPointController {

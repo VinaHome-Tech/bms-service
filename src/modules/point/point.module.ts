@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Province } from "src/entities/provinces.entity";
-import { BmsPointController } from "./bms/bms_point.controller";
+// import { BmsPointController } from "./bms/bms_point.controller";
 import { BmsPointService } from "./bms/bms_point.service";
 import { Ward } from "src/entities/wards.entity";
+import { BmsPointController } from "./controllers/bms_point.controller";
 // import { Ward } from "src/entities/wards.entity";
 // import { PlatformPointController } from "./platform_point.controller";
 // import { PlatformPointService } from "./platform_point.service";

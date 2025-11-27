@@ -3,7 +3,7 @@ import { OfficeModule } from './modules/office/office.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { RouteModule } from './modules/route/route.module';
+import { RouteModule } from './modules/route_2/route.module';
 import { SeatModule } from './modules/seat/seat.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { TripModule } from './modules/trip/trip.module';
@@ -13,6 +13,8 @@ import configuration from './config/configuration';
 import { ConfigFareModule } from './modules/config/config_fare.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PointModule } from './modules/point/point.module';
+import { ConfigAppModule } from './modules/config/config.module';
+import { RouteModule2 } from './modules/route/route.module';
 
 @Module({
   imports: [
@@ -33,32 +35,23 @@ import { PointModule } from './modules/point/point.module';
         password: configuration().database.password,
         database: configuration().database.database,
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
         ssl: false,
       }),
     }),
 
     OfficeModule,
-    RouteModule,
+    // RouteModule,
     SeatModule,
-    ScheduleModule,
+    // ScheduleModule,
     TripModule,
     VehicleModule,
     PointModule,
     ConfigFareModule,
+    ConfigAppModule,
+    RouteModule2,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule implements OnModuleInit {
-  constructor(private dataSource: DataSource) {}
-
-  onModuleInit() {
-    const logger = new Logger('DATABASE');
-    if (this.dataSource.isInitialized) {
-      logger.log('Kết nối PostgreSQL thành công!');
-    } else {
-      logger.error('Kết nối PostgreSQL thất bại!');
-    }
-  }
-}
+export class AppModule {}

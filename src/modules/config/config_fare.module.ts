@@ -5,7 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { FareConfig } from "src/entities/fare-config.entity";
 import { ConfigFare } from "src/entities/config-fare.entity";
 import { Route } from "src/entities/route.entity";
-import { RouteModule } from "../route/route.module";
+import { RouteModule } from "../route_2/route.module";
 import { SeatChart } from "src/entities/seat_chart.entity";
 
 @Module({

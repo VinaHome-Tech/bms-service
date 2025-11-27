@@ -1,20 +1,29 @@
 import { Controller, Delete, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { BmsRouteService } from './bms_route.service';
+// import { BmsRouteService } from '../bms_route.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
-import { DTO_RQ_Route } from './bms_route.dto';
+import { DTO_RQ_Route } from '../dto/bms_route.dto';
 import { TokenGuard } from 'src/guards/token.guard';
 import { Roles } from 'src/decorator/roles.decorator';
 import { CompanyIdParam } from 'src/param/CompanyIdParam';
 import { NumberIdParam } from 'src/param/NumberIdParam';
 import { UUIDParam } from 'src/param/UUIDParam';
+import { BmsRouteService } from '../service/bms_route.service';
+import { GetRoutesNameToConfigUseCase } from '../use-cases/get-routes-name-to-config.use-case';
 
-@Controller('bms-route')
+@Controller('bms-route-2')
 @UseGuards(TokenGuard)
 export class BmsRouteController {
-  constructor(private readonly routeService: BmsRouteService) { }
+  constructor(
+    private readonly routeService: BmsRouteService,
+    private readonly getRoutesNameToConfigUseCase: GetRoutesNameToConfigUseCase
+  ) { }
 
-
+  @Get('companies/:id/route-name-to-config-point')
+  @Roles('ADMIN')
+  async GetListRouteNameByCompanyId_2(@Param() param: UUIDParam) {
+    return await this.getRoutesNameToConfigUseCase.execute(param.id);
+  }
 
   // M3_v2.F1
   @Get('companies/:id/routes')
