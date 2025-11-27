@@ -12,6 +12,7 @@ import configuration from './config/configuration';
 // import { PointModule } from './modules/point/point.module';
 import { ConfigFareModule } from './modules/config/config_fare.module';
 import { JwtModule } from '@nestjs/jwt';
+import { PointModule } from './modules/point/point.module';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { JwtModule } from '@nestjs/jwt';
     ScheduleModule,
     TripModule,
     VehicleModule,
-    // PointModule,
+    PointModule,
     ConfigFareModule,
   ],
   controllers: [],

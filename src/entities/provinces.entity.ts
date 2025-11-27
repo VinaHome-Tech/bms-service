@@ -1,30 +1,18 @@
-// import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-// import { Ward } from './wards.entity';
-// import { Point } from './point.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Ward } from './wards.entity';
 
-// @Entity('tbl_provinces')
-// export class Province {
-//   @PrimaryGeneratedColumn()
-//   id: number;
+@Entity('tbl_province')
+export class Province {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
 
-//   @Column()
-//   name: string;
+  @Column({ type: 'varchar', length: 100, nullable: false })
+  name: string;
 
-//   @Column({type: 'bigint', unique: true })
-//   code: number;
+  @Column({ type: 'bigint', unique: true, nullable: false })
+  code: number;
 
-//   @Column()
-//   division_type: string;
+  @OneToMany(() => Ward, ward => ward.province)
+  wards: Ward[];
+}
 
-//   @Column()
-//   codename: string;
-
-//   @Column()
-//   phone_code: number;
-
-//   @OneToMany(() => Ward, ward => ward.province)
-//   wards: Ward[];
-
-//   @OneToMany(() => Point, (point) => point.province)
-//   points: Point[];
-// }

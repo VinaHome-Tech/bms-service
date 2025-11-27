@@ -10,34 +10,26 @@
 // import { Ward } from './wards.entity';
 // import { RoutePoint } from './route_point.entity';
 
-// @Entity('tbl_point')
-// export class Point {
-//   @PrimaryGeneratedColumn()
-//   id: number;
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-//   @Column()
-//   name: string;
+@Entity('tbl_point')
+export class Point {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
 
-//   @Column()
-//   short_name: string;
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  name: string;
 
-//   @Column()
-//   address: string;
+  @Column({ type: 'varchar', length: 100, nullable: false })
+  short_name: string;
 
-//   @Column()
-//   province_code: number;
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  address: string;
 
-//   @Column()
-//   ward_code: number;
+  @Column({ type: 'bigint', nullable: false })
+  province_code: number;
 
-//   @ManyToOne(() => Province, (province) => province.points)
-//   @JoinColumn({ name: 'province_code', referencedColumnName: 'code' })
-//   province: Province;
+  @Column({ type: 'bigint', nullable: false })
+  ward_code: number;
 
-//   @ManyToOne(() => Ward, (ward) => ward.points)
-//   @JoinColumn({ name: 'ward_code', referencedColumnName: 'code' })
-//   ward: Ward;
-
-//   @OneToMany(() => RoutePoint, (routePoint) => routePoint.point)
-//   routePoints: RoutePoint[];
-// }
+}
