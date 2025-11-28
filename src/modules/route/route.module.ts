@@ -1,31 +1,31 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { RouteOrmEntity } from "./infrastructure/orm/route.orm-entity";
-import { BmsRouteController } from "./presentation/controllers/bms-route.controller";
-import { LoggerAdapter } from "./infrastructure/adapters/logger.adapter";
-import { RouteNameDomainService } from "./domain/services/route-name-domain.service";
-import { RouteRepository } from "./infrastructure/repositories/route.repository";
-import { ROUTE_REPOSITORY } from "./application/ports/route-repository.port";
-import { GetRouteNameListByCompanyIdUseCase } from "./application/use-cases/get-route-name-list-by-company-id.use-case";
+import { BmsRouteController } from "./controllers/bms-route.controller";
+import { RouteRepository } from "./repositories/route.repository";
+import { TypeOrmRouteRepository } from "./repositories/typeorm-route.repository";
+import { GetRouteNameListByCompanyIdUseCase } from "./use-case/bms/get-route-name-list-by-company-id.usecase";
+import { RouteOrmEntity } from "./entities/RouteOrmEntity.entity";
+import { GetRouteListByCompanyIdUseCase } from "./use-case/bms/get-route-list-by-company-id.usecase";
+import { Schedule } from "src/entities/schedule.entity";
+import { GetRouteNameActionListByCompanyIdUseCase } from "./use-case/bms/get-route-name-action-list-by-company-id.usecase";
+import { CreateRouteUseCase } from "./use-case/bms/create-route.usecase";
+import { UpdateRouteUseCase } from "./use-case/bms/update-route.usecase";
+import { DeleteRouteUseCase } from "./use-case/bms/delete-route.usecase";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([RouteOrmEntity])],
+    imports: [TypeOrmModule.forFeature([RouteOrmEntity, Schedule])],
     controllers: [BmsRouteController],
     providers: [
-        LoggerAdapter,
-        RouteNameDomainService,
-        RouteRepository,
         {
-            provide: ROUTE_REPOSITORY,
-            useExisting: RouteRepository,
+            provide: RouteRepository,
+            useClass: TypeOrmRouteRepository,
         },
-        {
-            provide: GetRouteNameListByCompanyIdUseCase,
-            useFactory: (repo: RouteRepository) => {
-                return new GetRouteNameListByCompanyIdUseCase(repo);
-            },
-            inject: [RouteRepository],
-        }
+        GetRouteNameListByCompanyIdUseCase,
+        GetRouteListByCompanyIdUseCase,
+        GetRouteNameActionListByCompanyIdUseCase,
+        CreateRouteUseCase,
+        UpdateRouteUseCase,
+        DeleteRouteUseCase,
     ],
     exports: [],
 })

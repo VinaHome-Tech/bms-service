@@ -35,7 +35,7 @@ import { RouteModule2 } from './modules/route/route.module';
         password: configuration().database.password,
         database: configuration().database.database,
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         ssl: false,
       }),
     }),

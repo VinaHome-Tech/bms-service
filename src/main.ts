@@ -26,6 +26,7 @@ async function bootstrap() {
   // 🟢 3) PHẦN HTTP API (KHÔNG ĐỔI)
   app.setGlobalPrefix('v2');
   app.useGlobalPipes(new CustomValidationPipe());
+  // app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(Number(configuration().service.port));
 

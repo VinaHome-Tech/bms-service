@@ -1,8 +1,8 @@
 import { Schedule } from "src/entities/schedule.entity";
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-@Entity('tbl_route_2')
-export class RouteOrmEntity  {
+@Entity('tbl_route')
+export class RouteOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
   @Column({ type: 'double precision', nullable: false })
@@ -34,8 +34,8 @@ export class RouteOrmEntity  {
   @Column({ type: 'uuid', nullable: false })
   company_id: string;
 
-//   @OneToMany(() => Schedule, (schedule) => schedule.route)
-//   schedule: Schedule[];
+  @OneToMany(() => Schedule, (schedule) => schedule.route)
+  schedule: Schedule[];
 
   // @OneToMany(() => RoutePoint, (routePoint) => routePoint.route)
   // routePoints: RoutePoint[];
