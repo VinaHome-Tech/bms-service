@@ -1,22 +1,34 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Province } from "src/entities/provinces.entity";
-// import { BmsPointController } from "./bms/bms_point.controller";
+import { ProvinceOrmEntity } from "src/modules/point/entities/ProvinceOrmEntity";
 import { BmsPointService } from "./bms/bms_point.service";
-import { Ward } from "src/entities/wards.entity";
+import { WardOrmEntity } from "src/modules/point/entities/WardOrmEntity";
 import { BmsPointController } from "./controllers/bms_point.controller";
-// import { Ward } from "src/entities/wards.entity";
-// import { PlatformPointController } from "./platform_point.controller";
-// import { PlatformPointService } from "./platform_point.service";
-// import { Point } from "src/entities/point.entity";
-// import { BmsPointController } from "./bms_point.controller";
-// import { BmsPointService } from "./bms_point.service";
-// import { RoutePoint } from "src/entities/route_point.entity";
+import { GlobalPointOrmEntity } from "./entities/GlobalPointOrmEntity.entity";
+import { PointRepository } from "./repositories/point.repository";
+import { TypeOrmPointRepository } from "./repositories/typeorm-point.repository";
+import { GetAllProvinceNameUseCase } from "./use-cases/super-admin/get-all-province-name.usecase";
+import { SuperAdminPointController } from "./controllers/super-admin-point.controller";
+import { GetWardsByProvinceCodeUseCase } from "./use-cases/super-admin/get-wards-by-province-code.usecase";
+import { CreateGlobalPointUseCase } from "./use-cases/super-admin/create-global-point.usecase";
+import { GetAllGlobalPointUseCase } from "./use-cases/super-admin/get-all-global-point.usecase";
+import { UpdateGlobalPointUseCase } from "./use-cases/super-admin/update-global-point.usecase";
+
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Province, Ward])],
-    controllers: [BmsPointController],
-    providers: [BmsPointService],
+    imports: [TypeOrmModule.forFeature([ProvinceOrmEntity, WardOrmEntity, GlobalPointOrmEntity])],
+    controllers: [BmsPointController, SuperAdminPointController],
+    providers: [
+        {
+            provide: PointRepository,
+            useClass: TypeOrmPointRepository,
+        },
+        GetAllProvinceNameUseCase,
+        GetWardsByProvinceCodeUseCase,
+        CreateGlobalPointUseCase,
+        GetAllGlobalPointUseCase,
+        UpdateGlobalPointUseCase,
+        BmsPointService],
     exports: []
 })
 export class PointModule {}

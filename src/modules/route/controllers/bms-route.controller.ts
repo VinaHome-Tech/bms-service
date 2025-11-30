@@ -12,6 +12,8 @@ import { DTO_RQ_Route } from "../dtos/request/bms/route.dto";
 import { CreateRouteUseCase } from "../use-case/bms/create-route.usecase";
 import { UpdateRouteUseCase } from "../use-case/bms/update-route.usecase";
 import { DeleteRouteUseCase } from "../use-case/bms/delete-route.usecase";
+import { DTO_RP_RouteNameToConfig } from "../dtos/response/bms/route-name-to-config.dto";
+import { GetListRouteNameToConfigUseCase } from "../use-case/bms/get-list-route-name-to-config.usecase";
 
 @Controller('bms-route')
 @UseGuards(TokenGuard)
@@ -23,6 +25,7 @@ export class BmsRouteController {
         private readonly createRouteUseCase: CreateRouteUseCase,
         private readonly updateRouteUseCase: UpdateRouteUseCase,
         private readonly deleteRouteUseCase: DeleteRouteUseCase,
+        private readonly getListRouteNameToConfigUseCase: GetListRouteNameToConfigUseCase,
     ) { }
 
     @Get('companies/:id/route-names')
@@ -76,6 +79,15 @@ export class BmsRouteController {
     @Roles('ADMIN')
     async DeleteRoute(@Param() param: any) {
         const result = await this.deleteRouteUseCase.execute(param.id);
+        return new ResponseResult(true, HttpStatus.OK, 'Success', result);
+    }
+
+    @Get('companies/:id/route-name-to-config')
+    @Roles('ADMIN')
+    async GetRouteNameToConfigByCompanyId(
+        @Param() param: UUIDParam,
+    ): Promise<ResponseResult<DTO_RP_RouteNameToConfig[]>> {
+        const result = await this.getListRouteNameToConfigUseCase.execute(param.id);
         return new ResponseResult(true, HttpStatus.OK, 'Success', result);
     }
 }

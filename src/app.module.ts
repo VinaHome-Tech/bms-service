@@ -36,7 +36,9 @@ import { RouteModule2 } from './modules/route/route.module';
         database: configuration().database.database,
         autoLoadEntities: true,
         synchronize: true,
-        ssl: false,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     }),
 
@@ -54,4 +56,4 @@ import { RouteModule2 } from './modules/route/route.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

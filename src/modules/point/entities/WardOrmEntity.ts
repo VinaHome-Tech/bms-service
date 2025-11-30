@@ -1,21 +1,25 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Province } from "./provinces.entity";
+import { ProvinceOrmEntity } from "./ProvinceOrmEntity";
+import { GlobalPointOrmEntity } from "./GlobalPointOrmEntity.entity";
 
 @Entity('tbl_ward')
-export class Ward {
+export class WardOrmEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: number;
+  id: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
   name: string;
 
   @Column({ type: 'bigint', nullable: false })
-  code: number;
+  code: string;
 
   @Column({ type: 'bigint', nullable: false })
-  province_code: number;
+  province_code: string;
 
-  @ManyToOne(() => Province, province => province.wards)
+  @ManyToOne(() => ProvinceOrmEntity, province => province.wards)
   @JoinColumn({ name: 'province_code', referencedColumnName: 'code' })
-  province: Province;
+  province: ProvinceOrmEntity;
+
+  @OneToMany(() => GlobalPointOrmEntity, global => global.ward)
+  global_points: GlobalPointOrmEntity[];
 }

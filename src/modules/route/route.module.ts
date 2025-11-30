@@ -11,6 +11,7 @@ import { GetRouteNameActionListByCompanyIdUseCase } from "./use-case/bms/get-rou
 import { CreateRouteUseCase } from "./use-case/bms/create-route.usecase";
 import { UpdateRouteUseCase } from "./use-case/bms/update-route.usecase";
 import { DeleteRouteUseCase } from "./use-case/bms/delete-route.usecase";
+import { GetListRouteNameToConfigUseCase } from "./use-case/bms/get-list-route-name-to-config.usecase";
 
 @Module({
     imports: [TypeOrmModule.forFeature([RouteOrmEntity, Schedule])],
@@ -26,6 +27,7 @@ import { DeleteRouteUseCase } from "./use-case/bms/delete-route.usecase";
         CreateRouteUseCase,
         UpdateRouteUseCase,
         DeleteRouteUseCase,
+        GetListRouteNameToConfigUseCase,
     ],
     exports: [],
 })

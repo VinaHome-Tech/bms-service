@@ -17,18 +17,18 @@
 
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Province } from "src/entities/provinces.entity";
-import { Ward } from "src/entities/wards.entity";
+import { ProvinceOrmEntity } from "src/modules/point/entities/ProvinceOrmEntity";
+import { WardOrmEntity } from "src/modules/point/entities/WardOrmEntity";
 import { Repository } from "typeorm";
 
 @Injectable()
 export class BmsPointService {
     constructor(
 
-        @InjectRepository(Province)
-        private readonly provinceRepository: Repository<Province>,
-        @InjectRepository(Ward)
-        private readonly wardRepository: Repository<Ward>,
+        @InjectRepository(ProvinceOrmEntity)
+        private readonly provinceRepository: Repository<ProvinceOrmEntity>,
+        @InjectRepository(WardOrmEntity)
+        private readonly wardRepository: Repository<WardOrmEntity>,
     ) { }
 
     async addProvince() {
@@ -39,7 +39,7 @@ export class BmsPointService {
         const provincesData = await response.json();
         console.log(provincesData);
         for (const prov of provincesData) {
-            const province = new Province();
+            const province = new ProvinceOrmEntity();
             province.name = prov.name;
             province.code = prov.code;
             await this.provinceRepository.save(province);
@@ -60,7 +60,7 @@ export class BmsPointService {
             console.log(`Total wards: ${wardData.length}`);
             for (const w of wardData) {
                 try {
-                    const ward = new Ward();
+                    const ward = new WardOrmEntity();
 
                     ward.name = w.name;
                     ward.code = w.code;
