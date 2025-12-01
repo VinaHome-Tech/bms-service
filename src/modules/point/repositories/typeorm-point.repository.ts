@@ -42,9 +42,6 @@ export class TypeOrmPointRepository extends PointRepository {
         return this.globalPointRepo.findOne({ where: { name } });
     }
 
-    findByShortNameGlobalPoint(shortName: string) {
-        return this.globalPointRepo.findOne({ where: { short_name: shortName } });
-    }
 
     findProvinceById(id: string) {
         return this.provinceRepo.findOne({ where: { id } });
@@ -62,12 +59,14 @@ export class TypeOrmPointRepository extends PointRepository {
         return this.globalPointRepo.findOne({
             where: { id },
             relations: ['province', 'ward'],
+            
         });
     }
 
     getAllGlobalPoints(): Promise<GlobalPointOrmEntity[]> {
         return this.globalPointRepo.find({
             relations: ['province', 'ward'],
+            order: { created_at: 'DESC' },
         });
     }
     async updateGlobalPoint(id: string, data: Partial<GlobalPointOrmEntity>): Promise<void> {

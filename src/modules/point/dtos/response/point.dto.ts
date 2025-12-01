@@ -11,7 +11,6 @@ export class DTO_RP_Ward {
 export class DTO_RP_GlobalPoint {
     id: string;
     name: string;
-    short_name: string;
     code: string;
     province: DTO_RP_Province;
     ward: DTO_RP_Ward; 

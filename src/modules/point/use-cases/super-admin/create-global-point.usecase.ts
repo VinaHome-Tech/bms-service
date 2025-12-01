@@ -13,11 +13,6 @@ export class CreateGlobalPointUseCase {
         // 1. Check duplicate name
         const existName = await this.repo.findByNameGlobalPoint(data.name);
         if (existName) throw new ConflictException(`Tên điểm "${data.name}" đã tồn tại`);
-
-        // 2. Check duplicate short_name
-        const existShortName = await this.repo.findByShortNameGlobalPoint(data.short_name);
-        if (existShortName) throw new ConflictException(`Tên điểm rút gọn "${data.short_name}" đã tồn tại`);
-
         // 3. Check province exists
         const exitsProvince = await this.repo.findProvinceById(data.province_id);
         console.log('exitsProvince', exitsProvince);
@@ -30,13 +25,12 @@ export class CreateGlobalPointUseCase {
         // 5. Create record
         const created = await this.repo.createGlobalPoint({
             name: data.name.trim(),
-            short_name: data.short_name.trim(),
             code: data.code.toUpperCase().trim(),
             province_id: exitsProvince.id,
             // province_code: exitsProvince.province_code,
             ward_id: exitsWard.id,
             // ward_code: exitsWard.ward_code,
-            address: data.address.trim(),
+            address: data.address || null,
         });
 
         // 6. Load full entity with relations

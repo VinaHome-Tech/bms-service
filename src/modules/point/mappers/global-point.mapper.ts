@@ -6,7 +6,6 @@ export class GlobalPointMapper {
         return {
             id: entity.id,
             name: entity.name,
-            short_name: entity.short_name,
             code: entity.code,
             address: entity.address,
             province: {

@@ -12,15 +12,31 @@ import { CreateRouteUseCase } from "./use-case/bms/create-route.usecase";
 import { UpdateRouteUseCase } from "./use-case/bms/update-route.usecase";
 import { DeleteRouteUseCase } from "./use-case/bms/delete-route.usecase";
 import { GetListRouteNameToConfigUseCase } from "./use-case/bms/get-list-route-name-to-config.usecase";
+import { SuperAdminRouteRepository } from "./repositories/super-admin-route.repository";
+import { SuperAdminTypeOrmRouteRepository } from "./repositories/super-admin-typeorm-route.repository";
+import { SuperAdminRouteController } from "./controllers/super-admin-route.controller";
+import { SuperAdminCreateRouteUseCase } from "./use-case/super-admin/create-route.usecase";
+import { SuperAdminGetAllRouteByCompanyUseCase } from "./use-case/super-admin/get-all-route-by-company.usecase";
+import { SuperAdminUpdateRouteUseCase } from "./use-case/super-admin/update-route.usecase";
+import { SuperAdminDeleteRouteUseCase } from "./use-case/super-admin/delete-route.usecase";
 
 @Module({
     imports: [TypeOrmModule.forFeature([RouteOrmEntity, Schedule])],
-    controllers: [BmsRouteController],
+    controllers: [BmsRouteController, SuperAdminRouteController],
     providers: [
+        {
+            provide: SuperAdminRouteRepository,
+            useClass: SuperAdminTypeOrmRouteRepository,
+        },
+        SuperAdminCreateRouteUseCase,
+        SuperAdminGetAllRouteByCompanyUseCase,
+        SuperAdminUpdateRouteUseCase,
+        SuperAdminDeleteRouteUseCase,
         {
             provide: RouteRepository,
             useClass: TypeOrmRouteRepository,
         },
+
         GetRouteNameListByCompanyIdUseCase,
         GetRouteListByCompanyIdUseCase,
         GetRouteNameActionListByCompanyIdUseCase,

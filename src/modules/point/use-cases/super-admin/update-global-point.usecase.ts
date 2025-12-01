@@ -24,13 +24,6 @@ export class UpdateGlobalPointUseCase {
             }
         }
 
-        // 3. Check duplicate short_name (ignore itself)
-        if (data.short_name) {
-            const existShortName = await this.repo.findByShortNameGlobalPoint(data.short_name);
-            if (existShortName && existShortName.id !== id) {
-                throw new ConflictException(`Tên điểm rút gọn "${data.short_name}" đã tồn tại`);
-            }
-        }
 
         // 4. Check province
         let exitsProvince = null;
@@ -53,7 +46,6 @@ export class UpdateGlobalPointUseCase {
         // 6. Build update object
         const updateData: Partial<GlobalPointOrmEntity> = {
             name: data.name?.trim() ?? existing.name,
-            short_name: data.short_name?.trim() ?? existing.short_name,
             code: data.code?.toUpperCase().trim() ?? existing.code,
 
             province_id: data.province_id ?? existing.province_id,

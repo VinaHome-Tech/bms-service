@@ -7,7 +7,6 @@ export abstract class PointRepository {
     abstract getWardsByProvinceCode(provinceCode: string): Promise<WardOrmEntity[]>;
 
     abstract findByNameGlobalPoint(name: string): Promise<GlobalPointOrmEntity | null>;
-    abstract findByShortNameGlobalPoint(shortName: string): Promise<GlobalPointOrmEntity | null>;
     abstract findProvinceById(id: string): Promise<ProvinceOrmEntity | null>;
     abstract findWardById(id: string): Promise<WardOrmEntity | null>;
 

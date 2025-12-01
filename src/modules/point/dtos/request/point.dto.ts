@@ -7,8 +7,6 @@ export class DTO_RQ_GlobalPoint {
     @IsString()
     name: string;
     @IsString()
-    short_name: string;
-    @IsString()
     code: string;
     @IsString()
     province_id: string;

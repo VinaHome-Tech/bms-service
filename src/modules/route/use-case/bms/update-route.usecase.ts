@@ -5,9 +5,9 @@ import { RouteMapper } from "../../mappers/bms/route.mapper";
 
 @Injectable()
 export class UpdateRouteUseCase {
-    constructor(private readonly repo: RouteRepository) { }
+  constructor(private readonly repo: RouteRepository) { }
 
-    async execute(id: string, data: DTO_RQ_Route) {
+  async execute(id: string, data: DTO_RQ_Route) {
     try {
       // 1. Lấy route hiện tại
       const route = await this.repo.findById(id);
