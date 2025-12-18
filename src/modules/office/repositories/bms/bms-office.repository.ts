@@ -14,4 +14,5 @@ export abstract class BmsOfficeRepository {
     ): Promise<void>;
 
     abstract deleteOffice(officeId: string): Promise<void>;
+    abstract findRoomWorkByCompanyId(companyId: string): Promise<OfficeOrmEntity[]>;
 }

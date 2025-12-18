@@ -12,6 +12,7 @@ import { CreateOfficeUseCase } from './use-cases/bms/create-office.usecase';
 import { GetOfficeListByCompanyIdUseCase } from './use-cases/bms/get-office-list-by-company-id.usecase';
 import { UpdateOfficeUseCase } from './use-cases/bms/update-office.usecase';
 import { DeleteOfficeUseCase } from './use-cases/bms/delete-office.usecase';
+import { GetOfficeListRoomWorkByCompanyIdUseCase } from './use-cases/bms/get-office-list-room-work-by-company-id.usecase';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Office, OfficePhone, OfficeOrmEntity, OfficePhoneOrmEntity])],
@@ -25,6 +26,7 @@ import { DeleteOfficeUseCase } from './use-cases/bms/delete-office.usecase';
     UpdateOfficeUseCase,
     DeleteOfficeUseCase,
     GetOfficeListByCompanyIdUseCase,
+    GetOfficeListRoomWorkByCompanyIdUseCase,
     BmsOfficeService],
   exports: [],
 })

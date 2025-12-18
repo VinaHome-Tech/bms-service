@@ -10,6 +10,7 @@ import { TimingInterceptor } from "src/shared/timing-interceptor";
 import { GetOfficeListByCompanyIdUseCase } from "../use-cases/bms/get-office-list-by-company-id.usecase";
 import { UpdateOfficeUseCase } from "../use-cases/bms/update-office.usecase";
 import { DeleteOfficeUseCase } from "../use-cases/bms/delete-office.usecase";
+import { GetOfficeListRoomWorkByCompanyIdUseCase } from "../use-cases/bms/get-office-list-room-work-by-company-id.usecase";
 
 @Controller('bms-office')
 @UseGuards(TokenGuard)
@@ -20,13 +21,15 @@ export class BmsOfficeController {
     private readonly updateOfficeUseCase: UpdateOfficeUseCase,
     private readonly deleteOfficeUseCase: DeleteOfficeUseCase,
     private readonly getOfficeListByCompanyIdUseCase: GetOfficeListByCompanyIdUseCase,
+    private readonly getOfficeListRoomWorkByCompanyIdUseCase: GetOfficeListRoomWorkByCompanyIdUseCase,
 ) {}
 
   // M1_v2.F1
   @Get('companies/:id/room-work')
   @Roles('ADMIN', 'STAFF')
   async GetListOfficeRoomWorkByCompanyId(@Param() param: UUIDParam) {
-    return await this.service.GetListOfficeRoomWorkByCompanyId(param.id);
+    const result = await this.getOfficeListRoomWorkByCompanyIdUseCase.execute(param.id);
+    return new ResponseResult(true, HttpStatus.OK, 'Success', result);
   }
 
   // M1_v2.F2

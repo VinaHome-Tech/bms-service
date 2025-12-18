@@ -71,6 +71,19 @@ export class TypeOrmOfficeRepository extends BmsOfficeRepository {
         });
     }
 
+    async findRoomWorkByCompanyId(companyId: string) {
+        return this.repoOffice.find({
+            select: ['id', 'name', 'code', 'address', 'note', 'status'],
+            where: {
+                company_id: companyId,
+            },
+            relations: ['phones'],
+            order: {
+                created_at: 'ASC',
+            },
+        });
+    }
+
     async findById(officeId: string) {
         return this.repoOffice.findOne({
             where: {
