@@ -1,4 +1,4 @@
-import { RouteOrmEntity } from "../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../entities/RouteOrmEntity";
 
 export abstract class RouteRepository {
   abstract findNameByCompanyId(companyId: string): Promise<RouteOrmEntity[]>;

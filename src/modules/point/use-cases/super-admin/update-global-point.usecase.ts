@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import { PointRepository } from "../../repositories/point.repository";
 import { DTO_RQ_GlobalPoint } from "../../dtos/request/point.dto";
 import { GlobalPointMapper } from "../../mappers/global-point.mapper";
-import { GlobalPointOrmEntity } from "../../entities/GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "../../entities/GlobalPointOrmEntity";
 
 @Injectable()
 export class UpdateGlobalPointUseCase {

@@ -4,7 +4,7 @@ import { BmsRouteController } from "./controllers/bms-route.controller";
 import { RouteRepository } from "./repositories/route.repository";
 import { TypeOrmRouteRepository } from "./repositories/typeorm-route.repository";
 import { GetRouteNameListByCompanyIdUseCase } from "./use-case/bms/get-route-name-list-by-company-id.usecase";
-import { RouteOrmEntity } from "./entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "./entities/RouteOrmEntity";
 import { GetRouteListByCompanyIdUseCase } from "./use-case/bms/get-route-list-by-company-id.usecase";
 import { Schedule } from "src/entities/schedule.entity";
 import { GetRouteNameActionListByCompanyIdUseCase } from "./use-case/bms/get-route-name-action-list-by-company-id.usecase";

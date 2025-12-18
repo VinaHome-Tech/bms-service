@@ -4,7 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Injectable } from "@nestjs/common";
 import { PointRepository } from "./point.repository";
 import { WardOrmEntity } from "../entities/WardOrmEntity";
-import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity";
 
 @Injectable()
 export class TypeOrmPointRepository extends PointRepository {

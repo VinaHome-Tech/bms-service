@@ -4,7 +4,7 @@ import { ProvinceOrmEntity } from "src/modules/point/entities/ProvinceOrmEntity"
 import { BmsPointService } from "./bms/bms_point.service";
 import { WardOrmEntity } from "src/modules/point/entities/WardOrmEntity";
 import { BmsPointController } from "./controllers/bms_point.controller";
-import { GlobalPointOrmEntity } from "./entities/GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "./entities/GlobalPointOrmEntity";
 import { PointRepository } from "./repositories/point.repository";
 import { TypeOrmPointRepository } from "./repositories/typeorm-point.repository";
 import { GetAllProvinceNameUseCase } from "./use-cases/super-admin/get-all-province-name.usecase";

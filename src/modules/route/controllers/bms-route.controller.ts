@@ -8,12 +8,12 @@ import { DTO_RP_RouteName } from "../dtos/response/bms/route-name.dto";
 import { GetRouteNameListByCompanyIdUseCase } from "../use-case/bms/get-route-name-list-by-company-id.usecase";
 import { GetRouteListByCompanyIdUseCase } from "../use-case/bms/get-route-list-by-company-id.usecase";
 import { GetRouteNameActionListByCompanyIdUseCase } from "../use-case/bms/get-route-name-action-list-by-company-id.usecase";
-import { DTO_RQ_Route } from "../dtos/request/bms/route.dto";
 import { CreateRouteUseCase } from "../use-case/bms/create-route.usecase";
 import { UpdateRouteUseCase } from "../use-case/bms/update-route.usecase";
 import { DeleteRouteUseCase } from "../use-case/bms/delete-route.usecase";
 import { DTO_RP_RouteNameToConfig } from "../dtos/response/bms/route-name-to-config.dto";
 import { GetListRouteNameToConfigUseCase } from "../use-case/bms/get-list-route-name-to-config.usecase";
+import { DTO_RQ_Route } from "../dtos/request/bms/route.dto";
 
 @Controller('bms-route')
 @UseGuards(TokenGuard)

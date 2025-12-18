@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { SuperAdminRouteRepository } from "./super-admin-route.repository";
 import { InjectRepository } from "@nestjs/typeorm";
-import { RouteOrmEntity } from "../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../entities/RouteOrmEntity";
 import { Repository } from "typeorm";
 
 @Injectable()

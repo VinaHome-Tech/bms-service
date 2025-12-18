@@ -1,5 +1,5 @@
 import { DTO_RP_GlobalPoint } from "../dtos/response/point.dto";
-import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity";
 
 export class GlobalPointMapper {
     static toResponse(entity: GlobalPointOrmEntity): DTO_RP_GlobalPoint {

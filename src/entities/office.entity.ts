@@ -9,7 +9,7 @@ import { OfficePhone } from './office_phone.entity';
 import { Schedule } from './schedule.entity';
 
 
-@Entity('tbl_office')
+@Entity('tbl_office_2')
 export class Office {
   @PrimaryGeneratedColumn('uuid')
   id: string;

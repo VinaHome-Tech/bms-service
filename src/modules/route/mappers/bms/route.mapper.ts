@@ -1,5 +1,5 @@
 import { DTO_RP_Route } from "src/modules/route_2/route.dto";
-import { RouteOrmEntity } from "../../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
 
 export class RouteMapper {
     static toResponse(entity: RouteOrmEntity): DTO_RP_Route {

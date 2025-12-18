@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { Office } from './office.entity';
 
-@Entity('tbl_office_phone')
+@Entity('tbl_office_phone_2')
 export class OfficePhone {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -1,5 +1,5 @@
 import { InjectRepository } from "@nestjs/typeorm";
-import { RouteOrmEntity } from "../../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { RouteRepository } from "../../repositories/route.repository";
 import { RouteNameMapper } from "../../mappers/bms/route-name.mapper";

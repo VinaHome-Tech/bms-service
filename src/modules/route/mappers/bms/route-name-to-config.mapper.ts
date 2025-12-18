@@ -1,5 +1,5 @@
 import { DTO_RP_RouteNameToConfig } from "../../dtos/response/bms/route-name-to-config.dto";
-import { RouteOrmEntity } from "../../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
 
 export class RouteNameToConfigMapper {
   static toResponse(entity: RouteOrmEntity): DTO_RP_RouteNameToConfig {

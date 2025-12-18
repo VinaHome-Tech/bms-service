@@ -1,5 +1,5 @@
 import { DTO_RP_SuperAdminRoute } from "../dtos/response/super-admin-route.dto";
-import { RouteOrmEntity } from "../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../entities/RouteOrmEntity";
 
 export class SuperAdminRouteMapper {
     static toResponse(entity: RouteOrmEntity): DTO_RP_SuperAdminRoute {

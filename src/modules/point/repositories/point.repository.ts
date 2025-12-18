@@ -1,4 +1,4 @@
-import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "../entities/GlobalPointOrmEntity";
 import { ProvinceOrmEntity } from "../entities/ProvinceOrmEntity";
 import { WardOrmEntity } from "../entities/WardOrmEntity";
 

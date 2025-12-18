@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { RouteRepository } from "./route.repository";
-import { RouteOrmEntity } from "../entities/RouteOrmEntity.entity";
+import { RouteOrmEntity } from "../entities/RouteOrmEntity";
 import { Repository } from "typeorm";
 
 @Injectable()

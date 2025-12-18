@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ProvinceOrmEntity } from "./ProvinceOrmEntity";
-import { GlobalPointOrmEntity } from "./GlobalPointOrmEntity.entity";
+import { GlobalPointOrmEntity } from "./GlobalPointOrmEntity";
 
 @Entity('tbl_ward')
 export class WardOrmEntity {
