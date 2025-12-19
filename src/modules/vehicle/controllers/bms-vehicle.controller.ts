@@ -1,18 +1,20 @@
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { VehicleService } from './bms_vehicle.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { DTO_RQ_Vehicle } from './bms_vehicle.dto';
 import { DTO_RQ_UserAction } from 'src/utils/user.dto';
 import { TokenGuard } from 'src/guards/token.guard';
 import { Roles } from 'src/decorator/roles.decorator';
 import { CompanyIdParam } from 'src/param/CompanyIdParam';
 import { NumberIdParam } from 'src/param/NumberIdParam';
 import { UUIDParam } from 'src/param/UUIDParam';
+import { DTO_RQ_Vehicle } from '../bms_vehicle.dto';
+import { VehicleService } from '../bms_vehicle.service';
 
 @Controller('bms-vehicle')
 @UseGuards(TokenGuard)
-export class VehicleController {
-  constructor(private readonly vehicleService: VehicleService) {}
+export class BmsVehicleController {
+  constructor(
+    private readonly vehicleService: VehicleService
+  ) {}
 
   // M2_v2.F1
   @Get('companies/:id/vehicles')
