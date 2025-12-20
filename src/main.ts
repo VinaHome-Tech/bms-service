@@ -10,20 +10,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('BMS_SERVICE');
 
-  // 🟢 1) ĐĂNG KÝ MICROSOFT RABBITMQ ĐỂ NHẬN MESSAGE
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [configuration().rabbitmq.url],
-      queue: configuration().rabbitmq.queue, // ⬅ Booking Service sẽ gửi vào queue này
+      queue: configuration().rabbitmq.queue,
       queueOptions: { durable: true },
     },
   });
 
-  // 🟢 2) KHỞI ĐỘNG MICROSOFT ĐỂ LẮNG NGHE MESSAGE
   await app.startAllMicroservices();
 
-  // 🟢 3) PHẦN HTTP API (KHÔNG ĐỔI)
   app.setGlobalPrefix('v2');
   app.useGlobalPipes(new CustomValidationPipe());
   // app.useGlobalInterceptors(new ResponseInterceptor());
