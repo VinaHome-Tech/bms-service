@@ -1,30 +1,31 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { BmsVehicleRepository } from "../../repositories/bms/bms-vehicle.repository";
 import { DTO_RQ_Vehicle } from "../../dtos/request/bms/bms-vehicle.request";
-import { VehicleOrmEntity } from "../../entities/VehicleOrmEntity";
 import { BmsVehicleMapper } from "../../mappers/bms-vehicle.mapper";
-@Injectable()
-export class CreateVehicleUseCase {
-    constructor(private readonly repo: BmsVehicleRepository) { }
 
-    async execute(companyId: string, data: DTO_RQ_Vehicle) {
-        console.log(companyId, data);
+@Injectable()
+export class UpdateVehicleUseCase {
+    constructor(private readonly repo: BmsVehicleRepository) { }
+    async execute(vehicleId: string, data: DTO_RQ_Vehicle) {
+        const vehicle = await this.repo.findById(vehicleId);
+        if (!vehicle) {
+            throw new NotFoundException('Phương tiện không tồn tại.');
+        }
+        console.log("Vehicle:", vehicle);
         const licensePlate = data.license_plate
             .replace(/\s+/g, '')
             .trim()
             .toUpperCase();
         console.log("License Plate:", licensePlate);
         const existed = await this.repo.findOneByCompanyAndLicensePlate(
-            companyId,
+            vehicle.company_id,
             licensePlate,
         );
 
-        if (existed) {
+        if (existed && existed.id !== vehicleId) {
             throw new ConflictException('Biển số xe đã tồn tại.');
         }
-        console.log("Vehicle:", existed);
-        const vehicle = new VehicleOrmEntity();
-        vehicle.company_id = companyId;
+
         vehicle.license_plate = licensePlate;
         vehicle.brand = data.brand?.trim() || null;
         vehicle.color = data.color?.trim() || null;
@@ -35,7 +36,10 @@ export class CreateVehicleUseCase {
         vehicle.maintenance_due = data.maintenance_due || null;
         vehicle.status = data.status;
 
-        const result = await this.repo.saveVehicle(vehicle);
-        return BmsVehicleMapper.toResponse(result);
+        await this.repo.saveVehicle(vehicle);
+
+        const updated = await this.repo.findById(vehicleId);
+        console.log("Updated Vehicle:", updated);
+        return BmsVehicleMapper.toResponse(updated!);
     }
 }

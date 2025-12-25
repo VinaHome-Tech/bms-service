@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BmsOfficeService } from './bms_office.service';
-import { Office } from '../../entities/office.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OfficePhone } from 'src/entities/office_phone.entity';
 import { BmsOfficeController } from './controllers/bms-office.controller';
 import { BmsOfficeRepository } from './repositories/bms/bms-office.repository';
 import { TypeOrmOfficeRepository } from './repositories/bms/typeorm-bms-office.repository';
@@ -15,7 +12,7 @@ import { DeleteOfficeUseCase } from './use-cases/bms/delete-office.usecase';
 import { GetOfficeListRoomWorkByCompanyIdUseCase } from './use-cases/bms/get-office-list-room-work-by-company-id.usecase';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Office, OfficePhone, OfficeOrmEntity, OfficePhoneOrmEntity])],
+  imports: [TypeOrmModule.forFeature([OfficeOrmEntity, OfficePhoneOrmEntity])],
   controllers: [BmsOfficeController],
   providers: [
     {
@@ -27,7 +24,7 @@ import { GetOfficeListRoomWorkByCompanyIdUseCase } from './use-cases/bms/get-off
     DeleteOfficeUseCase,
     GetOfficeListByCompanyIdUseCase,
     GetOfficeListRoomWorkByCompanyIdUseCase,
-    BmsOfficeService],
+    ],
   exports: [],
 })
 export class OfficeModule {}

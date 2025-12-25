@@ -1,5 +1,4 @@
 import { Schedule } from 'src/entities/schedule.entity';
-import { Trip } from 'src/entities/trip.entity';
 import {
   Column,
   CreateDateColumn,

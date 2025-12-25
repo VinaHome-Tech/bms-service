@@ -1,9 +1,9 @@
 import { ConflictException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { BmsOfficeRepository } from "../../repositories/bms/bms-office.repository";
-import { DTO_RQ_Office } from "../../bms_office.dto";
 import { OfficePhoneOrmEntity } from "../../entities/OfficePhoneOrmEntity";
 import { OfficeOrmEntity } from "../../entities/OfficeOrmEntity";
 import { BmsOfficeMapper } from "../../mappers/bms-office.mapper";
+import { DTO_RQ_Office } from "../../dtos/request/bms/office.dto";
 
 @Injectable()
 export class CreateOfficeUseCase {

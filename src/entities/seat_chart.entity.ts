@@ -7,7 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Schedule } from './schedule.entity';
-import { Trip } from './trip.entity';
 import { Seat } from './seat.entity';
 
 @Entity('tbl_seat_chart')

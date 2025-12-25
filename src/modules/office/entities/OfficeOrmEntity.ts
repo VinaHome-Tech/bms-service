@@ -1,5 +1,3 @@
-import { OfficePhone } from "src/entities/office_phone.entity";
-import { Schedule } from "src/entities/schedule.entity";
 import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { OfficePhoneOrmEntity } from "./OfficePhoneOrmEntity";
 
