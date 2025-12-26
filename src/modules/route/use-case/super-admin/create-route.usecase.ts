@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from "@nestjs/common";
-import { SuperAdminRouteRepository } from "../../repositories/super-admin-route.repository";
 import { DTO_RQ_SuperAdminRoute } from "../../dtos/request/super-admin-route.dto";
 import { SuperAdminRouteMapper } from "../../mappers/super-admin-route.mapper";
+import { SuperAdminRouteRepository } from "../../repositories/super-admin/super-admin-route.repository";
 
 @Injectable()
 export class SuperAdminCreateRouteUseCase {

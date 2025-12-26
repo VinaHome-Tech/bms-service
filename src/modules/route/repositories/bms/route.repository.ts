@@ -1,10 +1,10 @@
-import { RouteOrmEntity } from "../entities/RouteOrmEntity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
 
 export abstract class RouteRepository {
   abstract findNameByCompanyId(companyId: string): Promise<RouteOrmEntity[]>;
-  abstract findByCompanyId(companyId: string): Promise<RouteOrmEntity[]>;
+  abstract findAllByCompanyId(companyId: string): Promise<RouteOrmEntity[]>;
   abstract findNameActionByCompanyId(companyId: string): Promise<RouteOrmEntity[]>;
-  abstract findOneByCompanyAndRouteName(companyId: string, route_name: string): Promise<RouteOrmEntity>;
+  abstract findOneByCompanyAndRouteName(companyId: string, route_name: string): Promise<Partial<RouteOrmEntity>>;
   abstract findOneByCompanyAndShortName(companyId: string, short_name: string): Promise<RouteOrmEntity>;
   abstract findOneByCompanyAndETicketName(companyId: string, eticketName: string): Promise<RouteOrmEntity>;
 

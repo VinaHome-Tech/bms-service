@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { RouteRepository } from "./route.repository";
-import { RouteOrmEntity } from "../entities/RouteOrmEntity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
 import { Repository } from "typeorm";
 
 @Injectable()
@@ -27,7 +27,7 @@ export class TypeOrmRouteRepository extends RouteRepository {
       order: { display_order: 'ASC' },
     });
   }
-  async findByCompanyId(companyId: string): Promise<RouteOrmEntity[]> {
+  async findAllByCompanyId(companyId: string): Promise<RouteOrmEntity[]> {
     return this.repo.find({
       where: { company_id: companyId },
       select: [
@@ -42,6 +42,8 @@ export class TypeOrmRouteRepository extends RouteRepository {
         'short_name',
         'status',
         'base_price',
+        'created_at',
+        'updated_at',
       ],
       order: { display_order: 'ASC' },
     });
@@ -79,7 +81,24 @@ export class TypeOrmRouteRepository extends RouteRepository {
   }
 
   async findById(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({
+      select: [
+        'id',
+        'display_order',
+        'distance',
+        'e_ticket_price',
+        'journey',
+        'note',
+        'route_name',
+        'route_name_e_ticket',
+        'short_name',
+        'status',
+        'base_price',
+        'created_at',
+        'updated_at',
+      ], 
+      where: { id } 
+    });
   }
 
   async findByCompanyAndRouteName(companyId: string, routeName: string) {

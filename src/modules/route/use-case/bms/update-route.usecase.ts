@@ -1,7 +1,8 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { RouteRepository } from "../../repositories/route.repository";
-import { DTO_RQ_Route } from "../../dtos/request/bms/route.dto";
+import { RouteRepository } from "../../repositories/bms/route.repository";
 import { RouteMapper } from "../../mappers/bms/route.mapper";
+import { DTO_RQ_Route } from "../../dtos/request/bms-route.request";
+import { BmsRouteMapper } from "../../mappers/bms-route.mapper";
 
 @Injectable()
 export class UpdateRouteUseCase {
@@ -18,8 +19,6 @@ export class UpdateRouteUseCase {
       // 2. Normalize dữ liệu
       const routeName = data.route_name.trim();
       const shortName = data.short_name.trim();
-      const journey = data.journey?.trim() || null;
-      const note = data.note?.trim() || null;
       const routeNameETicket = data.route_name_e_ticket?.trim() || null;
 
       // 3. Kiểm tra trùng route_name
@@ -55,18 +54,20 @@ export class UpdateRouteUseCase {
       route.route_name = routeName;
       route.route_name_e_ticket = routeNameETicket;
       route.short_name = shortName;
-      route.journey = journey;
-      route.note = note;
-      route.base_price = data.base_price;
-      route.e_ticket_price = data.e_ticket_price;
-      route.distance = data.distance;
+      route.journey = data.journey?.trim() || null;
+      route.note = data.note?.trim() || null;
+      route.base_price = data.base_price || 0;
+      route.e_ticket_price = data.e_ticket_price || 0;
+      route.distance = data.distance || 0;
       route.status = data.status;
 
+      await this.repo.updateRoute(route);
       // 7. Lưu DB
-      const saved = await this.repo.updateRoute(route);
+      const saved = await this.repo.findById(id);
+      console.log("Route updated:", saved);
 
       // 8. Trả về DTO
-      return RouteMapper.toResponse(saved);
+      return BmsRouteMapper.toResponse(saved);
 
     } catch (error) {
       console.error(error);

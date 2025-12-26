@@ -1,7 +1,9 @@
 import { Schedule } from "src/entities/schedule.entity";
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 @Entity('tbl_route')
+@Unique('uq_route_company_route_name', ['company_id', 'route_name'])
+@Index('idx_route_company_id', ['company_id'])
 export class RouteOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

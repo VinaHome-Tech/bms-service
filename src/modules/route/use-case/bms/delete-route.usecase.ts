@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { RouteRepository } from "../../repositories/route.repository";
+import { RouteRepository } from "../../repositories/bms/route.repository";
 
 @Injectable()
 export class DeleteRouteUseCase {

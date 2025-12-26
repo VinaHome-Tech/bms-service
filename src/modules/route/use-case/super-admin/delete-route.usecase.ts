@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { SuperAdminRouteRepository } from "../../repositories/super-admin-route.repository";
+import { SuperAdminRouteRepository } from "../../repositories/super-admin/super-admin-route.repository";
 
 @Injectable()
 export class SuperAdminDeleteRouteUseCase {

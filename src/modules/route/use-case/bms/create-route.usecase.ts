@@ -1,13 +1,13 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from "@nestjs/common";
-import { RouteRepository } from "../../repositories/route.repository";
-import { DTO_RQ_Route } from "../../dtos/request/bms/route.dto";
+import { RouteRepository } from "../../repositories/bms/route.repository";
 import { RouteMapper } from "../../mappers/bms/route.mapper";
+import { DTO_RQ_Route } from "../../dtos/request/bms-route.request";
 
 @Injectable()
 export class CreateRouteUseCase {
     constructor(private readonly repo: RouteRepository) { }
 
-    async execute(companyId: string, data: Partial<DTO_RQ_Route>) {
+    async execute(companyId: string, data: DTO_RQ_Route) {
         try {
             // ==========================
             // 1. Normalize dữ liệu input

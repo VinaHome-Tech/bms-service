@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Post, Put, UseGuards, UseInterceptors } from "@nestjs/common";
 // import { DTO_RP_RouteName } from "../presentation/http/response/route-name.response";
 import { Roles } from "src/decorator/roles.decorator";
 import { UUIDParam } from "src/param/UUIDParam";
@@ -13,7 +13,9 @@ import { UpdateRouteUseCase } from "../use-case/bms/update-route.usecase";
 import { DeleteRouteUseCase } from "../use-case/bms/delete-route.usecase";
 import { DTO_RP_RouteNameToConfig } from "../dtos/response/bms/route-name-to-config.dto";
 import { GetListRouteNameToConfigUseCase } from "../use-case/bms/get-list-route-name-to-config.usecase";
-import { DTO_RQ_Route } from "../dtos/request/bms/route.dto";
+import { DTO_RQ_Route } from "../dtos/request/bms-route.request";
+import { DTO_RP_Route } from "../dtos/response/bms-route.response";
+import { TimingInterceptor } from "src/shared/timing-interceptor";
 
 @Controller('bms-route')
 @UseGuards(TokenGuard)
@@ -50,7 +52,7 @@ export class BmsRouteController {
     @Roles('ADMIN', 'STAFF')
     async GetRouteListByCompanyId(
         @Param() param: UUIDParam,
-    ): Promise<ResponseResult<DTO_RP_RouteName[]>> {
+    ) {
         const result = await this.getRouteListByCompanyId.execute(param.id);
         return new ResponseResult(true, HttpStatus.OK, 'Success', result);
     }
@@ -64,6 +66,7 @@ export class BmsRouteController {
     }
 
     // M3_v2.F3
+    @UseInterceptors(TimingInterceptor)
     @Put(':id')
     @Roles('ADMIN')
     async UpdateRoute(

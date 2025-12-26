@@ -1,4 +1,5 @@
-import { RouteOrmEntity } from "../entities/RouteOrmEntity";
+import { RouteOrmEntity } from "../../entities/RouteOrmEntity";
+
 
 export abstract class SuperAdminRouteRepository {
     abstract findOneByCompanyAndRouteName(companyId: string, route_name: string): Promise<RouteOrmEntity>;

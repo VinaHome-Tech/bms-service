@@ -1,6 +1,8 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 @Entity('tbl_vehicle')
+@Unique('uq_vehicle_company_license_plate', ['company_id', 'license_plate'])
+@Index('idx_vehicle_company_id', ['company_id'])
 export class VehicleOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
